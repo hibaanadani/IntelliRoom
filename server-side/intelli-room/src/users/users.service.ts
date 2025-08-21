@@ -12,4 +12,12 @@ export class UsersService {
     findById(userId: number){
         return this.users.find(user => user.id === userId );
     }
+
+    createUser(name:string){
+        const newUser ={id: Date.now(), name};
+
+        this.users.push(newUser);
+
+        return newUser;
+    }
 }
