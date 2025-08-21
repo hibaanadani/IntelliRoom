@@ -6,7 +6,7 @@ version: '3.8'
 # 'services' defines the containers for our application.
 # Each service will be a separate container.
 services:
-  # This is the name of our server-side service.
+  # This is the name of our server-side service
   server:
   # not needed files not on server to build
     # 'build' specifies how to build the Docker image for this service.
