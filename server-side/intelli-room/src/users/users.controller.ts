@@ -1,5 +1,6 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { time } from 'console';
 
 @Controller('users')
 export class UsersController {
@@ -17,5 +18,11 @@ export class UsersController {
     @Get(':id')
     getUserById(@Param('id') id: string): any{ // Nest already parses to int, but we will see it later on
         return this.usersService.findById(Number(id));
+    }
+
+    // body parser
+    @Post()
+    createUser(@Body() body: any ): any {
+        return this.usersService.createUser(); 
     }
 }
