@@ -1,0 +1,56 @@
+# defines how to build and run both the client and server services together.
+# here we are using it to run the image only
+# Version of the Docker Compose file format. Using '3.8' is a common and stable choice.
+version: '3.8'
+
+# 'services' defines the containers for our application.
+# Each service will be a separate container.
+services:
+  # This is the name of our server-side service.
+  server:
+  # not needed files not on server to build
+    # 'build' specifies how to build the Docker image for this service.
+    # build:
+      # 'context' tells Docker where to find the source code and Dockerfile.
+      # The '.' in the Dockerfile's COPY command will be relative to this path.
+      # context: ./server-side/intelli-room
+      # 'dockerfile' specifies the name of the Dockerfile to use.
+      # It's relative to the context.
+      # dockerfile: Dockerfile
+    # 'image' gives a name and tag to the image that will be built.
+    # We use 'latest' to indicate it's the most recent build.
+    image: your-dockerhub-username/intelli-room-server:latest
+    # 'ports' maps a port on the host machine to a port in the container.
+    # The format is "HOST_PORT:CONTAINER_PORT".
+    # This allows us to access the server from our local machine at http://localhost:9000.
+    ports:
+      - "9000:9000"
+    # The 'depends_on' key ensures the server service will not start until
+    # the database service is running and healthy.
+    depends_on:
+      - database
+
+  # This is the new database service. We name it 'database'.
+  database:
+    # We use the official MySQL image from Docker Hub.
+    image: mysql:8.0
+    # 'environment' variables are crucial for configuring MySQL.
+    environment:
+      # This sets the root user's password. It's required for the MySQL image to start.
+      MYSQL_ROOT_PASSWORD: your_root_password
+      # This creates a database with the specified name on startup.
+      MYSQL_DATABASE: your_database_name
+    # 'volumes' are used to persist data.
+    # We map a named volume to the MySQL data directory inside the container.
+    volumes:
+      - dbdata:/var/lib/mysql
+    # We map the standard MySQL port (3306) to the same port on the host.
+    # This allows MySQL Workbench to connect.
+    ports:
+      - "3306:3306"
+
+# 'volumes' are defined outside the services block.
+# This creates a persistent storage space for our database data.
+volumes:
+  dbdata:
+  
