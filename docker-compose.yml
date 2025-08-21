@@ -19,7 +19,10 @@ services:
       # dockerfile: Dockerfile
     # 'image' gives a name and tag to the image that will be built.
     # We use 'latest' to indicate it's the most recent build.
-    image: your-dockerhub-username/intelli-room-server:latest
+    image: hibaanadani/docker-backend:22
+    # using service database
+    environment:
+      - DATABASE_HOST=database
     # 'ports' maps a port on the host machine to a port in the container.
     # The format is "HOST_PORT:CONTAINER_PORT".
     # This allows us to access the server from our local machine at http://localhost:9000.
@@ -29,6 +32,8 @@ services:
     # the database service is running and healthy.
     depends_on:
       - database
+    # restart when a problem occurs in a container instead of shutting down
+    restart: always
 
   # This is the new database service. We name it 'database'.
   database:
@@ -37,9 +42,9 @@ services:
     # 'environment' variables are crucial for configuring MySQL.
     environment:
       # This sets the root user's password. It's required for the MySQL image to start.
-      MYSQL_ROOT_PASSWORD: your_root_password
+      MYSQL_ROOT_PASSWORD: placeholder
       # This creates a database with the specified name on startup.
-      MYSQL_DATABASE: your_database_name
+      MYSQL_DATABASE: placeholder
     # 'volumes' are used to persist data.
     # We map a named volume to the MySQL data directory inside the container.
     volumes:
@@ -48,8 +53,15 @@ services:
     # This allows MySQL Workbench to connect.
     ports:
       - "3306:3306"
+    
+    # restart when a problem occurs in a container instead of shutting down
+    restart: always
 
 # 'volumes' are defined outside the services block.
+# this is a named volume, we defined it
+# the other type is binding volume, no need to know it now
+# external hardisk, since conatiners do not have external...
+# it doesnt burn if the containers burns, so when creating a new one it remains
 # This creates a persistent storage space for our database data.
 volumes:
   dbdata:
