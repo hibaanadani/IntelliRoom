@@ -66,10 +66,13 @@ jobs:
       # | means I can run multiple commands on multiple lines
       # run from github secret to docker compose
       # sed searching substituting strings s| string .* anything named MYSQL_ROOT_PASSWORD |g glbal in all the file
+      # sed -i "s|MYSQL_ROOT_PASSWORD:.*|MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}|g" docker-compose.yml
+      # sed -i "s|MYSQL_DATABASE:.*|MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}|g" docker-compose.yml
       - name: Injecting secrets to docker-compose
         run: |
-          sed -i "s|MYSQL_ROOT_PASSWORD:.*|MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}|g" docker-compose.yml
-          sed -i "s|MYSQL_DATABASE:.*|MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}|g" docker-compose.yml
+          sed -i "s|MONGO_INITDB_ROOT_USERNAME:.*|MONGO_INITDB_ROOT_USERNAME: ${{ secrets.MONGO_INITDB_ROOT_USERNAME }}|g" docker-compose.yml
+          sed -i "s|MONGO_INITDB_ROOT_PASSWORD:.*|MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}|g" docker-compose.yml
+          sed -i "s|MONGO_INITDB_DATABASE:.*|MONGO_INITDB_DATABASE: ${{ secrets.MONGO_INITDB_DATABASE }}|g" docker-compose.yml
 
       # job to deploy ONLYY DOCKER COMPOSE to EC2
       # ssh to connect to a remote host, it provides a secure shell
