@@ -1,20 +1,23 @@
 import { Injectable } from '@nestjs/common';
+import { createUserDto } from './dto/create-user.dto';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
 
-    private users: any = [{id:0, name:'Charbel'}];
+    private users: User[] = [{id:0, name:'Charbel'}];
 
-    findAll(){
+    // : User[] provides return type, important to help catch bugs early
+    findAll(): User[]{
         return this.users;
     }
 
-    findById(userId: number){
-        return this.users.find(user => user.id === userId );
+    findById(userId: number): User{
+        return this.users.find((user) => user.id === userId );
     }
-
-    createUser(name:string){
-        const newUser ={id: Date.now(), name};
+// ... spreading since we will connect to a db lateron and we will need more than the name
+    createUser(createUserDto: createUserDto): User{
+        const newUser ={id: Date.now(), ...createUserDto};
 
         this.users.push(newUser);
 

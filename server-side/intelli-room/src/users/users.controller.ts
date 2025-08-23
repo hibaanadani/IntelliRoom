@@ -1,6 +1,8 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { time } from 'console';
+import { createUserDto } from './dto/create-user.dto';
+import { User } from './entities/user.entity';
 
 @Controller('users')
 export class UsersController {
@@ -8,7 +10,7 @@ export class UsersController {
     constructor(private usersService: UsersService){}
 
     @Get()
-    getUser(): any{
+    getUser(): User[]{
         return this.usersService.findAll();
     }
 
@@ -16,13 +18,13 @@ export class UsersController {
     // parse the id from the URL and provide it to the service
     // param 1 to many, specify id and giv eit name id and type string
     @Get(':id')
-    getUserById(@Param('id') id: string): any{ // Nest already parses to int, but we will see it later on
+    getUserById(@Param('id') id: string): User{ // Nest already parses to int, but we will see it later on
         return this.usersService.findById(Number(id));
     }
 
     // body parser
     @Post()
-    createUser(@Body() body: any ): any {
-        return this.usersService.createUser(); 
+    createUser(@Body() body: createUserDto ): User{
+        return this.usersService.createUser(body); 
     }
 }
