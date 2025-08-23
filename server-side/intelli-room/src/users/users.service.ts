@@ -12,7 +12,7 @@ export class UsersService {
         return this.users;
     }
 
-    findById(userId: number): User{
+    findById(userId: number): User | undefined{
         return this.users.find((user) => user.id === userId );
     }
 // ... spreading since we will connect to a db lateron and we will need more than the name
