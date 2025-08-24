@@ -3,6 +3,7 @@ import { AppService } from './app.service';
 import { AuthGuard } from '@nestjs/passport';
 import { LocalAuthGuard } from './auth/local-auth.guard';
 import { AuthService } from './auth/auth.service';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 @Controller()
 export class AppController {
@@ -16,8 +17,9 @@ export class AppController {
     return this.authService.login(req.user); //return jwt access token
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('protected')
-  getHello(): string { //require a bearer token, and validate it
-    return this.authService.getHello();
+  getHello(@Request() req): string { //require a bearer token, and validate it
+    return req.user;
   }
 }
