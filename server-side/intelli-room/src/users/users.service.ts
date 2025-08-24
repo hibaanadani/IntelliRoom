@@ -1,5 +1,5 @@
 //Added Logger import - NestJS built-in logging service
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { createUserDto } from './dto/create-user.dto';
 import { updateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -8,12 +8,16 @@ import { Db } from 'mongodb';
 @Injectable()
 export class UsersService {
 
+    constructor(
+        @Inject('MONGO_DB')
+        private readonly db:Db,
+    ){}
     // Our in-memory user storage
     private users: User[] = [
-        { id: 0, name: 'Charbel Daoud', email:'charbel@sefactory.com',password:'charbel' },
-        { id: 1, name: 'Taha Taha', email:'taha@sefactory.com',password:'taha' },
-        { id: 2, name: 'Nour Mshawreb', email:'nour@sefactory.com',password:'nour' },
-        { id: 3, name: 'Joseph Matta', email:'joe@sefactory.com',password:'joe' }
+        { id: 0, name: 'Charbel Daoud', username:'charbeldaoud', email:'charbel@sefactory.com',password:'charbel' },
+        { id: 1, name: 'Taha Taha', username:'tahataha', email:'taha@sefactory.com',password:'taha' },
+        { id: 2, name: 'Nour Mshawrab', username:'nourmshawrab', email:'nour@sefactory.com',password:'nour' },
+        { id: 3, name: 'Joseph Matta', username:'josephmatta', email:'joe@sefactory.com',password:'joe' }
     ];
     
     // Track next available ID instead of using Date.now()
@@ -35,20 +39,26 @@ export class UsersService {
         return user ? { ...user } : undefined;
     }
 
-    findByName(userName: string): User[] {
+    findByName(name: string): User[] {
         // Input validation - check for empty/null/undefined names
-        if (!userName?.trim()) {
+        if (!name?.trim()) {
             return [];
         }
         
         // Case-insensitive partial matching using includes()
         // This is more user-friendly than exact matching
         const matchedUsers = this.users.filter(user => 
-            user.name.toLowerCase().includes(userName.toLowerCase())
+            user.name.toLowerCase().includes(name.toLowerCase())
         );
         
         // Return copies of matched users to prevent external mutations
         return matchedUsers.map(user => ({ ...user }));
+    }
+
+    async findByUserName(userName: string): Promise<User | undefined> {
+        return this.users.find(user => 
+            user.username===userName
+        );
     }
 
     // ... spreading since we will connect to a db later on and we will need more than the name

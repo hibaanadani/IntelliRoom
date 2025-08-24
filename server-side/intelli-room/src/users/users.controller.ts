@@ -1,3 +1,5 @@
+// the command for it is nest g controller users
+
 import { 
     Body, 
     Controller, 
@@ -9,8 +11,8 @@ import {
     Patch, 
     Post, 
     Query,
-    HttpCode,        // NEW: Allows us to set specific HTTP status codes
-    HttpStatus       // NEW: Enum with standard HTTP status codes
+    HttpCode,        // Allows us to set specific HTTP status codes
+    HttpStatus       // Enum with standard HTTP status codes
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { createUserDto } from './dto/create-user.dto';
@@ -22,8 +24,8 @@ import {
     ApiOkResponse, 
     ApiQuery, 
     ApiTags,
-    ApiOperation,    // NEW: Adds description to each endpoint in Swagger
-    ApiParam         // NEW: Documents path parameters in Swagger
+    ApiOperation,    // Adds description to each endpoint in Swagger
+    ApiParam         // Documents path parameters in Swagger
 } from '@nestjs/swagger';
 
 @ApiTags('Users')
