@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, NotFoundException, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { time } from 'console';
 import { createUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
-import { ApiCreatedResponse, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { NotFoundError } from 'rxjs';
 
 @ApiTags('Users')
 @Controller('users')
@@ -20,8 +21,10 @@ export class UsersController {
     // get user by querying over, search by id, name...
     // you can have multipe query params, so here we will specify
     // ApiQuery makes entering the name non optional
+    // ApiNotFound returns 404 not found error
     @ApiOkResponse({type:User, isArray: true, description: 'get user by Name'})
     @ApiQuery({name:'name',required: true})
+    @ApiNotFoundResponse()
     @Get('name')
     getUserByName(@Query('name') name: string): User[]{
         return this.usersService.findByName(name);
@@ -40,9 +43,16 @@ export class UsersController {
     // parse the id from the URL and provide it to the service
     // param 1 to many, specify id and giv eit name id and type string
     @ApiOkResponse({type:User, description: 'get user by ID'})
+    @ApiNotFoundResponse()
     @Get(':id')
-    getUserById(@Param('id') id: string): User | undefined{ // Nest already parses to int, but we will see it later on
-        return this.usersService.findById(Number(id));
+    getUserById(@Param('id', ParseIntPipe) id: number): User{ // Nest already parses to int, using ParseIntPipe
+        const user =  this.usersService.findById(id); //so here we can get rid of Number(id)
+
+        if(!user){
+            throw new NotFoundException();
+        }
+
+        return user;
     }
 
     // body parser

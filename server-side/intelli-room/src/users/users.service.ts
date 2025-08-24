@@ -5,7 +5,7 @@ import { User } from './entities/user.entity';
 @Injectable()
 export class UsersService {
 
-    private users: User[] = [{id:0, name:'Charbel'},{id:1, name:'Taha'},{id:2, name:'Nour'}];
+    private users: User[] = [{id:0, name:'Charbel'},{id:1, name:'Taha'},{id:2, name:'Nour'},{id:3, name:'Nour'}];
 
     // : User[] provides return type, important to help catch bugs early
     findAll(): User[]{
