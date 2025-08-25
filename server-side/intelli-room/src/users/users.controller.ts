@@ -40,7 +40,7 @@ export class UsersController {
     //More descriptive response documentation
     @ApiOkResponse({ type: User, isArray: true, description: 'List of all users' })
     @Get()
-    getUsers(): User[] {
+    async getUsers(): Promise<User[]> {
         return this.usersService.findAll();
     }
 
@@ -54,8 +54,8 @@ export class UsersController {
     @ApiNotFoundResponse({ description: 'No users found with the specified name' })
     @ApiQuery({ name: 'name', required: true, description: 'Name to search for' })
     @Get('search')
-    getUsersByName(@Query('name') name: string): User[] {
-        const users = this.usersService.findByName(name);
+    async getUsersByName(@Query('name') name: string): Promise<User[]> {
+        const users = await this.usersService.findByName(name);
 
         if (users.length === 0) {
             throw new NotFoundException(`No users found with name: ${name}`);
@@ -73,8 +73,8 @@ export class UsersController {
     @ApiOkResponse({ type: User, description: 'User found successfully' })
     @ApiNotFoundResponse({ description: 'User not found' })
     @Get(':id')
-    getUserById(@Param('id', ParseIntPipe) id: number): User { // Nest already parses to int, using ParseIntPipe
-        const user = this.usersService.findById(id); // so here we can get rid of Number(id)
+    async getUserById(@Param('id', ParseIntPipe) id: number): Promise<User> { // Nest already parses to int, using ParseIntPipe
+        const user = await this.usersService.findById(id); // so here we can get rid of Number(id)
         
         if (!user) {
             throw new NotFoundException(`User with ID ${id} not found`);
@@ -88,7 +88,7 @@ export class UsersController {
     @ApiOperation({ summary: 'Create a new user' })
     @ApiCreatedResponse({ type: User, description: 'User created successfully' })
     @Post()
-    createUser(@Body() createUserDto: createUserDto): User {
+    async createUser(@Body() createUserDto: createUserDto): Promise<User> {
         return this.usersService.createUser(createUserDto);
     }
 
@@ -98,11 +98,11 @@ export class UsersController {
     @ApiOkResponse({ type: User, description: 'User updated successfully' })
     @ApiNotFoundResponse({ description: 'User not found' })
     @Patch(':id')
-    updateUser(
+    async updateUser(
         @Param('id', ParseIntPipe) id: number, 
         @Body() updateUserDto: updateUserDto
-    ): User {
-        const updatedUser = this.usersService.updateUser(id, updateUserDto);
+    ): Promise<User> {
+        const updatedUser = await this.usersService.updateUser(id, updateUserDto);
         
         if (!updatedUser) {
             throw new NotFoundException(`User with ID ${id} not found`);
@@ -120,8 +120,8 @@ export class UsersController {
     @HttpCode(HttpStatus.NO_CONTENT)
     @Delete(':id')
     // void return type since we don't return any data for DELETE
-    removeUser(@Param('id', ParseIntPipe) id: number): void {
-        const isDeleted = this.usersService.removeUser(id);
+    async removeUser(@Param('id', ParseIntPipe) id: number): Promise<void> {
+        const isDeleted = await this.usersService.removeUser(id);
         
         // Check if user was found and deleted
         if (!isDeleted) {

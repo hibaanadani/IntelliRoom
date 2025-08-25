@@ -3,98 +3,64 @@ import { Inject, Injectable } from '@nestjs/common';
 import { createUserDto } from './dto/create-user.dto';
 import { updateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { Db } from 'mongodb'; 
+import { Db } from 'mongodb';
+import { MONGO_DB } from '../mongodb/mongodb.module';
 
 @Injectable()
 export class UsersService {
 
     constructor(
-        @Inject('MONGO_DB')
-        private readonly db:Db,
+        @Inject(MONGO_DB)
+        private readonly db: Db,
     ){}
-    // Our in-memory user storage
-    private users: User[] = [
-        { id: 0, name: 'Charbel Daoud', username:'charbeldaoud', email:'charbel@sefactory.com',password:'charbel' },
-        { id: 1, name: 'Taha Taha', username:'tahataha', email:'taha@sefactory.com',password:'taha' },
-        { id: 2, name: 'Nour Mshawrab', username:'nourmshawrab', email:'nour@sefactory.com',password:'nour' },
-        { id: 3, name: 'Joseph Matta', username:'josephmatta', email:'joe@sefactory.com',password:'joe' }
-    ];
-    
-    // Track next available ID instead of using Date.now()
-    // This prevents ID conflicts and gives us sequential IDs
-    private nextId = 4;
-
-    // : User[] provides return type, important to help catch bugs early
-    findAll(): User[] {
-        // Return a copy of the array using spread operator
-        // This prevents external code from modifying our internal users array
-        return [...this.users];
+    // Use the shared "users" collection
+    private collection() {
+        return this.db.collection<User>('users');
     }
 
-    findById(userId: number): User | undefined {
-        const user = this.users.find(user => user.id === userId);
-        
-        // Return a copy of the user object (or undefined if not found)
-        // This prevents external code from modifying our internal user data
-        return user ? { ...user } : undefined;
+    async findAll(): Promise<User[]> {
+        return this.collection()
+            .find({}, { projection: { _id: 0 } })
+            .toArray();
     }
 
-    findByName(name: string): User[] {
-        // Input validation - check for empty/null/undefined names
+    async findById(userId: number): Promise<User | undefined> {
+        const user = await this.collection().findOne({ id: userId }, { projection: { _id: 0 } });
+        return user ?? undefined;
+    }
+
+    async findByName(name: string): Promise<User[]> {
         if (!name?.trim()) {
             return [];
         }
-        
-        // Case-insensitive partial matching using includes()
-        // This is more user-friendly than exact matching
-        const matchedUsers = this.users.filter(user => 
-            user.name.toLowerCase().includes(name.toLowerCase())
-        );
-        
-        // Return copies of matched users to prevent external mutations
-        return matchedUsers.map(user => ({ ...user }));
+        // match on a stored lowercase copy for case-insensitive exact search
+        return this.collection()
+            .find({ nameLower: name.trim().toLowerCase() } as any, { projection: { _id: 0, nameLower: 0 } })
+            .toArray();
     }
 
     async findByUserName(userName: string): Promise<User | undefined> {
-        return this.users.find(user => 
-            user.username===userName
-        );
+        const user = await this.collection().findOne({ username: userName }, { projection: { _id: 0 } });
+        return user ?? undefined;
     }
 
-    // ... spreading since we will connect to a db later on and we will need more than the name
-    createUser(createUserDto: createUserDto): User {
-        // Input validation - ensure name is provided and not empty
+    async createUser(createUserDto: createUserDto): Promise<User> {
         if (!createUserDto.name?.trim()) {
             throw new Error('Name is required and cannot be empty');
         }
 
-        // Optional business logic - check for duplicate names
-        // You can enable this based on your business requirements
-        const existingUser = this.users.find(user => 
-            user.name.toLowerCase() === createUserDto.name.toLowerCase()
-        );
-        
-        // Use sequential ID instead of Date.now()
-        // trim the name to remove extra whitespace
+        // Simple numeric id auto-increment by reading the last id
+        const nextId = await this.getNextId();
         const newUser: User = {
-            id: this.nextId++,  // Increment and use the next available ID
+            id: nextId,
             ...createUserDto,
-            name: createUserDto.name.trim()  // Remove leading/trailing spaces
+            name: createUserDto.name.trim(),
         };
-        
-        this.users.push(newUser);
-        
-        //Return a copy to prevent external modifications
+        await this.collection().insertOne({ ...newUser, nameLower: newUser.name.toLowerCase() } as any);
         return { ...newUser };
     }
 
-    updateUser(id: number, updateUserDto: updateUserDto): User | undefined {
-        const userIndex = this.users.findIndex(user => user.id === id);
-        
-        // If user not found, log and return undefined
-        if (userIndex === -1) {
-            return undefined;
-        }
+    async updateUser(id: number, updateUserDto: updateUserDto): Promise<User | undefined> {
         if (updateUserDto.name !== undefined) {
             if (!updateUserDto.name?.trim()) {
                 throw new Error('Name cannot be empty');
@@ -102,44 +68,40 @@ export class UsersService {
             updateUserDto.name = updateUserDto.name.trim();
         }
 
-        // NEW: Keep track of original data for logging
-        const originalUser = { ...this.users[userIndex] };
-        
-        // Update the user with new data (partial update using spread operator)
-        this.users[userIndex] = {
-            ...this.users[userIndex],  // Keep existing properties
-            ...updateUserDto           // Override with new properties
-        };
-
-        // Return a copy of the updated user
-        return { ...this.users[userIndex] };
-    }
-
-    removeUser(id: number): boolean {
-        const userIndex = this.users.findIndex(user => user.id === id);
-        
-        // If user not found, log and return false
-        if (userIndex === -1) {
-            return false;
+        const $set: any = { ...updateUserDto };
+        if (updateUserDto.name !== undefined) {
+            $set.nameLower = updateUserDto.name.toLowerCase();
         }
 
-        //Keep reference to deleted user for logging
-        const deletedUser = this.users[userIndex];
-        
-        // Remove the user from the array using splice
-        this.users.splice(userIndex, 1);
+        const result = await this.collection().findOneAndUpdate(
+            { id },
+            { $set },
+            { returnDocument: 'after', projection: { _id: 0, nameLower: 0 } }
+        );
+        if (!result || !('value' in result) || !result.value) {
+            return undefined;
+        }
+        return result.value as User;
+    }
 
-        // Return true to indicate successful deletion
-        return true;
+    async removeUser(id: number): Promise<boolean> {
+        const res = await this.collection().deleteOne({ id });
+        return res.deletedCount === 1;
     }
     
-    // Get total number of users
-    getUserCount(): number {
-        return this.users.length;
+    async getUserCount(): Promise<number> {
+        return this.collection().countDocuments();
     }
 
-    // Check if a user exists without returning the user data
-    userExists(id: number): boolean {
-        return this.users.some(user => user.id === id);
+    async userExists(id: number): Promise<boolean> {
+        const user = await this.collection().findOne({ id }, { projection: { id: 1 } });
+        return !!user;
+    }
+
+    // Find the highest numeric id and increment by 1
+    private async getNextId(): Promise<number> {
+        const last = await this.collection().find({}, { projection: { id: 1 } }).sort({ id: -1 }).limit(1).toArray();
+        const lastId = last.length > 0 ? (last[0] as any).id : -1;
+        return lastId + 1;
     }
 }

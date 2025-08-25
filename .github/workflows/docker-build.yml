@@ -73,6 +73,7 @@ jobs:
           sed -i "s|MONGO_INITDB_ROOT_USERNAME:.*|MONGO_INITDB_ROOT_USERNAME: ${{ secrets.MONGO_INITDB_ROOT_USERNAME }}|g" docker-compose.yml
           sed -i "s|MONGO_INITDB_ROOT_PASSWORD:.*|MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}|g" docker-compose.yml
           sed -i "s|MONGO_INITDB_DATABASE:.*|MONGO_INITDB_DATABASE: ${{ secrets.MONGO_INITDB_DATABASE }}|g" docker-compose.yml
+          sed -i "s|MONGODB_DATABASE_HOST:.*|MONGODB_DATABASE_HOST: ${{ secrets.MONGODB_DATABASE_HOST }}|g" docker-compose.yml
 
       # job to deploy ONLYY DOCKER COMPOSE to EC2
       # ssh to connect to a remote host, it provides a secure shell
