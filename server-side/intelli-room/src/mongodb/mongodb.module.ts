@@ -28,9 +28,6 @@ const MONGO_DB = 'MONGO_DB';
         // This tells MongoDB where to connect and how to authenticate
         const mongoUrl = `mongodb://${username}:${password}@${host}:27017/${dbName}?authSource=admin`;
         
-        console.log(`📡 Connecting to MongoDB at: ${host}:27017`);
-        console.log(`🗄️  Database name: ${dbName}`);
-        
         try {
           // Step 5: Create a new MongoDB client and connect
           const client = new MongoClient(mongoUrl);
@@ -40,13 +37,10 @@ const MONGO_DB = 'MONGO_DB';
           const database = client.db(dbName);
           await database.admin().ping();
           
-          console.log('✅ Successfully connected to MongoDB!');
-          
           // Step 7: Return the database instance for other parts of the app to use
           return database;
           
         } catch (error) {
-          console.error('❌ Failed to connect to MongoDB:', error.message);
           throw error;
         }
       },
