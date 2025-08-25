@@ -1,56 +1,65 @@
-import { Module, OnModuleDestroy } from '@nestjs/common';
+// This module handles connecting to MongoDB database
+// Think of it as the "bridge" between your NestJS app and your MongoDB database
+
+import { Module } from '@nestjs/common';
 import { Db, MongoClient } from 'mongodb';
 
-// Token used to inject the Mongo "Db" instance elsewhere
+// This is like a "name tag" for our database connection
+// Other parts of our app will use this name to get the database
 const MONGO_DB = 'MONGO_DB';
 
 @Module({
   providers: [
     {
+      // Step 1: Tell NestJS "when someone asks for MONGO_DB, give them this"
       provide: MONGO_DB,
+      
+      // Step 2: This function creates the actual database connection
       useFactory: async (): Promise<Db> => {
-        // For tests/dev you can enable an in-memory Mongo by setting USE_IN_MEMORY_MONGO=true
-        if (process.env.USE_IN_MEMORY_MONGO === 'true') {
-          // Use CommonJS require to avoid Jest vm-modules flag requirement
-          // eslint-disable-next-line @typescript-eslint/no-var-requires
-          const { MongoMemoryServer } = require('mongodb-memory-server');
-          const mem = await MongoMemoryServer.create();
-          const uri = mem.getUri();
-          const client = new MongoClient(uri);
-          await client.connect();
-          const dbName = (await client.db().admin().listDatabases()).databases[0]?.name || 'test';
-          return client.db(dbName);
-        }
-        // In normal runs, prefer MONGODB_URI if present, otherwise build a URI from parts
-        const uriFromEnv = process.env.MONGODB_URI;
-
+        
+        // Step 3: Get connection details from environment variables
+        // These come from your .env file or Docker environment
         const host = process.env.MONGODB_DATABASE_HOST || 'localhost';
-        const username = process.env.MONGODB_USERNAME || 'placeholder';
-        const password = process.env.MONGODB_PASSWORD || 'placeholder';
-        const dbName = process.env.MONGODB_DB || 'placeholder';
-
-        // If you store full URI in secrets, we use it directly
-        // Otherwise, compose a URI from host/username/password/dbName
-        const uri = uriFromEnv
-          ? uriFromEnv
-          : `mongodb://${encodeURIComponent(username)}:${encodeURIComponent(password)}@${host}:27017/${dbName}?authSource=admin`;
-
-        const client = new MongoClient(uri);
-        await client.connect();
-        // Return the connected database instance
-        return client.db(dbName);
+        const username = process.env.MONGODB_USERNAME || 'admin';
+        const password = process.env.MONGODB_PASSWORD || 'password';
+        const dbName = process.env.MONGODB_DB || 'intelliroom';
+        
+        // Step 4: Build the MongoDB connection string (URL)
+        // This tells MongoDB where to connect and how to authenticate
+        const mongoUrl = `mongodb://${username}:${password}@${host}:27017/${dbName}?authSource=admin`;
+        
+        console.log(`📡 Connecting to MongoDB at: ${host}:27017`);
+        console.log(`🗄️  Database name: ${dbName}`);
+        
+        try {
+          // Step 5: Create a new MongoDB client and connect
+          const client = new MongoClient(mongoUrl);
+          await client.connect();
+          
+          // Step 6: Test the connection by pinging the database
+          const database = client.db(dbName);
+          await database.admin().ping();
+          
+          console.log('✅ Successfully connected to MongoDB!');
+          
+          // Step 7: Return the database instance for other parts of the app to use
+          return database;
+          
+        } catch (error) {
+          console.error('❌ Failed to connect to MongoDB:', error.message);
+          throw error;
+        }
       },
     },
   ],
+  
+  // Step 8: Export MONGO_DB so other modules can use it
+  // This makes the database available to UserModule, AuthModule, etc.
   exports: [MONGO_DB],
 })
-export class MongodbModule implements OnModuleDestroy {
-  async onModuleDestroy(): Promise<void> {
-    // Best-effort note: Native driver does not expose a global registry; clients
-    // are owned by providers and closed when the process exits.
-  }
-}
+export class MongodbModule {}
 
+// Export the token name so other files can import it
 export { MONGO_DB };
 
  

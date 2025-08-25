@@ -15,8 +15,8 @@ import {
     HttpStatus       // Enum with standard HTTP status codes
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { createUserDto } from './dto/create-user.dto';
-import { updateUserDto } from './dto/update-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { 
     ApiCreatedResponse, 
@@ -88,7 +88,7 @@ export class UsersController {
     @ApiOperation({ summary: 'Create a new user' })
     @ApiCreatedResponse({ type: User, description: 'User created successfully' })
     @Post()
-    async createUser(@Body() createUserDto: createUserDto): Promise<User> {
+    async createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
         return this.usersService.createUser(createUserDto);
     }
 
@@ -100,7 +100,7 @@ export class UsersController {
     @Patch(':id')
     async updateUser(
         @Param('id', ParseIntPipe) id: number, 
-        @Body() updateUserDto: updateUserDto
+        @Body() updateUserDto: UpdateUserDto
     ): Promise<User> {
         const updatedUser = await this.usersService.updateUser(id, updateUserDto);
         
