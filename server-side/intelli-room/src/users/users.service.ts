@@ -12,7 +12,7 @@ import * as bcrypt from 'bcryptjs';
 @Injectable()
 export class UsersService {
 
-    // Step 1: Get the database connection that was created in MongodbModule
+    // Get the database connection when this service starts up
     constructor(
         @Inject(MONGO_DB) // This gets the database connection we made earlier
         private readonly database: Db, // Now we have access to MongoDB!
@@ -20,13 +20,13 @@ export class UsersService {
         console.log('📚 UsersService is ready to work with the database!');
     }
     
-    // Step 2: Helper function to get the "users" collection from the database
+    // Helper function to get the "users" collection from the database
     // Think of a collection like a "table" in SQL or a "folder" for user records
     private getUsersCollection() {
         return this.database.collection<User>('users');
     }
 
-    // Step 3: Get all users from the database
+    // Get all users from the database
     async findAll(): Promise<User[]> {
         console.log('📋 Getting all users from database...');
         
@@ -37,7 +37,7 @@ export class UsersService {
             .toArray();
     }
 
-    // Step 4: Find a specific user by their ID number
+    // Find a specific user by their ID number
     async findById(userId: number): Promise<User | undefined> {
         console.log(`🔍 Looking for user with ID: ${userId}`);
         
@@ -48,7 +48,7 @@ export class UsersService {
         return user || undefined; // Return user if found, undefined if not
     }
 
-    // Step 5: Find users by name (case-insensitive search)
+    // Find users by name (case-insensitive search)
     async findByName(name: string): Promise<User[]> {
         if (!name?.trim()) {
             console.log('⚠️  No name provided for search');
@@ -66,7 +66,7 @@ export class UsersService {
             .toArray();
     }
 
-    // Step 6: Find a user by their username (for login)
+    // Find a user by their username (used for login)
     async findByUserName(userName: string): Promise<User | undefined> {
         console.log(`🔍 Looking for user with username: ${userName}`);
         
@@ -77,11 +77,39 @@ export class UsersService {
         return user || undefined;
     }
 
-    // Step 7: Create a new user in the database
+    // Check if a username already exists (for duplicate checking)
+    async usernameExists(username: string): Promise<boolean> {
+        console.log(`🔍 Checking if username '${username}' already exists...`);
+        
+        // Just check if we can find a user with this username (only get the id field to be efficient)
+        const user = await this.getUsersCollection()
+            .findOne({ username }, { projection: { id: 1 } });
+        
+        const exists = !!user; // Convert to boolean
+        console.log(`🔍 Username '${username}' ${exists ? 'already exists' : 'is available'}`);
+        
+        return exists;
+    }
+
+    // Check if an email already exists (for duplicate checking)
+    async emailExists(email: string): Promise<boolean> {
+        console.log(`🔍 Checking if email '${email}' already exists...`);
+        
+        // Just check if we can find a user with this email (only get the id field to be efficient)
+        const user = await this.getUsersCollection()
+            .findOne({ email }, { projection: { id: 1 } });
+        
+        const exists = !!user; // Convert to boolean
+        console.log(`🔍 Email '${email}' ${exists ? 'already exists' : 'is available'}`);
+        
+        return exists;
+    }
+
+    // Create a new user in the database
     async createUser(createUserDto: CreateUserDto): Promise<User> {
         console.log(`🆕 Creating new user: ${createUserDto.username}`);
         
-        // Step 7a: Validate the input data
+        // First, let's make sure they gave us the basic required stuff
         if (!createUserDto.name?.trim()) {
             throw new BadRequestException('Name is required and cannot be empty');
         }
@@ -89,14 +117,28 @@ export class UsersService {
             throw new BadRequestException('Password is required');
         }
 
-        // Step 7b: Hash the password for security (never store plain text passwords!)
+        // Check if someone already took this username
+        console.log('🔍 Checking if username already exists...');
+        const usernameExists = await this.usernameExists(createUserDto.username);
+        if (usernameExists) {
+            throw new BadRequestException(`Username '${createUserDto.username}' is already taken. Please choose a different username.`);
+        }
+
+        // Check if this email is already registered
+        console.log('🔍 Checking if email already exists...');
+        const emailExists = await this.emailExists(createUserDto.email);
+        if (emailExists) {
+            throw new BadRequestException(`Email '${createUserDto.email}' is already registered. Please use a different email or try logging in.`);
+        }
+
+        // Hash the password so we never store it in plain text
         console.log('🔐 Hashing password for security...');
         const hashedPassword = await bcrypt.hash(createUserDto.password, 12);
 
-        // Step 7c: Get the next available ID number
+        // Figure out what ID number to give this new user
         const nextId = await this.getNextUserId();
         
-        // Step 7d: Create the user object with all the data
+        // Build the user object with all their info
         const newUser: User = {
             id: nextId,
             ...createUserDto,
@@ -104,7 +146,7 @@ export class UsersService {
             password: hashedPassword,
         };
         
-        // Step 7e: Save the user to the database
+        // Actually save the user to the database
         // We also store a lowercase version of the name for easy searching
         await this.getUsersCollection().insertOne({ 
             ...newUser, 
@@ -113,16 +155,16 @@ export class UsersService {
         
         console.log(`✅ Successfully created user with ID: ${nextId}`);
         
-        // Step 7f: Return user data WITHOUT the password (for security)
+        // Return the user info but strip out the password for security
         const { password, ...userWithoutPassword } = newUser;
         return userWithoutPassword as User;
     }
 
-    // Step 8: Update an existing user's information
+    // Update an existing user's information
     async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<User | undefined> {
         console.log(`🔄 Updating user with ID: ${id}`);
         
-        // Step 8a: Validate name if it's being updated
+        // Make sure name isn't empty if they're trying to update it
         if (updateUserDto.name !== undefined) {
             if (!updateUserDto.name?.trim()) {
                 throw new BadRequestException('Name cannot be empty');
@@ -130,7 +172,7 @@ export class UsersService {
             updateUserDto.name = updateUserDto.name.trim();
         }
 
-        // Step 8b: Prepare the update data
+        // Prepare the update data
         const updateData: any = { ...updateUserDto };
         
         // Add lowercase name for searching if name is being updated
@@ -144,7 +186,7 @@ export class UsersService {
             updateData.password = await bcrypt.hash(updateUserDto.password, 12);
         }
 
-        // Step 8c: Update the user in the database
+        // Actually update the user in the database
         const result = await this.getUsersCollection().findOneAndUpdate(
             { id }, // Find user by ID
             { $set: updateData }, // Update with new data
@@ -154,7 +196,7 @@ export class UsersService {
             }
         );
         
-        // Step 8d: Check if update was successful
+        // Check if update was successful
         if (!result || !result.value) {
             console.log(`⚠️  User with ID ${id} not found for update`);
             return undefined;
@@ -164,7 +206,7 @@ export class UsersService {
         return result.value as User;
     }
 
-    // Step 9: Delete a user from the database
+    // Delete a user from the database
     async removeUser(id: number): Promise<boolean> {
         console.log(`🗑️  Deleting user with ID: ${id}`);
         
@@ -183,7 +225,7 @@ export class UsersService {
         return wasDeleted;
     }
     
-    // Step 10: Count how many users are in the database
+    // Count how many users are in the database
     async getUserCount(): Promise<number> {
         console.log('📊 Counting total users in database...');
         
@@ -193,7 +235,7 @@ export class UsersService {
         return count;
     }
 
-    // Step 11: Check if a user exists (simple true/false)
+    // Check if a user exists (simple true/false)
     async userExists(id: number): Promise<boolean> {
         console.log(`🔍 Checking if user with ID ${id} exists...`);
         
@@ -207,7 +249,7 @@ export class UsersService {
         return exists;
     }
 
-    // Step 12: Helper function to get the next available user ID
+    // Helper function to get the next available user ID
     // This finds the highest ID number and adds 1
     private async getNextUserId(): Promise<number> {
         console.log('🔢 Finding next available user ID...');
