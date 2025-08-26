@@ -171,11 +171,11 @@ export class UsersService {
         );
         
         // Check if update was successful
-        if (!result || !result.value) {
+        if (!result) {
             return undefined;
         }
         
-        return result.value as User;
+        return result as User;
     }
 
     // Delete a user from the database

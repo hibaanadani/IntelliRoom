@@ -2,6 +2,7 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { Db } from 'mongodb';
 import { MONGO_DB } from 'src/mongodb/mongodb.module';
 import { User } from './entities/user.entity';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UsersSeeder implements OnModuleInit {
@@ -31,12 +32,20 @@ export class UsersSeeder implements OnModuleInit {
             return;
         }
 
-        const initialUsers: (User & { nameLower: string })[] = [
+        const initialUsersData= [
             { id: 0, name: 'Charbel Daoud', nameLower: 'charbel daoud', username: 'charbeldaoud', email: 'charbel@sefactory.com', password: 'charbel' },
             { id: 1, name: 'Taha Taha', nameLower: 'taha taha', username: 'tahataha', email: 'taha@sefactory.com', password: 'taha' },
             { id: 2, name: 'Nour Mshawrab', nameLower: 'nour mshawrab', username: 'nourmshawrab', email: 'nour@sefactory.com', password: 'nour' },
             { id: 3, name: 'Joseph Matta', nameLower: 'joseph matta', username: 'josephmatta', email: 'joe@sefactory.com', password: 'joe' },
         ];
+
+        // Hash all passwords before inserting
+        const initialUsers = await Promise.all(
+            initialUsersData.map(async (user) => ({
+                ...user,
+                password: await bcrypt.hash(user.password, 12)
+            }))
+        );
 
         await this.collection().insertMany(initialUsers as any);
     }

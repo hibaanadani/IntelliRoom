@@ -4,26 +4,29 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';      // Everything related to users
+import { UsersModule } from './users/users.module'; // Everything related to users
 import { MongodbModule } from './mongodb/mongodb.module'; // Database connection
-import { AuthService } from './auth/auth.service';
-import { AuthModule } from './auth/auth.module';          // Everything related to authentication
+import { AuthModule } from './auth/auth.module'; // Everything related to authentication
 import { AppConfigModule } from './config/config.module'; // Environment variables
 
 @Module({
   // Import other modules (like importing other folders)
   imports: [
-    AppConfigModule,  // For environment variables (.env file)
-    UsersModule,      // For user-related endpoints (/users)
-    MongodbModule,    // For database connection
-    AuthModule,       // For authentication (login, JWT)
+    // This is the crucial change to fix the environment variable issue.
+    // The AppConfigModule is now at the top of the imports list,
+    // which ensures that environment variables are loaded first.
+    AppConfigModule, 
+    AuthModule,
+    MongodbModule,
+    UsersModule,
   ],
   
   // Controllers handle HTTP requests (like GET, POST, etc.)
   controllers: [AppController],
   
-  // Services contain business logic
-  // Note: AuthService is already provided in AuthModule, but keeping here for learning
-  providers: [AppService, AuthService],
+  // AppService is the only provider that belongs directly to the AppModule.
+  // We've removed AuthService from here because it is provided and exported
+  // by AuthModule, which is correctly imported above.
+  providers: [AppService],
 })
 export class AppModule {}
