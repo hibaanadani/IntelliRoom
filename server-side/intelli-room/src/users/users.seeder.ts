@@ -33,10 +33,10 @@ export class UsersSeeder implements OnModuleInit {
         }
 
         const initialUsersData= [
-            { id: 0, name: 'Charbel Daoud', nameLower: 'charbel daoud', username: 'charbeldaoud', email: 'charbel@sefactory.com', password: 'charbel' },
-            { id: 1, name: 'Taha Taha', nameLower: 'taha taha', username: 'tahataha', email: 'taha@sefactory.com', password: 'taha' },
-            { id: 2, name: 'Nour Mshawrab', nameLower: 'nour mshawrab', username: 'nourmshawrab', email: 'nour@sefactory.com', password: 'nour' },
-            { id: 3, name: 'Joseph Matta', nameLower: 'joseph matta', username: 'josephmatta', email: 'joe@sefactory.com', password: 'joe' },
+            { id: 0, name: 'Charbel Daoud', username: 'charbeldaoud', email: 'charbel@sefactory.com', password: 'charbel' },
+            { id: 1, name: 'Taha Taha', username: 'tahataha', email: 'taha@sefactory.com', password: 'taha' },
+            { id: 2, name: 'Nour Mshawrab', username: 'nourmshawrab', email: 'nour@sefactory.com', password: 'nour' },
+            { id: 3, name: 'Joseph Matta', username: 'josephmatta', email: 'joe@sefactory.com', password: 'joe' },
         ];
 
         // Hash all passwords before inserting
