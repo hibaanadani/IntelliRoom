@@ -15,22 +15,22 @@ export class AuthService {
         private jwtService: JwtService        // To create JWT tokens
     ) {}
 
-    // // This function checks if a user's login credentials are correct
-    // async validateUser(username: string, password: string): Promise<any> {
-    //     // Step 1: Find the user by username in the database
-    //     const user = await this.usersService.findByUserName(username);
+    // This function checks if a user's login credentials are correct
+    async validateUser(username: string, password: string): Promise<any> {
+        // Step 1: Find the user by username in the database
+        const user = await this.usersService.findByUserName(username);
 
-    //     // Step 2: Check if user exists and password is correct
-    //     if (user && await bcrypt.compare(password, user.password)) {
-    //         // Step 3: If login is successful, remove password from response
-    //         // We don't want to send the password back to the client!
-    //         const { password: userPassword, ...userWithoutPassword } = user;
-    //         return userWithoutPassword;
-    //     }
+        // Step 2: Check if user exists and password is correct
+        if (user && await bcrypt.compare(password, user.password)) {
+            // Step 3: If login is successful, remove password from response
+            // We don't want to send the password back to the client!
+            const { password: userPassword, ...userWithoutPassword } = user;
+            return userWithoutPassword;
+        }
 
-    //     // Step 4: If username not found or password wrong, return null
-    //     return null;
-    // }
+        // Step 4: If username not found or password wrong, return null
+        return null;
+    }
 
     // This function creates a JWT token when user logs in successfully
     async login(user: any) {
