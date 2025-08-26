@@ -7,18 +7,20 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module'; // Everything related to users
 import { MongodbModule } from './mongodb/mongodb.module'; // Database connection
 import { AuthModule } from './auth/auth.module'; // Everything related to authentication
-import { AppConfigModule } from './config/config.module'; // Environment variables
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   // Import other modules (like importing other folders)
   imports: [
     // This is the crucial change to fix the environment variable issue.
-    // The AppConfigModule is now at the top of the imports list,
     // which ensures that environment variables are loaded first.
-    AppConfigModule, 
     AuthModule,
     MongodbModule,
     UsersModule,
+    ConfigModule.forRoot({
+          isGlobal: true,
+          envFilePath: '.env',
+        }),
   ],
   
   // Controllers handle HTTP requests (like GET, POST, etc.)
