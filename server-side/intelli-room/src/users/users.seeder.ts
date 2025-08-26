@@ -24,15 +24,13 @@ export class UsersSeeder implements OnModuleInit {
         // Ensure indexes for performance and uniqueness
         await this.collection().createIndex({ username: 1 }, { unique: true });
         await this.collection().createIndex({ id: 1 }, { unique: true });
-        // Add an index on lowercase name for simple case-insensitive search
-        await this.collection().createIndex({ nameLower: 1 });
 
         const count = await this.collection().countDocuments();
         if (count > 0) {
             return;
         }
 
-        const initialUsersData= [
+        const initialUsersData = [
             { id: 0, name: 'Charbel Daoud', username: 'charbeldaoud', email: 'charbel@sefactory.com', password: 'charbel' },
             { id: 1, name: 'Taha Taha', username: 'tahataha', email: 'taha@sefactory.com', password: 'taha' },
             { id: 2, name: 'Nour Mshawrab', username: 'nourmshawrab', email: 'nour@sefactory.com', password: 'nour' },
@@ -50,5 +48,3 @@ export class UsersSeeder implements OnModuleInit {
         await this.collection().insertMany(initialUsers as any);
     }
 }
-
-
