@@ -1,18 +1,19 @@
-// the command for it is nest g controller users
+// The 'users' controller. This file handles all the incoming web requests.
+// It's like the front desk of our application.
+// It receives a request and just passes it along to the 'UsersService' to do the real work.
 
 import { 
     Body, 
     Controller, 
     Delete, 
     Get, 
-    NotFoundException, 
     Param, 
     ParseIntPipe, 
     Patch, 
     Post, 
     Query,
-    HttpCode,        // Allows us to set specific HTTP status codes
-    HttpStatus       // Enum with standard HTTP status codes
+    HttpCode, 
+    HttpStatus 
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -24,75 +25,80 @@ import {
     ApiOkResponse, 
     ApiQuery, 
     ApiTags,
-    ApiOperation,    // Adds description to each endpoint in Swagger
-    ApiParam         // Documents path parameters in Swagger
+    ApiOperation, 
+    ApiParam 
 } from '@nestjs/swagger';
 
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-    // nest js utilizing dependancy injection and instantiate classes and manage reference to those classes
+    // We use dependency injection to get an instance of the UsersService.
+    // This allows us to use the service's methods.
     // IMPROVED: Added 'readonly' - prevents accidental reassignment of the service
     constructor(private readonly usersService: UsersService) {}
 
+    // GET /users
+    // This endpoint gets all users. Simple.
     //@ApiOperation provides better documentation in Swagger UI
     @ApiOperation({ summary: 'Get all users' })
     //More descriptive response documentation
     @ApiOkResponse({ type: User, isArray: true, description: 'List of all users' })
     @Get()
     async getUsers(): Promise<User[]> {
+        // We delegate the request to the service layer.
         return this.usersService.findAll();
     }
 
-    // get user by querying over, search by id, name...
-    // you can have multiple query params, so here we will specify
-    // ApiQuery makes entering the name non optional
-    // ApiNotFound returns 404 not found error
-    // Added ApiOperation for better Swagger docs
+    // GET /users/search?name=...
+    // This endpoint lets us find users by their name.
+    // We can have multiple query params, so here we will specify.
+    // ApiQuery makes entering the name non optional.
+    // ApiNotFound returns 404 not found error.
+    // Added ApiOperation for better Swagger docs.
     @ApiOperation({ summary: 'Search users by name' })
     @ApiOkResponse({ type: User, isArray: true, description: 'Users matching the name' })
     @ApiNotFoundResponse({ description: 'No users found with the specified name' })
     @ApiQuery({ name: 'name', required: true, description: 'Name to search for' })
     @Get('search')
     async getUsersByName(@Query('name') name: string): Promise<User[]> {
-        const users = await this.usersService.findByName(name);
-
-        if (users.length === 0) {
-            throw new NotFoundException(`No users found with name: ${name}`);
-        }
-        return users;
+        // We pass the query parameter to the service. Any `NotFoundException` from the service
+        // will be automatically handled by NestJS, resulting in a 404 response.
+        return this.usersService.findByName(name);
     }
 
-    // : marks the id as dynamic value URL parameter
-    // parse the id from the URL and provide it to the service
-    // param 1 to many, specify id and give it name id and type string
-    // Added ApiOperation for better documentation
+    // GET /users/:id
+    // This endpoint gets a single user by their ID.
+    // : marks the id as a dynamic value URL parameter.
+    // parse the id from the URL and provide it to the service.
+    // param 1 to many, specify id and give it name id and type string.
+    // Added ApiOperation for better documentation.
     @ApiOperation({ summary: 'Get user by ID' })
-    // @ApiParam documents the path parameter in Swagger
+    // @ApiParam documents the path parameter in Swagger.
     @ApiParam({ name: 'id', description: 'User ID', type: 'integer' })
     @ApiOkResponse({ type: User, description: 'User found successfully' })
     @ApiNotFoundResponse({ description: 'User not found' })
     @Get(':id')
-    async getUserById(@Param('id', ParseIntPipe) id: number): Promise<User> { // Nest already parses to int, using ParseIntPipe
-        const user = await this.usersService.findById(id); // so here we can get rid of Number(id)
-        
-        if (!user) {
-            throw new NotFoundException(`User with ID ${id} not found`);
-        }
-        
-        return user;
+    async getUserById(@Param('id', ParseIntPipe) id: number): Promise<User> {
+        // The `ParseIntPipe` ensures the ID from the URL is a valid number.
+        // We call the service method, which will handle the case where the user is not found.
+        return this.usersService.findById(id);
     }
 
-    // body parser
-    // on post it responds to 201 with type user
+    // POST /users
+    // This endpoint creates a new user.
+    // The request body is parsed automatically.
+    // On post, it responds to 201 with type user.
     @ApiOperation({ summary: 'Create a new user' })
     @ApiCreatedResponse({ type: User, description: 'User created successfully' })
     @Post()
     async createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
+        // We pass the request body data to the service for creation and validation.
         return this.usersService.createUser(createUserDto);
     }
 
-    // @ApiOperation provides endpoint description in Swagger
+    // PATCH /users/:id
+    // This endpoint updates an existing user.
+    // @ApiOperation provides endpoint description in Swagger.
     @ApiOperation({ summary: 'Update user by ID' })
     @ApiParam({ name: 'id', description: 'User ID', type: 'integer' })
     @ApiOkResponse({ type: User, description: 'User updated successfully' })
@@ -102,15 +108,12 @@ export class UsersController {
         @Param('id', ParseIntPipe) id: number, 
         @Body() updateUserDto: UpdateUserDto
     ): Promise<User> {
-        const updatedUser = await this.usersService.updateUser(id, updateUserDto);
-        
-        if (!updatedUser) {
-            throw new NotFoundException(`User with ID ${id} not found`);
-        }
-        
-        return updatedUser;
+        // We call the service to update the user with the provided ID and data.
+        return this.usersService.updateUser(id, updateUserDto);
     }
 
+    // DELETE /users/:id
+    // This endpoint deletes a user.
     @ApiOperation({ summary: 'Delete user by ID' })
     @ApiParam({ name: 'id', description: 'User ID', type: 'integer' })
     @ApiOkResponse({ description: 'User deleted successfully' })
@@ -121,12 +124,7 @@ export class UsersController {
     @Delete(':id')
     // void return type since we don't return any data for DELETE
     async removeUser(@Param('id', ParseIntPipe) id: number): Promise<void> {
-        const isDeleted = await this.usersService.removeUser(id);
-        
-        // Check if user was found and deleted
-        if (!isDeleted) {
-            throw new NotFoundException(`User with ID ${id} not found`);
-        }
-        // No return statement needed for void - just successful deletion
+        // We delegate the deletion process to the service.
+        await this.usersService.removeUser(id);
     }
 }
