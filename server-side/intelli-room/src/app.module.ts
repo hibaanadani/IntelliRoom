@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module'; // Everything related to use
 import { MongodbModule } from './mongodb/mongodb.module'; // Database connection
 import { AuthModule } from './auth/auth.module'; // Everything related to authentication
 import { ConfigModule } from '@nestjs/config';
+import { CatalogueModule } from './catalogue/catalogue.module';
 
 @Module({
   // Import other modules (like importing other folders)
@@ -21,6 +22,7 @@ import { ConfigModule } from '@nestjs/config';
           isGlobal: true,
           envFilePath: '.env',
         }),
+    CatalogueModule,
   ],
   
   // Controllers handle HTTP requests (like GET, POST, etc.)

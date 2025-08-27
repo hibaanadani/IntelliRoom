@@ -34,7 +34,7 @@ import {
 export class UsersController {
     // We use dependency injection to get an instance of the UsersService.
     // This allows us to use the service's methods.
-    // IMPROVED: Added 'readonly' - prevents accidental reassignment of the service
+    // Added 'readonly' - prevents accidental reassignment of the service
     constructor(private readonly usersService: UsersService) {}
 
     // GET /users

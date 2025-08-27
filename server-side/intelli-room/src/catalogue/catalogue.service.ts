@@ -45,7 +45,6 @@ export class CatalogueService {
       .toArray();
   }
 
-  // Get a single catalogue by ID
   async findById(id: number): Promise<Catalogue> {
     const catalogue = await this.getCataloguesCollection()
       .findOne({ id }, { projection: { _id: 0 } });
