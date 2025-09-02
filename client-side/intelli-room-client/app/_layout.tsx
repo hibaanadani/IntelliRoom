@@ -29,12 +29,12 @@ export default function RootLayout() {
   // Your Stack navigator will render after fonts are loaded.
   return (
     <Stack>
-      <Stack.Screen
+      {/* <Stack.Screen
         name="(tabs)"
         options={{ headerShown: false }}
-      />
+      /> */}
       <Stack.Screen
-        name="rooms/[id]"
+        name="onboarding"
         options={{ headerShown: false }}
       />
     </Stack>

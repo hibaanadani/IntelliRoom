@@ -1,14 +1,25 @@
-import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import React from 'react';
+import { TextInput, View } from 'react-native';
 
-const InputField = () => {
+const InputField = ({ 
+  placeholder, 
+  value, 
+  onChangeText, 
+  secureTextEntry = false,
+}:any) => {
   return (
     <View>
-      <Text>InputField</Text>
+      <TextInput  style={{ marginBottom: 13}}
+        className="bg-transparent border border-greyclr rounded-xl px-4 py-3 text-greyclr"
+        placeholder={placeholder}
+        value={value}
+        onChangeText={onChangeText}
+        secureTextEntry={secureTextEntry}
+        placeholderTextColor="#9AA394"
+        
+      />
     </View>
-  )
-}
+  );
+};
 
-export default InputField
-
-const styles = StyleSheet.create({})
+export default InputField;

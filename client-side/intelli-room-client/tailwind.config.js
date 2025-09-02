@@ -10,6 +10,7 @@ module.exports = {
         secondary: "#548E32",
         beigeclr: "#DBAF8E",
         backgroundclr: "#FEF7E5",
+        greyclr: "#9AA394",
       },
       fontFamily: {
         "cinzel-regular": ["Cinzel-Regular"],
