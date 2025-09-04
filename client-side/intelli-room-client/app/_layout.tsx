@@ -9,6 +9,7 @@ export default function RootLayout() {
   const [fontsLoaded, error] = useFonts({
     'Cinzel': require('../assets/fonts/Cinzel-Regular.ttf'),
     'Cinzel-Bold': require('../assets/fonts/Cinzel-Bold.ttf'),
+    'Cinzel-SemiBold': require('../assets/fonts/Cinzel-SemiBold.ttf'),
   });
 
   // Expo Router uses Error Boundaries to catch errors in your app.
@@ -29,14 +30,29 @@ export default function RootLayout() {
   // Your Stack navigator will render after fonts are loaded.
   return (
     <Stack>
-      {/* <Stack.Screen
+      <Stack.Screen
         name="(tabs)"
         options={{ headerShown: false }}
-      /> */}
+      />
+
       <Stack.Screen
-        name="onboarding"
+        name="Login"
         options={{ headerShown: false }}
       />
+
+      <Stack.Screen
+        name="Signup"
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="Home"
+        options={{ headerShown: false }}
+      />
+      {/* <Stack.Screen
+        name="onboarding"
+        options={{ headerShown: false }}
+      /> */}
     </Stack>
   );
 }

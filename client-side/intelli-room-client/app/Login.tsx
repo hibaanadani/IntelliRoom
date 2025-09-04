@@ -36,14 +36,14 @@ const Login = ({ }) => {
         <View className="items-center mb-8">
           <Image 
             source={require('../assets/images/logo.png')}
-            className="w-52 h-52 mb-4"
+            className="w-96 h-96 mb-4"
             resizeMode="contain"
           />
         </View>
 
         <View className="w-full max-w-sm rounded-[50px] p-6 border border-primary">
           <Text className="text-primary text-2xl font-cinzel-bold text-center mb-6">
-            LOG IN
+            LOGIN
           </Text>
           
           <View className="space-y-4">
@@ -73,7 +73,7 @@ const Login = ({ }) => {
           </TouchableOpacity>
 
           <AuthButton 
-            text="Log In"
+            text="Login"
             variant="primary"
             onPress={handleLogin}
           />

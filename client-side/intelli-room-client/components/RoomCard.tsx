@@ -1,14 +1,47 @@
-import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import React from 'react';
+import {
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import PageButton from './PageButton';
 
-const RoomCard = () => {
-  return (
-    <View>
-      <Text>RoomCard</Text>
-    </View>
-  )
+interface RoomCardProps {
+  imageSource: any;
+  onPress: () => void;
+  title: string;
 }
 
-export default RoomCard
+const RoomCard = ({ imageSource, onPress, title }: RoomCardProps) => {
+  return (
+    <TouchableOpacity className="w-full h-64 mb-6 rounded-2xl overflow-hidden shadow-lg">
+      <View className="relative w-full h-full">
+        <Image
+          source={imageSource}
+          className="w-full h-full"
+          resizeMode="cover"
+        />
+        <View className="absolute inset-0" style={{ backgroundColor: 'rgba(0, 0, 0, 0.35)' }} />
 
-const styles = StyleSheet.create({})
+        <View className="absolute top-4 w-full items-start px-4">
+          <Text
+            className="text-white text-xl font-cinzel-semi-bold"
+            style={{ textTransform: 'uppercase' }}
+          >
+            {title}
+          </Text>
+        </View>
+
+        <PageButton
+          text="Open"
+          height={30}
+          backgroundColor="#DBAF8E"
+          onPress={onPress}
+        />
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+export default RoomCard;

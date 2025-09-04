@@ -1,6 +1,5 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  // NOTE: Update this to include the paths to all files that contain Nativewind classes.
   content: ["./app/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}"],
   presets: [require("nativewind/preset")],
   theme: {
@@ -15,6 +14,7 @@ module.exports = {
       fontFamily: {
         "cinzel-regular": ["Cinzel-Regular"],
         "cinzel-bold": ["Cinzel-Bold"],
+        "cinzel-semi-bold": ["Cinzel-SemiBold"],
       },
     },
   },

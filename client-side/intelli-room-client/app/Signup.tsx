@@ -1,12 +1,12 @@
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    Image,
-    KeyboardAvoidingView,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  KeyboardAvoidingView,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import AuthButton from '../components/AuthButton';
 import InputField from '../components/InputField';
@@ -31,7 +31,6 @@ const Signup = ({}) => {
   };
 
   const handleSignUp = () => {
-    //
   };
 
   return (
@@ -45,7 +44,7 @@ const Signup = ({}) => {
           <View className="items-center mb-8">
             <Image
               source={require('../assets/images/logo.png')}
-              className="w-52 h-52 mb-4"
+              className="w-80 h-80 mb-4"
               resizeMode="contain"
             />
           </View>
@@ -99,7 +98,7 @@ const Signup = ({}) => {
             </Text>
             <TouchableOpacity onPress={handleLoginPress}>
               <Text className="text-primary text-sm font-cinzel-bold">
-                Log In
+                Login
               </Text>
             </TouchableOpacity>
           </View>

@@ -27,6 +27,20 @@ export default function RootLayout() {
           tabBarIcon: ({ focused }) => (
             <TabIcon
               focused={focused}
+              name="index"
+              icon={icons.home}
+              title="Home"
+            />
+          )
+        }}
+      />
+      <Tabs.Screen
+        name="Home"
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              focused={focused}
               name="home"
               icon={icons.home}
               title="Home"
@@ -34,6 +48,7 @@ export default function RootLayout() {
           )
         }}
       />
+
       <Tabs.Screen
         name="rooms"
         options={{
@@ -73,7 +88,7 @@ export default function RootLayout() {
             <TabIcon
               focused={focused}
               name="gallery"
-              icon={icons.livingroom}
+              icon={icons.couch}
               title="Gallery"
             />
           )
