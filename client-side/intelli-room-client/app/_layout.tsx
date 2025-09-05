@@ -49,10 +49,10 @@ export default function RootLayout() {
         name="Home"
         options={{ headerShown: false }}
       />
-      {/* <Stack.Screen
-        name="onboarding"
+      <Stack.Screen
+        name="bookings"
         options={{ headerShown: false }}
-      /> */}
+      />
     </Stack>
   );
 }

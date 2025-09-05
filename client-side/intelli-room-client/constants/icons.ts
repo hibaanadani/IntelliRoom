@@ -1,3 +1,4 @@
+import bookings from "@/assets/icons/Booking.png";
 import calendar from "@/assets/icons/Calendar.png";
 import camera from "@/assets/icons/camera.png";
 import communication from "@/assets/icons/Communication.png";
@@ -20,5 +21,6 @@ export const icons = {
   couch,
   room,
   plus,
-  edit
+  edit,
+  bookings
 };

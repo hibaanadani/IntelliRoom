@@ -12,13 +12,10 @@ interface GalleryCardProps {
   imageSource: any;
   onPress: () => void;
   title: string;
+  onCalendarPress: () => void;
 }
 
-const GalleryCard = ({ imageSource, onPress, title }: GalleryCardProps) => {
-  function handleBooking(): void {
-    console.log('Booking button pressed');
-  }
-
+const GalleryCard = ({ imageSource, onPress, title, onCalendarPress }: GalleryCardProps) => {
   return (
     <TouchableOpacity className="w-full h-64 mb-6 rounded-2xl overflow-hidden shadow-lg">
       <View className="relative w-full h-full">
@@ -39,7 +36,7 @@ const GalleryCard = ({ imageSource, onPress, title }: GalleryCardProps) => {
         </View>
 
         <TouchableOpacity
-          onPress={handleBooking}
+          onPress={onCalendarPress}
           className="absolute bottom-4 right-[128] p-2 bg-primary rounded-full"
         >
           <Image

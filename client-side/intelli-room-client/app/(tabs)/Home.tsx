@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import React from 'react';
 import {
     ScrollView,
@@ -22,11 +23,11 @@ const nearbyStores = [
 
 const home = () => {
     const handleScanNow = () => {
-        console.log('Scanning room...');
+        router.push('/camera');
     };
 
     const handleUploadPhoto = () => {
-        console.log('Uploading photo...');
+        router.push({ pathname: '/camera', params: { mode: 'gallery' } });
     };
     
     const handleCardPress = (title: string) => {

@@ -1,11 +1,11 @@
 import GalleryCard from '@/components/GalleryCard';
+import { router } from 'expo-router';
 import React from 'react';
 import {
   ScrollView,
   Text,
   View
 } from 'react-native';
-
 
 const myRooms = [
   { id: '1', image: require('../../assets/images/gallery.png'), title: 'Daze' },
@@ -18,6 +18,9 @@ const gallery = () => {
     console.log(`Opening room: ${cardTitle}`);
   };
 
+  const handleBookings = () => {
+    router.push('/bookings');
+  };
 
   return (
     <ScrollView className="flex-1 bg-backgroundclr pt-16 px-4" contentContainerStyle={{ paddingBottom: 100 }}>
@@ -34,6 +37,7 @@ const gallery = () => {
             imageSource={room.image}
             title={room.title}
             onPress={() => handleCardPress(room.title)}
+            onCalendarPress={handleBookings}
           />
         ))}
       </View>
