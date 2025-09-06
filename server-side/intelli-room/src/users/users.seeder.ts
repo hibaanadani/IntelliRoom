@@ -1,5 +1,3 @@
-// src/users/users.seeder.ts
-
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
@@ -9,7 +7,6 @@ import * as bcrypt from 'bcryptjs';
 @Injectable()
 export class UsersSeeder implements OnModuleInit {
   constructor(
-    // Inject the TypeOrm repository instead of the raw MongoDB client
     @InjectRepository(User)
     private readonly usersRepository: MongoRepository<User>,
   ) {}
@@ -26,7 +23,6 @@ export class UsersSeeder implements OnModuleInit {
       return;
     }
 
-    // We use the new 'fullname' field and 'email' for uniqueness
     const initialUsersData = [
       {
         fullname: 'Charbel Daoud',
