@@ -2,33 +2,47 @@
 // Think of it as a "template" or "blueprint" for user data
 // It matches exactly what we store in the database
 
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
+import { Entity, Column, ObjectIdColumn } from 'typeorm';
+import { ObjectId } from 'mongodb';
 
+// The @Entity() decorator marks this class as a TypeORM entity.
+@Entity()
 export class User {
-    // Unique ID for each user (like a student ID number)
-    @ApiProperty({ description: 'Unique user ID', example: 1 })
-    id: number;
+  // @ObjectIdColumn() maps this property to MongoDB's native _id primary key.
+  @ObjectIdColumn()
+  _id: ObjectId;
 
-    // User's full name
-    @ApiProperty({ description: 'User full name', example: 'John Doe' })
-    name: string;
+  // @Column() maps this property to a field in the MongoDB collection.
+  // We use our custom sequential 'id' for application logic.
+  @Column({ unique: true })
+  @ApiProperty({ description: 'Unique user ID', example: 1 })
+  id: number;
 
-    // Unique username for login
-    @ApiProperty({ description: 'Unique username', example: 'johndoe123' })
-    username: string;
+  @Column()
+  @ApiProperty({ description: 'User full name', example: 'John Doe' })
+  fullname: string;
 
-    // User's email address
-    @ApiProperty({ description: 'User email address', example: 'john@example.com' })
-    email: string;
+  @Column({ unique: true })
+  @ApiProperty({
+    description: 'User email address',
+    example: 'john@example.com',
+  })
+  email: string;
 
-    // User's password (will be hashed/encrypted when saved)
-    @ApiProperty({ description: 'User password (hashed)', example: '$2b$12$...' })
-    password: string;
+  @Column()
+  @ApiProperty({ description: 'User password (hashed)', example: '$2b$12$...' })
+  password: string;
 
-    // Optional fields (these might not always be present)
-    @ApiProperty({ required: false, description: 'User age', example: 25 })
-    age?: number;
+  @Column()
+  @ApiProperty({ required: false, description: 'User age', example: 25 })
+  age?: number;
 
-    @ApiProperty({ required: false, description: 'User phone number', example: 1234567890 })
-    phone?: number;
+  @Column()
+  @ApiProperty({
+    required: false,
+    description: 'User phone number',
+    example: 1234567890,
+  })
+  phone?: number;
 }

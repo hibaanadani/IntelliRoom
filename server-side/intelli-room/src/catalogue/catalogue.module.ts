@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { CatalogueController } from './catalogue.controller';
 import { CatalogueService } from './catalogue.service';
-import { MongodbModule } from 'src/mongodb/mongodb.module';
+import { Catalogue } from './entities/catalogue.entity';
+import { TypeOrmModule } from '@nestjs/typeorm'; 
 
 @Module({
-  imports: [MongodbModule],
+  imports: [TypeOrmModule.forFeature([Catalogue])], 
   controllers: [CatalogueController],
   providers: [CatalogueService],
   exports: [CatalogueService]

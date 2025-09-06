@@ -1,50 +1,65 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { Db } from 'mongodb';
-import { MONGO_DB } from 'src/mongodb/mongodb.module';
+// src/users/users.seeder.ts
+
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { MongoRepository } from 'typeorm';
 import { User } from './entities/user.entity';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UsersSeeder implements OnModuleInit {
-    constructor(
-        @Inject(MONGO_DB)
-        private readonly db: Db,
-    ) {}
+  constructor(
+    // Inject the TypeOrm repository instead of the raw MongoDB client
+    @InjectRepository(User)
+    private readonly usersRepository: MongoRepository<User>,
+  ) {}
 
-    private collection() {
-        return this.db.collection<User>('users');
+  async onModuleInit(): Promise<void> {
+    // Optional flag to disable on boot
+    if (process.env.SEED_ON_BOOT === 'false') {
+      return;
     }
 
-    async onModuleInit(): Promise<void> {
-        // Optional flag to disable on boot
-        if (process.env.SEED_ON_BOOT === 'false') {
-            return;
-        }
-
-        // Ensure indexes for performance and uniqueness
-        await this.collection().createIndex({ username: 1 }, { unique: true });
-        await this.collection().createIndex({ id: 1 }, { unique: true });
-
-        const count = await this.collection().countDocuments();
-        if (count > 0) {
-            return;
-        }
-
-        const initialUsersData = [
-            { id: 0, name: 'Charbel Daoud', username: 'charbeldaoud', email: 'charbel@sefactory.com', password: 'charbel' },
-            { id: 1, name: 'Taha Taha', username: 'tahataha', email: 'taha@sefactory.com', password: 'taha' },
-            { id: 2, name: 'Nour Mshawrab', username: 'nourmshawrab', email: 'nour@sefactory.com', password: 'nour' },
-            { id: 3, name: 'Joseph Matta', username: 'josephmatta', email: 'joe@sefactory.com', password: 'joe' },
-        ];
-
-        // Hash all passwords before inserting
-        const initialUsers = await Promise.all(
-            initialUsersData.map(async (user) => ({
-                ...user,
-                password: await bcrypt.hash(user.password, 12)
-            }))
-        );
-
-        await this.collection().insertMany(initialUsers as any);
+    const count = await this.usersRepository.countDocuments();
+    if (count > 0) {
+      console.log('Database already has users, skipping seeder.');
+      return;
     }
+
+    // We use the new 'fullname' field and 'email' for uniqueness
+    const initialUsersData = [
+      {
+        fullname: 'Charbel Daoud',
+        email: 'charbel@sefactory.com',
+        password: 'charbel',
+      },
+      { fullname: 'Taha Taha', email: 'taha@sefactory.com', password: 'taha' },
+      {
+        fullname: 'Nour Mshawrab',
+        email: 'nour@sefactory.com',
+        password: 'nour',
+      },
+      { fullname: 'Joseph Matta', email: 'joe@sefactory.com', password: 'joe' },
+    ];
+
+    // Since we are not using the createUser service method, we'll manually hash the passwords and generate IDs here.
+    const highestIdUser = await this.usersRepository.findOne({
+      order: { id: 'DESC' },
+    });
+    let nextId = highestIdUser ? highestIdUser.id + 1 : 1;
+
+    const initialUsers = await Promise.all(
+      initialUsersData.map(async (user) => {
+        const hashedPassword = await bcrypt.hash(user.password, 12);
+        return {
+          ...user,
+          id: nextId++,
+          password: hashedPassword,
+        };
+      }),
+    );
+
+    await this.usersRepository.save(initialUsers);
+    console.log('Initial users seeded successfully.');
+  }
 }

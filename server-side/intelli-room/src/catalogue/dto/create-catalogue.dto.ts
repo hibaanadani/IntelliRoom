@@ -9,4 +9,5 @@ export class CreateCatalogueDto {
   @IsString()
   @IsOptional()
   gallary?: string;
+  galleryId: number | undefined;
 }
