@@ -12,20 +12,14 @@ import {
 import AuthButton from "../components/AuthButton";
 import InputField from "../components/InputField";
 
-// Import Redux hooks and the setUser action
 import { useDispatch } from "react-redux";
 import { setUser } from "../store/authSlice";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+import { signUp } from "../services/auth.service";
+
 const Signup = () => {
-  // Use a mock signUp function for now. This would be your actual API call.
-  const signUp = async (userData: any) => {
-    // In a real app, this is where you would call your backend API
-    console.log("Signing up with:", userData);
-
-    // Simulate a successful API response after a delay
-    return new Promise((resolve) => setTimeout(resolve, 1000));
-  };
-
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     fullname: "",
@@ -59,18 +53,20 @@ const Signup = () => {
 
     try {
       const { confirmpassword, ...userData } = formData;
-      await signUp(userData);
+      const response = await signUp(userData);
 
-      // On successful sign-up, dispatch the setUser action
-      dispatch(setUser({ name: formData.fullname }));
+      const { access_token, user } = response.data;
 
-      // Optionally navigate to the next screen after successful sign-up
-      router.replace("/(tabs)"); // or wherever your authenticated home screen is
+      await AsyncStorage.setItem("access_token", access_token);
+
+      dispatch(setUser({ name: user.fullname }));
+
+      router.replace("/(tabs)");
     } catch (err: any) {
       console.error("Signup failed:", err);
-      setError(
-        err.response?.data?.message || "Signup failed. Please try again."
-      );
+      const backendError =
+        err.response?.data?.message || "Signup failed. Please try again.";
+      setError(backendError);
     } finally {
       setIsLoading(false);
     }

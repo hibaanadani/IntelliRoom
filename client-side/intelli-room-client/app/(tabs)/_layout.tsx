@@ -1,39 +1,26 @@
 import { icons } from "@/constants/icons";
 import { Tabs } from "expo-router";
-import TabIcon from '../../components/TabIcon';
-import '../globals.css';
+import TabIcon from "../../components/TabIcon";
+import "../globals.css";
 
 export default function RootLayout() {
   return (
     <Tabs
-    screenOptions={{
-      tabBarShowLabel: false,
-      tabBarItemStyle: {
-        width: '100%',
-        height: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
-      },
-      tabBarStyle: {
-        backgroundColor: "#8C3B1E",
-        height: 47,
-        position: 'absolute',
-      }
-    }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <TabIcon
-              focused={focused}
-              name="index"
-              icon={icons.home}
-              title="Home"
-            />
-          )
-        }}
-      />
+      screenOptions={{
+        tabBarShowLabel: false,
+        tabBarItemStyle: {
+          width: "100%",
+          height: "100%",
+          justifyContent: "center",
+          alignItems: "center",
+        },
+        tabBarStyle: {
+          backgroundColor: "#8C3B1E",
+          height: 47,
+          position: "absolute",
+        },
+      }}
+    >
       <Tabs.Screen
         name="Home"
         options={{
@@ -45,14 +32,13 @@ export default function RootLayout() {
               icon={icons.home}
               title="Home"
             />
-          )
+          ),
         }}
       />
-
       <Tabs.Screen
         name="rooms"
         options={{
-          title: 'Rooms',
+          title: "Rooms",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
             <TabIcon
@@ -61,13 +47,13 @@ export default function RootLayout() {
               icon={icons.room}
               title="Rooms"
             />
-          )
+          ),
         }}
       />
       <Tabs.Screen
         name="camera"
         options={{
-          title: 'Camera',
+          title: "Camera",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
             <TabIcon
@@ -76,13 +62,13 @@ export default function RootLayout() {
               icon={icons.camera}
               title="Camera"
             />
-          )
+          ),
         }}
       />
       <Tabs.Screen
         name="gallery"
         options={{
-          title: 'Gallery',
+          title: "Gallery",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
             <TabIcon
@@ -91,13 +77,13 @@ export default function RootLayout() {
               icon={icons.couch}
               title="Gallery"
             />
-          )
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: "Profile",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
             <TabIcon
@@ -106,7 +92,7 @@ export default function RootLayout() {
               icon={icons.customer}
               title="Profile"
             />
-          )
+          ),
         }}
       />
     </Tabs>

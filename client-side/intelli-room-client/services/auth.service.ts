@@ -1,7 +1,7 @@
 import api from "./axiosInstance.ts";
 
 interface AuthResponse {
-  token: string;
+  access_token: string;
   user: {
     id: string;
     email: string;
@@ -14,5 +14,5 @@ export const login = (email: string, password: string) => {
 };
 
 export const signUp = (userData: any) => {
-  return api.post<AuthResponse>("/users", userData);
+  return api.post<AuthResponse>("/auth/signup", userData);
 };

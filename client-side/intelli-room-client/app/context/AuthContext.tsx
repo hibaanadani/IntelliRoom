@@ -14,7 +14,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signUp: (userData: Omit<User, 'id'>) => Promise<void>;
+  signUp: (userData: Omit<User, "id">) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -28,14 +28,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const handleAuthSuccess = async (accessToken: string, userData: User) => {
     setToken(accessToken);
     setUser(userData);
-    await AsyncStorage.setItem("token", accessToken);
+    await AsyncStorage.setItem("access_token", accessToken);
     await AsyncStorage.setItem("user", JSON.stringify(userData));
   };
 
   useEffect(() => {
     const loadAuthData = async () => {
       try {
-        const storedToken = await AsyncStorage.getItem("token");
+        const storedToken = await AsyncStorage.getItem("access_token");
         const storedUser = await AsyncStorage.getItem("user");
 
         if (storedToken && storedUser) {
@@ -54,17 +54,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const handleLogin = async (email: string, password: string) => {
     try {
       const response = await login(email, password);
-      await handleAuthSuccess(response.data.token, response.data.user);
+      await handleAuthSuccess(response.data.access_token, response.data.user);
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
     }
   };
 
-  const handleSignUp = async (userData: Omit<User, 'id'>) => {
+  const handleSignUp = async (userData: Omit<User, "id">) => {
     try {
       const response = await signUp(userData);
-      await handleAuthSuccess(response.data.token, response.data.user);
+      await handleAuthSuccess(response.data.access_token, response.data.user);
     } catch (error) {
       console.error("Sign up failed:", error);
       throw error;
@@ -98,3 +98,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export default AuthContext;
