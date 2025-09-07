@@ -4,11 +4,12 @@ import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { CreateUserDto } from '../users/dto/create-user.dto'; // <-- NEW IMPORT
+import { CreateUserDto } from '../users/dto/create-user.dto';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-@ApiTags('Authentication & Health') // Grouping for Swagger documentation
-@Controller()
+@ApiTags('Authentication & Health')
+// This decorator tells NestJS to prefix all routes in this controller with 'auth'
+@Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
