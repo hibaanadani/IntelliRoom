@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "IntelliRoom",
+    "slug": "IntelliRoom",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/IntelliRoom.png",
+    "scheme": "intelliroomclient",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/IntelliRoom.png",
+        "backgroundColor": "#FEF7E5"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/IntelliRoom.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#FEF7E5"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
