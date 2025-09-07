@@ -1,18 +1,30 @@
 import { useFonts } from 'expo-font';
-import { SplashScreen, Stack } from "expo-router";
+import { SplashScreen, Stack, router } from "expo-router";
 import React, { useEffect } from 'react';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+import { AuthProvider, useAuth } from './context/AuthContext';
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootLayoutContent() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+
+    if (isAuthenticated) {
+      router.replace('/(tabs)');
+    } else {
+      router.replace('/Login');
+    }
+  }, [isAuthenticated, isLoading]);
+
   const [fontsLoaded, error] = useFonts({
     'Cinzel': require('../assets/fonts/Cinzel-Regular.ttf'),
     'Cinzel-Bold': require('../assets/fonts/Cinzel-Bold.ttf'),
     'Cinzel-SemiBold': require('../assets/fonts/Cinzel-SemiBold.ttf'),
   });
 
-  // Expo Router uses Error Boundaries to catch errors in your app.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
@@ -23,28 +35,24 @@ export default function RootLayout() {
     }
   }, [fontsLoaded]);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || isLoading) {
     return null;
   }
 
-  // Your Stack navigator will render after fonts are loaded.
   return (
     <Stack>
       <Stack.Screen
         name="(tabs)"
         options={{ headerShown: false }}
       />
-
       <Stack.Screen
         name="Login"
         options={{ headerShown: false }}
       />
-
       <Stack.Screen
         name="Signup"
         options={{ headerShown: false }}
       />
-
       <Stack.Screen
         name="Home"
         options={{ headerShown: false }}
@@ -54,5 +62,13 @@ export default function RootLayout() {
         options={{ headerShown: false }}
       />
     </Stack>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <RootLayoutContent />
+    </AuthProvider>
   );
 }
