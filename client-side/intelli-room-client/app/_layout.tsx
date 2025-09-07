@@ -1,10 +1,13 @@
 import { Stack, SplashScreen, router } from "expo-router";
 import { useEffect } from "react";
-import { useAuth, AuthProvider } from "./context/AuthContext";
 import { View, ActivityIndicator } from "react-native";
 import { useFonts } from "expo-font";
 
-// Keep the splash screen visible while we load the fonts
+import { Provider } from "react-redux";
+import { store } from "../store";
+
+import { useAuth, AuthProvider } from "./context/AuthContext";
+
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutContent() {
@@ -12,7 +15,7 @@ function RootLayoutContent() {
   const [fontsLoaded] = useFonts({
     "Cinzel-Bold": require("../assets/fonts/Cinzel-Bold.ttf"),
     "Cinzel-Regular": require("../assets/fonts/Cinzel-Regular.ttf"),
-    "Cinzel-SemiBold": require("../assets/fonts/Cinzel-SemiBold.ttf"), // New font added here
+    "Cinzel-SemiBold": require("../assets/fonts/Cinzel-SemiBold.ttf"),
   });
 
   useEffect(() => {
@@ -20,7 +23,6 @@ function RootLayoutContent() {
       return;
     }
 
-    // Hide the splash screen after fonts and auth are ready
     SplashScreen.hideAsync();
 
     if (isAuthenticated) {
@@ -50,8 +52,11 @@ function RootLayoutContent() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootLayoutContent />
-    </AuthProvider>
+    <Provider store={store}>
+      <AuthProvider>
+        {" "}
+        <RootLayoutContent />
+      </AuthProvider>
+    </Provider>
   );
 }

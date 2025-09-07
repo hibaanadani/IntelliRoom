@@ -8,12 +8,19 @@ import {
 import bg from "../assets/images/bg.png";
 import AuthButton from "../components/AuthButton";
 
+import { useDispatch } from "react-redux";
+import { setUser } from "../store/authSlice";
+
 export default function Index() {
   const insets = useSafeAreaInsets();
   const screenHeight = Dimensions.get("window").height;
   const screenWidth = Dimensions.get("window").width;
 
+  const dispatch = useDispatch();
+
   const handleLogin = () => {
+    dispatch(setUser({ name: "User" }));
+
     router.push("/Login");
   };
 

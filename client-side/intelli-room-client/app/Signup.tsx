@@ -11,10 +11,22 @@ import {
 } from "react-native";
 import AuthButton from "../components/AuthButton";
 import InputField from "../components/InputField";
-import { useAuth } from "./context/AuthContext.tsx";
+
+// Import Redux hooks and the setUser action
+import { useDispatch } from "react-redux";
+import { setUser } from "../store/authSlice";
 
 const Signup = () => {
-  const { signUp } = useAuth();
+  // Use a mock signUp function for now. This would be your actual API call.
+  const signUp = async (userData: any) => {
+    // In a real app, this is where you would call your backend API
+    console.log("Signing up with:", userData);
+
+    // Simulate a successful API response after a delay
+    return new Promise((resolve) => setTimeout(resolve, 1000));
+  };
+
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     fullname: "",
     email: "",
@@ -48,6 +60,12 @@ const Signup = () => {
     try {
       const { confirmpassword, ...userData } = formData;
       await signUp(userData);
+
+      // On successful sign-up, dispatch the setUser action
+      dispatch(setUser({ name: formData.fullname }));
+
+      // Optionally navigate to the next screen after successful sign-up
+      router.replace("/(tabs)"); // or wherever your authenticated home screen is
     } catch (err: any) {
       console.error("Signup failed:", err);
       setError(
@@ -60,32 +78,25 @@ const Signup = () => {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="height">
-           {" "}
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         className="bg-backgroundclr"
       >
-               {" "}
         <View className="flex-1 items-center justify-center px-6 py-8">
-                   {" "}
           <View className="items-center mb-8">
-                       {" "}
             <Image
               source={require("../assets/images/logo.png")}
               className="w-80 h-80 mb-4"
               resizeMode="contain"
             />
-                     {" "}
           </View>
-                   {" "}
+
           <View className="w-full max-w-sm rounded-[50px] p-6 border border-primary">
-                       {" "}
             <Text className="text-primary text-2xl font-cinzel-bold text-center mb-6">
               SIGN UP
             </Text>
-                       {" "}
+
             <View className="space-y-4">
-                           {" "}
               <InputField
                 placeholder="Full Name"
                 value={formData.fullname}
@@ -95,7 +106,6 @@ const Signup = () => {
                 autoCapitalize="none"
                 editable={!isLoading}
               />
-                           {" "}
               <InputField
                 placeholder="Email"
                 value={formData.email}
@@ -106,7 +116,6 @@ const Signup = () => {
                 autoCapitalize="none"
                 editable={!isLoading}
               />
-                           {" "}
               <InputField
                 placeholder="Password"
                 value={formData.password}
@@ -116,7 +125,6 @@ const Signup = () => {
                 secureTextEntry={true}
                 editable={!isLoading}
               />
-                           {" "}
               <InputField
                 placeholder="Confirm Password"
                 value={formData.confirmpassword}
@@ -126,9 +134,8 @@ const Signup = () => {
                 secureTextEntry={true}
                 editable={!isLoading}
               />
-                         {" "}
             </View>
-                       {" "}
+
             {isLoading ? (
               <ActivityIndicator size="large" color="#fff" />
             ) : (
@@ -138,7 +145,7 @@ const Signup = () => {
                 onPress={handleSignUp}
               />
             )}
-                       {" "}
+
             {error ? (
               <Text
                 style={{ color: "red", textAlign: "center", marginTop: 10 }}
@@ -146,29 +153,20 @@ const Signup = () => {
                 {error}
               </Text>
             ) : null}
-                     {" "}
           </View>
-                   {" "}
+
           <View className="mt-6 flex-row items-center">
-                       {" "}
             <Text className="text-primary text-sm">
               Already have an account?{" "}
             </Text>
-                       {" "}
             <TouchableOpacity onPress={handleLoginPress}>
-                           {" "}
               <Text className="text-primary text-sm font-cinzel-bold">
                 Login
               </Text>
-                         {" "}
             </TouchableOpacity>
-                     {" "}
           </View>
-                 {" "}
         </View>
-             {" "}
       </ScrollView>
-         {" "}
     </KeyboardAvoidingView>
   );
 };

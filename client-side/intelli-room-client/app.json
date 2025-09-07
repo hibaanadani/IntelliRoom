@@ -25,13 +25,17 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "splash": {
-      "image": "./assets/images/IntelliRoom.png",
-      "backgroundColor": "#FEF7E5",
-      "resizeMode": "contain"
-    },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/IntelliRoom.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#FEF7E5"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

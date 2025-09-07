@@ -53,30 +53,24 @@ const Login = () => {
 
   return (
     <ScrollView className="flex-1 bg-backgroundclr">
-           {" "}
       <View className="flex-1 items-center justify-center px-6 py-8">
-               {" "}
         <View className="items-center mb-8">
-                   {" "}
           <Image
             source={require("../assets/images/logo.png")}
             className="w-96 h-96 mb-4"
             resizeMode="contain"
           />
-                 {" "}
         </View>
-               {" "}
+
         <View className="w-full max-w-sm rounded-[50px] p-6 border border-primary">
-                   {" "}
           <Text className="text-primary text-2xl font-cinzel-bold text-center mb-6">
-                        LOGIN          {" "}
+            LOGIN
           </Text>
-                   {" "}
+
           <View className="space-y-4">
-                       {" "}
             <InputField
               placeholder="Email"
-              value={formData.email} // Corrected line: explicit type for 'value' in the arrow function
+              value={formData.email}
               onChangeText={(value: string) =>
                 handleInputChange("email", value)
               }
@@ -84,59 +78,47 @@ const Login = () => {
               autoCapitalize="none"
               editable={!isLoading}
             />
-                       {" "}
             <InputField
               placeholder="Password"
-              value={formData.password} // Corrected line: explicit type for 'value' in the arrow function
+              value={formData.password}
               onChangeText={(value: string) =>
                 handleInputChange("password", value)
               }
               secureTextEntry={true}
               editable={!isLoading}
             />
-                     {" "}
           </View>
-                   {" "}
+
           <TouchableOpacity
             onPress={handleForgotPassword}
             className="self-end mb-6"
             disabled={isLoading}
           >
-                       {" "}
-            <Text className="text-secondary text-sm">Forgot Password?</Text>   
-                 {" "}
+            <Text className="text-secondary text-sm">Forgot Password?</Text>
           </TouchableOpacity>
-                   {" "}
+
           {isLoading ? (
             <ActivityIndicator size="large" color="#fff" />
           ) : (
             <AuthButton text="Login" variant="primary" onPress={handleLogin} />
           )}
-                   {" "}
+
           {error ? (
             <Text style={{ color: "red", textAlign: "center", marginTop: 10 }}>
               {error}
             </Text>
           ) : null}
-                 {" "}
         </View>
-               {" "}
+
         <View className="mt-6 flex-row items-center">
-                   {" "}
-          <Text className="text-primary text-sm">Don't have an account? </Text> 
-                 {" "}
+          <Text className="text-primary text-sm">Don't have an account? </Text>
           <TouchableOpacity onPress={handleSignUpPress}>
-                       {" "}
             <Text className="text-primary text-sm font-cinzel-bold">
               Sign Up
             </Text>
-                     {" "}
           </TouchableOpacity>
-                 {" "}
         </View>
-             {" "}
       </View>
-         {" "}
     </ScrollView>
   );
 };
