@@ -37,8 +37,25 @@ const Profile = () => {
       return;
     }
 
+    const updatedData: { [key: string]: any } = {};
+
+    if (formData.fullname !== user.fullname) {
+      updatedData.fullname = formData.fullname;
+    }
+    if (formData.email !== user.email) {
+      updatedData.email = formData.email;
+    }
+    if (formData.password) {
+      updatedData.password = formData.password;
+    }
+    if (Object.keys(updatedData).length === 0) {
+      console.log("No changes detected. Profile not updated.");
+      return;
+    }
+
     try {
-      await updateProfile(user.id, formData, token);
+      console.log("Attempting to update profile for user ID:", user.id);
+      await updateProfile(user.id, updatedData, token);
       console.log("Profile updated successfully!");
       router.replace("/(tabs)/profile");
     } catch (error) {

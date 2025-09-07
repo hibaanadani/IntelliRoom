@@ -3,7 +3,7 @@ import api from "./axiosInstance.ts";
 interface AuthResponse {
   access_token: string;
   user: {
-    id: string;
+    id: number;
     email: string;
     fullname: string;
   };

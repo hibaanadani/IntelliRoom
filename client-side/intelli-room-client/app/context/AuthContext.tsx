@@ -3,7 +3,7 @@ import { login, signUp } from "../../services/auth.service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface User {
-  id: string;
+  id: number;
   email: string;
   fullname: string;
 }

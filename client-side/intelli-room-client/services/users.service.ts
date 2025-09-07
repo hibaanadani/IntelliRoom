@@ -9,12 +9,12 @@ export const getUsers = (token: string) => {
 };
 
 export const updateProfile = async (
-  userId: string,
+  userId: number,
   data: any,
   token: string
 ) => {
   try {
-    const response = await api.put(`/users/${userId}`, data, {
+    const response = await api.patch(`/users/${userId}`, data, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
