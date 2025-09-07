@@ -1,7 +1,7 @@
-import { useFonts } from 'expo-font';
+import { useFonts } from "expo-font";
 import { SplashScreen, Stack, router } from "expo-router";
-import React, { useEffect } from 'react';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import React, { useEffect } from "react";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutContent() {
@@ -13,16 +13,16 @@ function RootLayoutContent() {
     }
 
     if (isAuthenticated) {
-      router.replace('/(tabs)');
+      router.replace("/(tabs)");
     } else {
-      router.replace('/onboarding');
+      router.replace("/onboarding");
     }
   }, [isAuthenticated, isLoading]);
 
   const [fontsLoaded, error] = useFonts({
-    'Cinzel': require('../assets/fonts/Cinzel-Regular.ttf'),
-    'Cinzel-Bold': require('../assets/fonts/Cinzel-Bold.ttf'),
-    'Cinzel-SemiBold': require('../assets/fonts/Cinzel-SemiBold.ttf'),
+    Cinzel: require("../assets/fonts/Cinzel-Regular.ttf"),
+    "Cinzel-Bold": require("../assets/fonts/Cinzel-Bold.ttf"),
+    "Cinzel-SemiBold": require("../assets/fonts/Cinzel-SemiBold.ttf"),
   });
 
   useEffect(() => {
@@ -41,30 +41,12 @@ function RootLayoutContent() {
 
   return (
     <Stack>
-      <Stack.Screen
-        name="(tabs)"
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="onboarding"
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Login"
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Signup"
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Home"
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="bookings"
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+      <Stack.Screen name="Login" options={{ headerShown: false }} />
+      <Stack.Screen name="Signup" options={{ headerShown: false }} />
+      <Stack.Screen name="Home" options={{ headerShown: false }} />
+      <Stack.Screen name="bookings" options={{ headerShown: false }} />
     </Stack>
   );
 }

@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import React, { useState } from 'react';
+import { router } from "expo-router";
+import React, { useState } from "react";
 import {
   Image,
   KeyboardAvoidingView,
@@ -8,22 +8,21 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
-  Platform,
-} from 'react-native';
-import AuthButton from '../components/AuthButton';
-import InputField from '../components/InputField';
-import { useAuth } from './context/AuthContext.tsx';
+} from "react-native";
+import AuthButton from "../components/AuthButton";
+import InputField from "../components/InputField";
+import { useAuth } from "./context/AuthContext.tsx";
 
 const Signup = () => {
   const { signUp } = useAuth();
   const [formData, setFormData] = useState({
-    fullname: '',
-    email: '',
-    password: '',
-    confirmpassword: '',
+    fullname: "",
+    email: "",
+    password: "",
+    confirmpassword: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
@@ -33,15 +32,15 @@ const Signup = () => {
   };
 
   const handleLoginPress = () => {
-    router.push('/Login');
+    router.push("/Login");
   };
 
   const handleSignUp = async () => {
     setIsLoading(true);
-    setError('');
+    setError("");
 
     if (formData.password !== formData.confirmpassword) {
-      setError('Passwords do not match.');
+      setError("Passwords do not match.");
       setIsLoading(false);
       return;
     }
@@ -50,62 +49,86 @@ const Signup = () => {
       const { confirmpassword, ...userData } = formData;
       await signUp(userData);
     } catch (err: any) {
-      console.error('Signup failed:', err);
-      setError(err.response?.data?.message || 'Signup failed. Please try again.');
+      console.error("Signup failed:", err);
+      setError(
+        err.response?.data?.message || "Signup failed. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={{ flex: 1, backgroundColor: '#FEF7E5' }} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="bg-backgroundclr">
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior="height">
+           {" "}
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        className="bg-backgroundclr"
+      >
+               {" "}
         <View className="flex-1 items-center justify-center px-6 py-8">
+                   {" "}
           <View className="items-center mb-8">
+                       {" "}
             <Image
-              source={require('../assets/images/logo.png')}
+              source={require("../assets/images/logo.png")}
               className="w-80 h-80 mb-4"
               resizeMode="contain"
             />
+                     {" "}
           </View>
-
+                   {" "}
           <View className="w-full max-w-sm rounded-[50px] p-6 border border-primary">
-            <Text className="text-primary text-2xl font-cinzel-bold text-center mb-6">SIGN UP</Text>
+                       {" "}
+            <Text className="text-primary text-2xl font-cinzel-bold text-center mb-6">
+              SIGN UP
+            </Text>
+                       {" "}
             <View className="space-y-4">
+                           {" "}
               <InputField
                 placeholder="Full Name"
                 value={formData.fullname}
-                onChangeText={(value: string) => handleInputChange('fullname', value)}
+                onChangeText={(value: string) =>
+                  handleInputChange("fullname", value)
+                }
                 autoCapitalize="none"
                 editable={!isLoading}
               />
+                           {" "}
               <InputField
                 placeholder="Email"
                 value={formData.email}
-                onChangeText={(value: string) => handleInputChange('email', value)}
+                onChangeText={(value: string) =>
+                  handleInputChange("email", value)
+                }
                 keyboardType="email-address"
                 autoCapitalize="none"
                 editable={!isLoading}
               />
+                           {" "}
               <InputField
                 placeholder="Password"
                 value={formData.password}
-                onChangeText={(value: string) => handleInputChange('password', value)}
+                onChangeText={(value: string) =>
+                  handleInputChange("password", value)
+                }
                 secureTextEntry={true}
                 editable={!isLoading}
               />
+                           {" "}
               <InputField
                 placeholder="Confirm Password"
                 value={formData.confirmpassword}
-                onChangeText={(value: string) => handleInputChange('confirmpassword', value)}
+                onChangeText={(value: string) =>
+                  handleInputChange("confirmpassword", value)
+                }
                 secureTextEntry={true}
                 editable={!isLoading}
               />
+                         {" "}
             </View>
-
+                       {" "}
             {isLoading ? (
               <ActivityIndicator size="large" color="#fff" />
             ) : (
@@ -115,17 +138,37 @@ const Signup = () => {
                 onPress={handleSignUp}
               />
             )}
-            {error ? <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>{error}</Text> : null}
+                       {" "}
+            {error ? (
+              <Text
+                style={{ color: "red", textAlign: "center", marginTop: 10 }}
+              >
+                {error}
+              </Text>
+            ) : null}
+                     {" "}
           </View>
-
+                   {" "}
           <View className="mt-6 flex-row items-center">
-            <Text className="text-primary text-sm">Already have an account?{' '}</Text>
+                       {" "}
+            <Text className="text-primary text-sm">
+              Already have an account?{" "}
+            </Text>
+                       {" "}
             <TouchableOpacity onPress={handleLoginPress}>
-              <Text className="text-primary text-sm font-cinzel-bold">Login</Text>
+                           {" "}
+              <Text className="text-primary text-sm font-cinzel-bold">
+                Login
+              </Text>
+                         {" "}
             </TouchableOpacity>
+                     {" "}
           </View>
+                 {" "}
         </View>
+             {" "}
       </ScrollView>
+         {" "}
     </KeyboardAvoidingView>
   );
 };
