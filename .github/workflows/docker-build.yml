@@ -1,0 +1,125 @@
+# The name of the GitHub Actions workflow. This is what you'll see in the 'Actions' tab.
+name: Docker Build and Push Multi-Container
+
+# 'on' defines the events that trigger this workflow.
+on:
+  # This workflow will run every time code is pushed to the 'main' branch.
+  push:
+    branches: [main]
+
+# 'env' defines environment variables that can be used throughout the workflow.
+# This keeps our image names clean and reusable.
+# comment the env
+# env:
+#   DOCKER_REPO_SERVER: your-dockerhub-username/intelli-room-server
+
+# 'jobs' defines the main tasks to be executed. We have a single job named 'build-push-nestjs'.
+jobs:
+  build-push-nestjs:
+    # 'runs-on' specifies the type of machine the job will run on.
+    # 'ubuntu-latest' is a standard virtual machine provided by GitHub.
+    runs-on: ubuntu-latest
+
+    # 'steps' is a list of individual actions to be performed in sequence.
+    steps:
+      # This step checks out the code from your repository onto the runner.
+      # checkout a terminal so that the other commands can run
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # This step logs in to Docker Hub using the secrets you've stored in GitHub.
+      # The 'uses' keyword indicates we are using a pre-made GitHub Action.
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          # We use ${{ secrets.<SECRET_NAME> }} to securely access our credentials.
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # This step uses the 'docker-compose' command to build and push both images.
+      # It finds the docker-compose.yml file and processes both the 'server' and 'client' services.
+      - name: Build and push images
+        # we need to tell it which dir to work on
+        working-directory: server-side/intelli-room
+        # The 'run' keyword executes a shell command.
+        # 'docker-compose build' builds the images, and 'docker-compose push' uploads them.
+        #  -f is file -t tag :22 nodes version (latest) . find dockerfile and build from it
+        # run: docker-compose -f docker-compose.yml build && docker-compose -f docker-compose.yml push
+        # build 1 image not multiple ones
+        # takes Dockerfile by default
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/docker-backend:22 . && docker push ${{ secrets.DOCKERHUB_USERNAME }}/docker-backend:22
+
+        # connect to server
+
+  # new job
+  copy-docker-compose-to-ec2:
+    # 'runs-on' specifies the type of machine the job will run on.
+    # 'ubuntu-latest' is a standard virtual machine provided by GitHub.
+    runs-on: ubuntu-latest
+
+    # 'steps' is a list of individual actions to be performed in sequence.
+    steps:
+      # This step checks out the code from your repository onto the runner.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # | means I can run multiple commands on multiple lines
+      # run from github secret to docker compose
+      # sed searching substituting strings s| string .* anything named MYSQL_ROOT_PASSWORD |g glbal in all the file
+      # sed -i "s|MYSQL_ROOT_PASSWORD:.*|MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}|g" docker-compose.yml
+      # sed -i "s|MYSQL_DATABASE:.*|MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}|g" docker-compose.yml
+      - name: Injecting secrets to docker-compose
+        run: |
+          sed -i "s|MONGO_INITDB_ROOT_USERNAME:.*|MONGO_INITDB_ROOT_USERNAME: ${{ secrets.MONGO_INITDB_ROOT_USERNAME }}|g" docker-compose.yml
+          sed -i "s|MONGO_INITDB_ROOT_PASSWORD:.*|MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}|g" docker-compose.yml
+          sed -i "s|MONGO_INITDB_DATABASE:.*|MONGO_INITDB_DATABASE: ${{ secrets.MONGO_INITDB_DATABASE }}|g" docker-compose.yml
+          sed -i "s|MONGODB_DATABASE_HOST:.*|MONGODB_DATABASE_HOST: ${{ secrets.MONGODB_DATABASE_HOST }}|g" docker-compose.yml
+
+      # job to deploy ONLYY DOCKER COMPOSE to EC2
+      # ssh to connect to a remote host, it provides a secure shell
+      # host: ip address username and key
+      # scp secured copy to copy files from and to remote host
+      # using repo appleboy/scp-action the first v
+      # with for attributes
+      - name: Copy docker-compose to ec2
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          source: "docker-compose.yml"
+          target: "/home/${{ secrets.EC2_USER }}"
+
+  run-on-ec2:
+    # wouldnt run if not! => to check if previous jobs are succesfully running
+    needs: [build-push-nestjs, copy-docker-compose-to-ec2]
+    # 'runs-on' specifies the type of machine the job will run on.
+    # 'ubuntu-latest' is a standard virtual machine provided by GitHub.
+    runs-on: ubuntu-latest
+
+    # 'steps' is a list of individual actions to be performed in sequence.
+    steps:
+      # This step checks out the code from your repository onto the runner.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # job to run DOCKER COMPOSE to EC2
+      # ssh to connect to a remote host, it provides a secure shell
+      # host: ip address username and key
+      # scp secured copy to copy files from and to remote host
+      # using repo appleboy/scp-action the first v
+      # with for attributes
+      # here we need to cover all issues in the script, if it exists it will run
+      # if not it wil pull and then rerun
+      # it shuts down the container not the image
+      # rmi remove image -d detached mode
+      - name: run docker-compose on EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            docker compose down
+            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/docker-backend:22
+            docker compose up -d

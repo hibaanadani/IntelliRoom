@@ -1,0 +1,89 @@
+# defines how to build and run both the client and server services together.
+# here we are using it to run the image only
+# Version of the Docker Compose file format. Using '3.8' is a common and stable choice.
+version: '3.8'
+
+# 'services' defines the containers for our application.
+# Each service will be a separate container.
+services:
+  # This is the name of our server-side service
+  server:
+    # not needed files not on server to build
+    # 'build' specifies how to build the Docker image for this service.
+    # build:
+      # 'context' tells Docker where to find the source code and Dockerfile.
+      # The '.' in the Dockerfile's COPY command will be relative to this path.
+      # context: ./server-side/intelli-room
+      # 'dockerfile' specifies the name of the Dockerfile to use.
+      # It's relative to the context.
+      # dockerfile: Dockerfile
+    # 'image' gives a name and tag to the image that will be built.
+    # We use 'latest' to indicate it's the most recent build.
+    image: hibaanadani/docker-backend:22
+    # using service database
+    environment:
+      # - MYSQL_DATABASE_HOST=mysql_db
+      - MONGODB_DATABASE_HOST=mongodb_db
+    # 'ports' maps a port on the host machine to a port in the container.
+    # The format is "HOST_PORT:CONTAINER_PORT".
+    # This allows us to access the server from our local machine at http://localhost:9000.
+    ports:
+      - "9000:9000"
+    # The 'depends_on' key ensures the server service will not start until
+    # the database services are running and healthy.
+    depends_on:
+      # - mysql_db
+      - mongodb_db
+    # restart when a problem occurs in a container instead of shutting down
+    restart: always
+
+  # The MySQL relational database service.
+  # mysql_db:
+  #   # We use the official MySQL image from Docker Hub.
+  #   image: mysql:8.0
+  #   # 'environment' variables are crucial for configuring MySQL.
+  #   environment:
+  #     # This sets the root user's password. It's required for the MySQL image to start.
+  #     MYSQL_ROOT_PASSWORD: placeholder
+  #     # This creates a database with the specified name on startup.
+  #     MYSQL_DATABASE: placeholder
+  #   # 'volumes' are used to persist data.
+  #   # We map a named volume to the MySQL data directory inside the container.
+  #   volumes:
+  #     - dbdata:/var/lib/mysql
+  #   # We map the standard MySQL port (3306) to the same port on the host.
+  #   # This allows MySQL Workbench to connect.
+  #   ports:
+  #     - "3306:3306"
+  #   # restart when a problem occurs in a container instead of shutting down
+  #   restart: always
+  
+  # The MongoDB non-relational database service.
+  mongodb_db:
+    # Use the official MongoDB image from Docker Hub.
+    image: mongo:latest
+    # Environment variables for initial setup.
+    environment:
+      # Set the root user's username. This is for initial access.
+      MONGO_INITDB_ROOT_USERNAME: placeholder
+      # Set the root user's password.
+      MONGO_INITDB_ROOT_PASSWORD: placeholder
+      # Create an initial database on startup.
+      MONGO_INITDB_DATABASE: placeholder
+      # set the connection
+      MONGODB_DATABASE_HOST: placeholder
+    # Persist data using a named volume.
+    volumes:
+      - mongodb_data:/data/db
+    # Map the standard MongoDB port (27017) to the host.
+    ports:
+      - "27017:27017"
+    # restart when a problem occurs in a container instead of shutting down
+    restart: always
+
+# 'volumes' are defined outside the services block.
+# This creates a persistent storage space for our database data.
+# The volume name is updated to match the MongoDB service.
+volumes:
+  # dbdata:
+  mongodb_data:
