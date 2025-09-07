@@ -1,52 +1,49 @@
+import { Stack, SplashScreen, router } from "expo-router";
+import { useEffect } from "react";
+import { useAuth, AuthProvider } from "./context/AuthContext";
+import { View, ActivityIndicator } from "react-native";
 import { useFonts } from "expo-font";
-import { SplashScreen, Stack, router } from "expo-router";
-import React, { useEffect } from "react";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+
+// Keep the splash screen visible while we load the fonts
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutContent() {
   const { isAuthenticated, isLoading } = useAuth();
+  const [fontsLoaded] = useFonts({
+    "Cinzel-Bold": require("../assets/fonts/Cinzel-Bold.ttf"),
+    "Cinzel-Regular": require("../assets/fonts/Cinzel-Regular.ttf"),
+    "Cinzel-SemiBold": require("../assets/fonts/Cinzel-SemiBold.ttf"), // New font added here
+  });
 
   useEffect(() => {
-    if (isLoading) {
+    if (isLoading || !fontsLoaded) {
       return;
     }
+
+    // Hide the splash screen after fonts and auth are ready
+    SplashScreen.hideAsync();
 
     if (isAuthenticated) {
       router.replace("/(tabs)");
     } else {
       router.replace("/onboarding");
     }
-  }, [isAuthenticated, isLoading]);
+  }, [isAuthenticated, isLoading, fontsLoaded]);
 
-  const [fontsLoaded, error] = useFonts({
-    Cinzel: require("../assets/fonts/Cinzel-Regular.ttf"),
-    "Cinzel-Bold": require("../assets/fonts/Cinzel-Bold.ttf"),
-    "Cinzel-SemiBold": require("../assets/fonts/Cinzel-SemiBold.ttf"),
-  });
-
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
-
-  useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
-
-  if (!fontsLoaded || isLoading) {
-    return null;
+  if (isLoading || !fontsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   return (
     <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="Login" options={{ headerShown: false }} />
       <Stack.Screen name="Signup" options={{ headerShown: false }} />
-      <Stack.Screen name="Home" options={{ headerShown: false }} />
-      <Stack.Screen name="bookings" options={{ headerShown: false }} />
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   );
 }
