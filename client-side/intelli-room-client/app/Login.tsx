@@ -29,11 +29,14 @@ const Login = () => {
   };
 
   const handleLogin = async () => {
+    console.log("Login button pressed. Starting login process...");
     setIsLoading(true);
     setError("");
 
     try {
       await login(formData.email, formData.password);
+      console.log("Login was successful! Redirecting now...");
+      router.replace("/(tabs)/Home");
     } catch (err: any) {
       console.error("Login failed:", err);
       setError(

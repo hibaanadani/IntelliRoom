@@ -3,7 +3,7 @@ import { User } from '../users/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
-import { CreateUserDto } from '../users/dto/create-user.dto'; // <-- NEW IMPORT
+import { CreateUserDto } from '../users/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +16,6 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
 
     if (user && (await bcrypt.compare(password, user.password))) {
-      // Return user object without the password
       const { password: userPassword, ...userWithoutPassword } = user;
       return userWithoutPassword;
     }
@@ -25,19 +24,34 @@ export class AuthService {
   }
 
   async login(user: any) {
+    const id = user.id;
+
+    if (!id || !user.email) {
+      throw new UnauthorizedException('Invalid user object for login.');
+    }
+
+    const fullname = user.fullname || '';
+
     const payload = {
       email: user.email,
-      sub: user.id,
+      sub: id.toString(),
     };
 
-    return {
-      access_token: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
-        fullname: user.fullname,
-        email: user.email,
-      },
-    };
+    try {
+      const access_token = this.jwtService.sign(payload);
+
+      return {
+        access_token,
+        user: {
+          id: id,
+          fullname: fullname,
+          email: user.email,
+        },
+      };
+    } catch (error) {
+      console.error('JWT sign failed:', error);
+      throw new UnauthorizedException('Authentication failed.');
+    }
   }
 
   async register(createUserDto: CreateUserDto) {

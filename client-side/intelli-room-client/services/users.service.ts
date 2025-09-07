@@ -7,3 +7,20 @@ export const getUsers = (token: string) => {
     },
   });
 };
+
+export const updateProfile = async (
+  userId: string,
+  data: any,
+  token: string
+) => {
+  try {
+    const response = await api.put(`/users/${userId}`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

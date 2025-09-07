@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   Image,
@@ -9,18 +8,12 @@ import {
   View,
   ActivityIndicator,
 } from "react-native";
+import { router } from "expo-router";
 import AuthButton from "../components/AuthButton";
 import InputField from "../components/InputField";
-
-import { useDispatch } from "react-redux";
-import { setUser } from "../store/authSlice";
-
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
-import { signUp } from "../services/auth.service";
-
+import { useAuth } from "./context/AuthContext";
 const Signup = () => {
-  const dispatch = useDispatch();
+  const { signUp, isLoading: isAuthLoading } = useAuth();
   const [formData, setFormData] = useState({
     fullname: "",
     email: "",
@@ -29,39 +22,27 @@ const Signup = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
-
   const handleLoginPress = () => {
     router.push("/Login");
   };
-
   const handleSignUp = async () => {
     setIsLoading(true);
     setError("");
-
     if (formData.password !== formData.confirmpassword) {
       setError("Passwords do not match.");
       setIsLoading(false);
       return;
     }
-
     try {
       const { confirmpassword, ...userData } = formData;
-      const response = await signUp(userData);
-
-      const { access_token, user } = response.data;
-
-      await AsyncStorage.setItem("access_token", access_token);
-
-      dispatch(setUser({ name: user.fullname }));
-
-      router.replace("/(tabs)");
+      await signUp(userData);
+      router.replace("/(tabs)/Home");
     } catch (err: any) {
       console.error("Signup failed:", err);
       const backendError =
@@ -71,7 +52,6 @@ const Signup = () => {
       setIsLoading(false);
     }
   };
-
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="height">
       <ScrollView
@@ -86,12 +66,10 @@ const Signup = () => {
               resizeMode="contain"
             />
           </View>
-
           <View className="w-full max-w-sm rounded-[50px] p-6 border border-primary">
             <Text className="text-primary text-2xl font-cinzel-bold text-center mb-6">
               SIGN UP
             </Text>
-
             <View className="space-y-4">
               <InputField
                 placeholder="Full Name"
@@ -131,8 +109,7 @@ const Signup = () => {
                 editable={!isLoading}
               />
             </View>
-
-            {isLoading ? (
+            {isLoading || isAuthLoading ? (
               <ActivityIndicator size="large" color="#fff" />
             ) : (
               <AuthButton
@@ -141,7 +118,6 @@ const Signup = () => {
                 onPress={handleSignUp}
               />
             )}
-
             {error ? (
               <Text
                 style={{ color: "red", textAlign: "center", marginTop: 10 }}
@@ -150,7 +126,6 @@ const Signup = () => {
               </Text>
             ) : null}
           </View>
-
           <View className="mt-6 flex-row items-center">
             <Text className="text-primary text-sm">
               Already have an account?{" "}
@@ -166,5 +141,4 @@ const Signup = () => {
     </KeyboardAvoidingView>
   );
 };
-
 export default Signup;

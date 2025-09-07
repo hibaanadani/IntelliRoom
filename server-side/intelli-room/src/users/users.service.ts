@@ -56,13 +56,6 @@ export class UsersService {
       throw new BadRequestException('Password is required');
     }
 
-    const emailExists = await this.emailExists(createUserDto.email);
-    if (emailExists) {
-      throw new BadRequestException(
-        `Email '${createUserDto.email}' is already registered.`,
-      );
-    }
-
     const hashedPassword = await bcrypt.hash(createUserDto.password, 12);
     const nextId = await this.getNextUserId();
 
@@ -73,9 +66,19 @@ export class UsersService {
       password: hashedPassword,
     });
 
-    await this.usersRepository.save(newUser);
-    const { password, ...userWithoutPassword } = newUser;
-    return userWithoutPassword as User;
+    try {
+      await this.usersRepository.save(newUser);
+      const { password, ...userWithoutPassword } = newUser;
+      return userWithoutPassword as User;
+    } catch (error) {
+      // Check for the specific Mongo duplicate key error (code 11000)
+      if (error.code === 11000) {
+        throw new BadRequestException(
+          `Email '${createUserDto.email}' is already registered.`,
+        );
+      }
+      throw error;
+    }
   }
 
   async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<User> {
