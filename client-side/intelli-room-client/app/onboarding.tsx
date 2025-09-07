@@ -4,7 +4,7 @@ import { ImageBackground, Text, View } from "react-native";
 import bg from '../assets/images/bg.png';
 import AuthButton from '../components/AuthButton';
 
-const Onboarding = () => {
+export default function Index() {
   
   const handleLogin = () => {
     router.push('/Login');
@@ -13,13 +13,16 @@ const Onboarding = () => {
   const handleSignUp = () => {
     router.push('/Signup');
   };
+  const goToHome = () =>{
+    router.push('/Home');
+  }
 
   return (
     <ImageBackground
       source={bg}
       className="flex-1 justify-end items-center pb-20"
       style={{ backgroundColor: '#FEF7E5' }}
-      resizeMode="contain" // 'stretch', 'contain', 'cover', 'center', or 'repeat'
+      resizeMode="contain"
       imageStyle={{
         opacity: 1,
       }}
@@ -48,7 +51,7 @@ const Onboarding = () => {
           
           <AuthButton 
             variant="primary"
-            text="Log In"
+            text="Login"
             onPress={handleLogin}
           />
           
@@ -57,7 +60,8 @@ const Onboarding = () => {
             text="Sign Up"
             onPress={handleSignUp}
           />
-                  <Text style={{
+          
+          <Text style={{
           fontSize: 14,
           color: '#548E32',
           textAlign: 'center',
@@ -70,4 +74,3 @@ const Onboarding = () => {
     </ImageBackground>
   );
 }
-export default Onboarding;

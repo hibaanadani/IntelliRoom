@@ -7,19 +7,25 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
+  Platform,
 } from 'react-native';
 import AuthButton from '../components/AuthButton';
 import InputField from '../components/InputField';
+import { useAuth } from './context/AuthContext.tsx';
 
-const Signup = ({}) => {
+const Signup = () => {
+  const { signUp } = useAuth();
   const [formData, setFormData] = useState({
     fullname: '',
     email: '',
     password: '',
     confirmpassword: '',
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -30,14 +36,31 @@ const Signup = ({}) => {
     router.push('/Login');
   };
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
+    setIsLoading(true);
+    setError('');
+
+    if (formData.password !== formData.confirmpassword) {
+      setError('Passwords do not match.');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { confirmpassword, ...userData } = formData;
+      await signUp(userData);
+    } catch (err: any) {
+      console.error('Signup failed:', err);
+      setError(err.response?.data?.message || 'Signup failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    // We wrap the whole screen content with KeyboardAvoidingView
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior="height" 
+    <KeyboardAvoidingView 
+      style={{ flex: 1, backgroundColor: '#FEF7E5' }} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="bg-backgroundclr">
         <View className="flex-1 items-center justify-center px-6 py-8">
@@ -50,56 +73,55 @@ const Signup = ({}) => {
           </View>
 
           <View className="w-full max-w-sm rounded-[50px] p-6 border border-primary">
-            <Text className="text-primary text-2xl font-cinzel-bold text-center mb-6">
-              SIGN UP
-            </Text>
-
+            <Text className="text-primary text-2xl font-cinzel-bold text-center mb-6">SIGN UP</Text>
             <View className="space-y-4">
               <InputField
                 placeholder="Full Name"
                 value={formData.fullname}
-                onChangeText={(value: any) => handleInputChange('fullname', value)}
+                onChangeText={(value: string) => handleInputChange('fullname', value)}
                 autoCapitalize="none"
+                editable={!isLoading}
               />
-
               <InputField
                 placeholder="Email"
                 value={formData.email}
-                onChangeText={(value: any) => handleInputChange('email', value)}
+                onChangeText={(value: string) => handleInputChange('email', value)}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                editable={!isLoading}
               />
-
               <InputField
                 placeholder="Password"
                 value={formData.password}
-                onChangeText={(value: any) => handleInputChange('password', value)}
+                onChangeText={(value: string) => handleInputChange('password', value)}
                 secureTextEntry={true}
+                editable={!isLoading}
               />
-
               <InputField
                 placeholder="Confirm Password"
                 value={formData.confirmpassword}
-                onChangeText={(value: any) => handleInputChange('confirmpassword', value)}
+                onChangeText={(value: string) => handleInputChange('confirmpassword', value)}
                 secureTextEntry={true}
+                editable={!isLoading}
               />
             </View>
 
-            <AuthButton
-              text="Sign Up"
-              variant="primary"
-              onPress={handleSignUp}
-            />
+            {isLoading ? (
+              <ActivityIndicator size="large" color="#fff" />
+            ) : (
+              <AuthButton
+                text="Sign Up"
+                variant="primary"
+                onPress={handleSignUp}
+              />
+            )}
+            {error ? <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>{error}</Text> : null}
           </View>
 
           <View className="mt-6 flex-row items-center">
-            <Text className="text-primary text-sm">
-              Already have an account?{' '}
-            </Text>
+            <Text className="text-primary text-sm">Already have an account?{' '}</Text>
             <TouchableOpacity onPress={handleLoginPress}>
-              <Text className="text-primary text-sm font-cinzel-bold">
-                Login
-              </Text>
+              <Text className="text-primary text-sm font-cinzel-bold">Login</Text>
             </TouchableOpacity>
           </View>
         </View>

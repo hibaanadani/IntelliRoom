@@ -5,11 +5,12 @@
     "paths": {
       "@/*": ["./*"]
     },
+    "allowImportingTsExtensions": true,
     "jsx": "react-native",
     "target": "esnext",
     "lib": ["dom", "esnext"],
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "allowJs": true,
     "isolatedModules": true,

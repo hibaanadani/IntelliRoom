@@ -15,7 +15,7 @@ function RootLayoutContent() {
     if (isAuthenticated) {
       router.replace('/(tabs)');
     } else {
-      router.replace('/Login');
+      router.replace('/onboarding');
     }
   }, [isAuthenticated, isLoading]);
 
@@ -43,6 +43,10 @@ function RootLayoutContent() {
     <Stack>
       <Stack.Screen
         name="(tabs)"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="onboarding"
         options={{ headerShown: false }}
       />
       <Stack.Screen

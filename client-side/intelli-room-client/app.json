@@ -31,9 +31,8 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/IntelliRoom.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#FEF7E5"
+          "backgroundColor": "#FEF7E5",
+          "resizeMode": "contain"
         }
       ]
     ],

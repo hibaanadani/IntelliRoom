@@ -1,6 +1,6 @@
-import api from "axiosInstance";
+import api from "./axiosInstance.ts";
 
-export const getUsers = (token) => {
+export const getUsers = (token: string) => {
   return api.get("/users", {
     headers: {
       Authorization: `Bearer ${token}`,

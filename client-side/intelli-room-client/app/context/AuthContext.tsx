@@ -2,32 +2,45 @@ import { createContext, useState, useContext, useEffect } from "react";
 import { login, signUp } from "../../services/auth.service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const AuthContext = createContext(null);
+interface User {
+  id: string;
+  email: string;
+  fullname: string;
+}
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+interface AuthContextType {
+  token: string | null;
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  signUp: (userData: Omit<User, 'id'>) => Promise<void>;
+  logout: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // A function to handle the JWT and user data
-  const handleAuthSuccess = async (accessToken, userData) => {
+  const handleAuthSuccess = async (accessToken: string, userData: User) => {
     setToken(accessToken);
     setUser(userData);
     await AsyncStorage.setItem("token", accessToken);
-    // You can also store user data if needed:
-    // await AsyncStorage.setItem('user', JSON.stringify(userData));
+    await AsyncStorage.setItem("user", JSON.stringify(userData));
   };
 
-  // Check for a stored token when the app loads
   useEffect(() => {
     const loadAuthData = async () => {
       try {
         const storedToken = await AsyncStorage.getItem("token");
-        if (storedToken) {
-          // You might also need to fetch user data if you don't store it
-          // const user = await fetchUser(storedToken);
+        const storedUser = await AsyncStorage.getItem("user");
+
+        if (storedToken && storedUser) {
           setToken(storedToken);
-          // setUser(user);
+          setUser(JSON.parse(storedUser) as User);
         }
       } catch (error) {
         console.error("Failed to load auth data:", error);
@@ -38,23 +51,20 @@ export const AuthProvider = ({ children }) => {
     loadAuthData();
   }, []);
 
-  const handleLogin = async (email, password) => {
+  const handleLogin = async (email: string, password: string) => {
     try {
       const response = await login(email, password);
-      // Backend returns { access_token, user_data }
-      await handleAuthSuccess(response.data.access_token, response.data.user);
+      await handleAuthSuccess(response.data.token, response.data.user);
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
     }
   };
 
-  // Renamed from 'handleRegister' to 'handleSignUp'
-  const handleSignUp = async (userData) => {
+  const handleSignUp = async (userData: Omit<User, 'id'>) => {
     try {
       const response = await signUp(userData);
-      // Assuming a successful signup also returns a token and user data
-      await handleAuthSuccess(response.data.access_token, response.data.user);
+      await handleAuthSuccess(response.data.token, response.data.user);
     } catch (error) {
       console.error("Sign up failed:", error);
       throw error;
@@ -65,7 +75,7 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
     await AsyncStorage.removeItem("token");
-    // await AsyncStorage.removeItem('user');
+    await AsyncStorage.removeItem("user");
   };
 
   const value = {
