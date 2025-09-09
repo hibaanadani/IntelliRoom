@@ -68,7 +68,7 @@ const Chatbot = ({ userId }: ChatbotProps) => {
     <View className="flex-1 rounded-lg overflow-hidden bg-backgroundclr">
       <View className="flex-row items-center p-4 bg-primary rounded-t-lg">
         <Image source={icons.chatbot} className="w-8 h-8 mr-2" />
-        <Text className="text-xl font-bold text-white">
+        <Text className="text-xl font-bold text-backgroundclr">
           IntelliRoom chatbot
         </Text>
       </View>
