@@ -4,6 +4,7 @@ import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import AuthButton from "../../components/AuthButton";
 import HomeCard from "../../components/HomeCard";
 import Chatbtn from "../../components/Chatbtn.tsx";
+import { useAuth } from "../context/AuthContext.tsx";
 
 const suggestedItems = [
   {
@@ -38,6 +39,7 @@ const nearbyStores = [
 ];
 
 const home = () => {
+  const { user } = useAuth();
   const handleScanNow = () => {
     router.push("/camera");
   };
@@ -55,7 +57,7 @@ const home = () => {
       <ScrollView className="flex-1 bg-backgroundclr pt-16 px-4">
         <View className="items-center mb-8">
           <Text className="text-primary text-2xl font-cinzel-bold">
-            WELCOME JOELLE!
+            WELCOME {user?.fullname?.toUpperCase() || "GUEST"}!
           </Text>
         </View>
 

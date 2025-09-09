@@ -1,19 +1,16 @@
-import { icons } from '@/constants/icons';
-import React, { useState } from 'react';
-import {
-  Image,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { Calendar } from 'react-native-calendars';
+import { icons } from "@/constants/icons";
+import React, { useState } from "react";
+import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Calendar } from "react-native-calendars";
+import { useAuth } from "./context/AuthContext";
 
 const Booking = () => {
+  const { user } = useAuth();
+
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
-  const availableTimes = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM'];
+  const availableTimes = ["9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM"];
 
   const onDayPress = (day: any) => {
     setSelectedDate(day.dateString);
@@ -27,7 +24,7 @@ const Booking = () => {
   };
 
   return (
-    <ScrollView 
+    <ScrollView
       className="flex-1 bg-backgroundclr pt-16"
       contentContainerStyle={{ flexGrow: 1 }}
     >
@@ -37,12 +34,10 @@ const Booking = () => {
             Good Day
           </Text>
           <Text className="text-primary text-2xl font-cinzel-bold">
-            Joelle Tabet
+            {user?.fullname || "Guest"}
           </Text>
         </View>
-        <TouchableOpacity 
-          className="flex-row items-center bg-transparent rounded-full border border-secondary px-4 py-2"
-        >
+        <TouchableOpacity className="flex-row items-center bg-transparent rounded-full border border-secondary px-4 py-2">
           <Text className="text-secondary font-cinzel-semi-bold">+ Book</Text>
         </TouchableOpacity>
       </View>
@@ -54,27 +49,27 @@ const Booking = () => {
             [selectedDate as string]: {
               selected: true,
               disableTouchEvent: true,
-              selectedColor: '#8C3B1E',
-              selectedTextColor: '#ffffff',
+              selectedColor: "#8C3B1E",
+              selectedTextColor: "#ffffff",
             },
           }}
           theme={{
-            backgroundColor: '#DBAF8E',
-            calendarBackground: '#DBAF8E',
-            textSectionTitleColor: '#8C3B1E',
-            textSectionTitleDisabledColor: '#9AA394',
-            selectedDayBackgroundColor: '#8C3B1E',
-            selectedDayTextColor: '#ffffff',
-            todayTextColor: '#8C3B1E',
-            dayTextColor: '#8C3B1E',
-            textDisabledColor: '#9AA394',
-            dotColor: '#8C3B1E',
-            selectedDotColor: '#ffffff',
-            arrowColor: '#8C3B1E',
-            monthTextColor: '#8C3B1E',
-            textDayFontWeight: '500',
-            textMonthFontWeight: 'bold',
-            textDayHeaderFontWeight: '500',
+            backgroundColor: "#DBAF8E",
+            calendarBackground: "#DBAF8E",
+            textSectionTitleColor: "#8C3B1E",
+            textSectionTitleDisabledColor: "#9AA394",
+            selectedDayBackgroundColor: "#8C3B1E",
+            selectedDayTextColor: "#ffffff",
+            todayTextColor: "#8C3B1E",
+            dayTextColor: "#8C3B1E",
+            textDisabledColor: "#9AA394",
+            dotColor: "#8C3B1E",
+            selectedDotColor: "#ffffff",
+            arrowColor: "#8C3B1E",
+            monthTextColor: "#8C3B1E",
+            textDayFontWeight: "500",
+            textMonthFontWeight: "bold",
+            textDayHeaderFontWeight: "500",
             textDayFontSize: 16,
             textMonthFontSize: 18,
             textDayHeaderFontSize: 16,
@@ -101,9 +96,7 @@ const Booking = () => {
                   className={buttonClassName}
                   onPress={() => onTimePress(time)}
                 >
-                  <Text className={textClassName}>
-                    {time}
-                  </Text>
+                  <Text className={textClassName}>{time}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -115,9 +108,7 @@ const Booking = () => {
               className="w-44 h-44"
               resizeMode="contain"
             />
-            <Text className="text-primary">
-              No Bookings, YET!
-            </Text>
+            <Text className="text-primary">No Bookings, YET!</Text>
           </View>
         )}
       </View>
