@@ -17,10 +17,10 @@ export class AppController {
   @Post('login')
   async login(@Request() req): Promise<any> {
     return this.authService.login(req.user);
-  } // GET /protected - This is a protected endpoint that requires a JWT token
+  }
 
   @ApiOperation({ summary: 'Test endpoint that requires JWT token' })
-  @UseGuards(JwtAuthGuard) // This guard checks for a valid JWT token
+  @UseGuards(JwtAuthGuard)
   @Get('protected')
   getProtectedData(@Request() req): any {
     return {

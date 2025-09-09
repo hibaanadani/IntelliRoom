@@ -1,5 +1,3 @@
-// This is the main module that brings everything together
-// Think of it as the "main folder" that contains all other folders
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -12,6 +10,8 @@ import { Catalogue } from './catalogue/entities/catalogue.entity';
 import { User } from './users/entities/user.entity';
 import { GalleryModule } from './gallery/gallery.module';
 import { Gallery } from './gallery/entities/gallery.entity';
+import { CalendarModule } from './calendar/calendar.module';
+import { ChatbotModule } from './chatbot/chatbot.module';
 
 @Module({
   imports: [
@@ -45,11 +45,11 @@ import { Gallery } from './gallery/entities/gallery.entity';
     UsersModule,
     CatalogueModule,
     GalleryModule,
+    CalendarModule,
+    ChatbotModule,
   ],
   controllers: [AppController],
   // AppService is the only provider that belongs directly to the AppModule.
-  // We've removed AuthService from here because it is provided and exported
-  // by AuthModule, which is correctly imported above.
   providers: [AppService],
 })
 export class AppModule {}
