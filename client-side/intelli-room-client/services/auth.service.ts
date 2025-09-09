@@ -10,7 +10,7 @@ interface AuthResponse {
 }
 
 export const login = (email: string, password: string) => {
-  return api.post<AuthResponse>("/login", { email, password });
+  return api.post<AuthResponse>("/auth/login", { email, password });
 };
 
 export const signUp = (userData: any) => {

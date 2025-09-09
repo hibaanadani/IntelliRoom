@@ -1,7 +1,7 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ChatbotService } from './chatbot.service';
-import { MessageDto } from '../calendar/dto/message.dto'; // Re-use the existing DTO
+import { MessageDto } from '../chatbot/dto/message.dto';
 
 @ApiTags('Chatbot')
 @Controller('chatbot')
@@ -21,6 +21,10 @@ export class ChatbotController {
     description: 'The message was empty or invalid',
   })
   async postMessage(@Body() messageDto: MessageDto): Promise<any> {
-    return this.chatbotService.sendMessage(messageDto.message);
+    // Pass both the message and userId to the service
+    return this.chatbotService.sendMessage(
+      messageDto.message,
+      messageDto.userId,
+    );
   }
 }

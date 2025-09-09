@@ -20,17 +20,19 @@ export class ChatbotService {
     this.chatbotWebhookUrl = url;
   }
 
-  async sendMessage(message: string): Promise<any> {
+  async sendMessage(message: string, userId: string): Promise<any> {
     if (!message) {
       throw new BadRequestException('Message cannot be empty.');
     }
 
     try {
+      // Fix the payload here by removing the "body" wrapper
       const response = await axios.post(this.chatbotWebhookUrl, {
-        body: {
-          message: message,
-        },
+        message: message,
+        userId: userId,
       });
+
+      console.log('Response from n8n:', response.data);
 
       return response.data;
     } catch (error) {
