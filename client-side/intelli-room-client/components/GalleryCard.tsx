@@ -1,12 +1,7 @@
-import React from 'react';
-import {
-  Image,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { icons } from '../constants/icons';
-import PageButton from './PageButton';
+import React from "react";
+import { Image, Text, TouchableOpacity, View } from "react-native";
+import { icons } from "../constants/icons";
+import PageButton from "./PageButton";
 
 interface GalleryCardProps {
   imageSource: any;
@@ -15,7 +10,12 @@ interface GalleryCardProps {
   onCalendarPress: () => void;
 }
 
-const GalleryCard = ({ imageSource, onPress, title, onCalendarPress }: GalleryCardProps) => {
+const GalleryCard = ({
+  imageSource,
+  onPress,
+  title,
+  onCalendarPress,
+}: GalleryCardProps) => {
   return (
     <TouchableOpacity className="w-full h-64 mb-6 rounded-2xl overflow-hidden shadow-lg">
       <View className="relative w-full h-full">
@@ -24,13 +24,10 @@ const GalleryCard = ({ imageSource, onPress, title, onCalendarPress }: GalleryCa
           className="w-full h-full"
           resizeMode="cover"
         />
-        <View className="absolute inset-0" style={{ backgroundColor: 'rgba(0, 0, 0, 0.35)' }} />
+        <View className="absolute inset-0 bg-black/35" />
 
         <View className="absolute top-4 w-full items-start px-4">
-          <Text
-            className="text-white text-xl font-cinzel-semi-bold"
-            style={{ textTransform: 'uppercase' }}
-          >
+          <Text className="text-white text-xl font-cinzel-semi-bold uppercase">
             {title}
           </Text>
         </View>

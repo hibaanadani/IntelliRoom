@@ -1,11 +1,6 @@
-import React from 'react';
-import {
-  Image,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import PageButton from './PageButton';
+import React from "react";
+import { Image, Text, TouchableOpacity, View } from "react-native";
+import PageButton from "./PageButton";
 
 interface RoomCardProps {
   imageSource: any;
@@ -22,13 +17,10 @@ const RoomCard = ({ imageSource, onPress, title }: RoomCardProps) => {
           className="w-full h-full"
           resizeMode="cover"
         />
-        <View className="absolute inset-0" style={{ backgroundColor: 'rgba(0, 0, 0, 0.35)' }} />
+        <View className="absolute inset-0 bg-black/35" />
 
         <View className="absolute top-4 w-full items-start px-4">
-          <Text
-            className="text-white text-xl font-cinzel-semi-bold"
-            style={{ textTransform: 'uppercase' }}
-          >
+          <Text className="text-white text-xl font-cinzel-semi-bold uppercase">
             {title}
           </Text>
         </View>

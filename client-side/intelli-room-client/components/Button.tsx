@@ -1,75 +1,39 @@
-import React from 'react';
-import {
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  ViewStyle,
-  TextStyle,
-} from 'react-native';
+import React from "react";
+import { TouchableOpacity, Text } from "react-native";
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary';
-  style?: ViewStyle;
-  textStyle?: TextStyle;
+  variant?: "primary" | "secondary";
+  className?: string;
+  textClassName?: string;
 }
 
-export const Button: React.FC<ButtonProps> = ({
+export const Button = ({
   title,
   onPress,
-  variant = 'primary',
-  style,
-  textStyle,
-}) => {
+  variant = "primary",
+  className = "",
+  textClassName = "",
+}: ButtonProps) => {
+  const buttonClasses =
+    variant === "primary"
+      ? `bg-primary`
+      : `bg-transparent border-2 border-primary`;
+
+  const textClasses = variant === "primary" ? `text-white` : `text-primary`;
+
   return (
     <TouchableOpacity
-      style={[
-        styles.button,
-        variant === 'primary' ? styles.primaryButton : styles.secondaryButton,
-        style,
-      ]}
+      className={`rounded-2xl py-4 px-8 items-center justify-center min-w-[200px] ${buttonClasses} ${className}`}
       onPress={onPress}
       activeOpacity={0.8}
     >
       <Text
-        style={[
-          styles.buttonText,
-          variant === 'primary' ? styles.primaryText : styles.secondaryText,
-          textStyle,
-        ]}
+        className={`text-base font-semibold ${textClasses} ${textClassName}`}
       >
         {title}
       </Text>
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  button: {
-    borderRadius: 25,
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 200,
-  },
-  primaryButton: {
-    backgroundColor: '#8B4513',
-  },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: '#8B4513',
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  primaryText: {
-    color: '#FFFFFF',
-  },
-  secondaryText: {
-    color: '#8B4513',
-  },
-});

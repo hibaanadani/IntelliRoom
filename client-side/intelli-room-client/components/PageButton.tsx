@@ -1,5 +1,5 @@
-import React from 'react';
-import { Text, TouchableOpacity } from 'react-native';
+import React from "react";
+import { Text, TouchableOpacity } from "react-native";
 
 interface PageButtonProps {
   text: string;
@@ -8,24 +8,25 @@ interface PageButtonProps {
   onPress: () => void;
 }
 
-const PageButton = ({ text, height, backgroundColor, onPress }: PageButtonProps) => {
+const PageButton = ({
+  text,
+  height,
+  backgroundColor,
+  onPress,
+}: PageButtonProps) => {
+  const bgColorClass = {
+    "#DBAF8E": "bg-beigeclr",
+    "#548E32": "bg-secondary",
+  };
+
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="absolute bottom-2 right-2 rounded-2xl px-4 py-1"
-      style={{
-        height: height,
-        backgroundColor: backgroundColor,
-      }}
+      className={`absolute bottom-2 right-2 rounded-2xl px-4 py-1 h-[${height}px] ${
+        bgColorClass[backgroundColor as keyof typeof bgColorClass]
+      }`}
     >
-      <Text
-        style={{
-          color: 'white',
-          fontSize: 16,
-        }}
-      >
-        {text}
-      </Text>
+      <Text className="text-white text-base">{text}</Text>
     </TouchableOpacity>
   );
 };
