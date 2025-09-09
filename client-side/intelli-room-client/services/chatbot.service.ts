@@ -1,6 +1,5 @@
 import api from "./axiosInstance.ts";
 
-// Add 'export' so it can be imported by other files
 export interface ChatbotResponse {
   output: string;
 }

@@ -21,7 +21,6 @@ export class ChatbotController {
     description: 'The message was empty or invalid',
   })
   async postMessage(@Body() messageDto: MessageDto): Promise<any> {
-    // Pass both the message and userId to the service
     return this.chatbotService.sendMessage(
       messageDto.message,
       messageDto.userId,

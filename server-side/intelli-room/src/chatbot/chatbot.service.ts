@@ -26,7 +26,6 @@ export class ChatbotService {
     }
 
     try {
-      // Fix the payload here by removing the "body" wrapper
       const response = await axios.post(this.chatbotWebhookUrl, {
         message: message,
         userId: userId,
