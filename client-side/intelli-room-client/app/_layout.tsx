@@ -1,15 +1,13 @@
 import { Stack, SplashScreen } from "expo-router";
 import { useFonts } from "expo-font";
 import { useEffect } from "react";
-
 import { Provider } from "react-redux";
 import { store } from "../store";
-
 import { AuthProvider } from "./context/AuthContext";
 
 SplashScreen.preventAutoHideAsync();
 
-function RootLayoutContent() {
+const RootLayoutContent = () => {
   const [fontsLoaded, fontError] = useFonts({
     "Cinzel-Bold": require("../assets/fonts/Cinzel-Bold.ttf"),
     "Cinzel-Regular": require("../assets/fonts/Cinzel-Regular.ttf"),
@@ -36,9 +34,9 @@ function RootLayoutContent() {
       <Stack.Screen name="bookings" options={{ headerShown: false }} />
     </Stack>
   );
-}
+};
 
-export default function RootLayout() {
+const RootLayout = () => {
   return (
     <Provider store={store}>
       <AuthProvider>
@@ -46,4 +44,6 @@ export default function RootLayout() {
       </AuthProvider>
     </Provider>
   );
-}
+};
+
+export default RootLayout;

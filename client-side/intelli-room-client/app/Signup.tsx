@@ -53,7 +53,7 @@ const Signup = () => {
     }
   };
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior="height">
+    <KeyboardAvoidingView className="flex-1" behavior="height">
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         className="bg-backgroundclr"
@@ -110,7 +110,7 @@ const Signup = () => {
               />
             </View>
             {isLoading || isAuthLoading ? (
-              <ActivityIndicator size="large" color="#fff" />
+              <ActivityIndicator size="large" className="text-white" />
             ) : (
               <AuthButton
                 text="Sign Up"
@@ -119,11 +119,7 @@ const Signup = () => {
               />
             )}
             {error ? (
-              <Text
-                style={{ color: "red", textAlign: "center", marginTop: 10 }}
-              >
-                {error}
-              </Text>
+              <Text className="text-red-500 text-center mt-2">{error}</Text>
             ) : null}
           </View>
           <View className="mt-6 flex-row items-center">

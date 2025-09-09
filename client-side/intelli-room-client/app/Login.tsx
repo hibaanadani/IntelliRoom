@@ -101,15 +101,13 @@ const Login = () => {
           </TouchableOpacity>
 
           {isLoading ? (
-            <ActivityIndicator size="large" color="#fff" />
+            <ActivityIndicator size="large" className="text-white" />
           ) : (
             <AuthButton text="Login" variant="primary" onPress={handleLogin} />
           )}
 
           {error ? (
-            <Text style={{ color: "red", textAlign: "center", marginTop: 10 }}>
-              {error}
-            </Text>
+            <Text className="text-red-500 text-center mt-2">{error}</Text>
           ) : null}
         </View>
 

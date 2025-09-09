@@ -2,12 +2,12 @@ import { Redirect } from "expo-router";
 import { useAuth } from "./context/AuthContext";
 import { ActivityIndicator, View } from "react-native";
 
-export default function StartPage() {
+const StartPage = () => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" />
       </View>
     );
@@ -18,4 +18,6 @@ export default function StartPage() {
   } else {
     return <Redirect href="/onboarding" />;
   }
-}
+};
+
+export default StartPage;

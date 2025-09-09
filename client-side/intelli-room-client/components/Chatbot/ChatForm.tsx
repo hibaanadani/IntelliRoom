@@ -1,4 +1,4 @@
-import React, { useState, FC } from "react";
+import React, { useState } from "react";
 import { View, TextInput, TouchableOpacity, Image } from "react-native";
 import { icons } from "../../constants/icons.ts";
 
@@ -8,7 +8,7 @@ interface ChatFormProps {
   >;
 }
 
-const ChatForm: FC<ChatFormProps> = ({ setChatHistory }) => {
+const ChatForm = ({ setChatHistory }: ChatFormProps) => {
   const [message, setMessage] = useState<string>("");
 
   const handleFormSubmit = () => {

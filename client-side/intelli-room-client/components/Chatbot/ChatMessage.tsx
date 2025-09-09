@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React from "react";
 import { View, Text, Image } from "react-native";
 import { icons } from "../../constants/icons.ts";
 
@@ -9,7 +9,7 @@ interface ChatMessageProps {
   };
 }
 
-const ChatMessage: FC<ChatMessageProps> = ({ chat }) => {
+const ChatMessage = ({ chat }: ChatMessageProps) => {
   const isBotMessage: boolean = chat.role === "model";
   const messageContainerClasses: string = isBotMessage
     ? "flex-row items-start mb-4"
