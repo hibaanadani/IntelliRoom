@@ -79,67 +79,88 @@ const Profile = () => {
     >
       <TouchableOpacity
         onPress={handleLogout}
-        className="absolute top-8 right-4 p-2 z-10"
+        className="absolute top-8 right-4 z-10 flex-row items-center bg-primary rounded-full px-4 py-2"
       >
-        <Text className="text-primary text-base font-cinzel-bold">Logout</Text>
+        <Image
+          source={icons.logout}
+          className="w-5 h-5 mr-2"
+          resizeMode="contain"
+        />
+           
       </TouchableOpacity>
-
+           
       <View className="items-center mb-8">
+               
         <View className="relative w-32 h-32 rounded-full mb-4">
+                   
           <Image
             source={profilePicture}
             className="w-full h-full"
             resizeMode="cover"
           />
+                   
           <TouchableOpacity
             onPress={handleEditPicture}
             className="absolute bottom-0 right-[-4] p-2 bg-primary rounded-full"
           >
+                       
             <Image
               source={icons.edit}
               className="w-4 h-4"
               resizeMode="contain"
             />
+                     
           </TouchableOpacity>
+                 
         </View>
+               
         <Text className="text-primary text-2xl font-cinzel-bold">
-          Edit Profile
+          Edit Profile        
         </Text>
+             
       </View>
-
+           
       <View className="pt-8 px-8">
+               
         <View className="w-full">
+                   
           <Text className="text-greyclr text-base font-cinzel-semi-bold mb-2">
-            Full Name
+            Full Name          
           </Text>
+                   
           <InputField
             value={formData.fullname}
             onChangeText={(value) => handleInputChange("fullname", value)}
           />
-
+                   
           <Text className="text-greyclr text-base font-cinzel-semi-bold mb-2">
-            Email
+            Email          
           </Text>
+                   
           <InputField
             value={formData.email}
             onChangeText={(value) => handleInputChange("email", value)}
             keyboardType="email-address"
             autoCapitalize="none"
           />
-
+                   
           <Text className="text-greyclr text-base font-cinzel-semi-bold mb-2">
-            Password
+            Password          
           </Text>
+                   
           <InputField
             placeholder="New Password"
             value={formData.password}
             onChangeText={(value) => handleInputChange("password", value)}
             secureTextEntry
           />
+                 
         </View>
-
-        <AuthButton text="Confirm" variant="primary" onPress={handleConfirm} />
+               
+        <AuthButton text="Confirm" variant="primary" onPress={handleConfirm} /> 
+           
       </View>
+         
     </ScrollView>
   );
 };

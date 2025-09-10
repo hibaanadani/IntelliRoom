@@ -21,7 +21,7 @@ const Chatbtn = () => {
     <>
       {isChatbotVisible && userId && (
         <View className="absolute inset-0 z-50 flex-1 justify-end items-end">
-          <View className="absolute bottom-28 right-4 w-80 h-96 rounded-lg shadow-lg">
+          <View className="absolute bottom-[110px] right-4 w-80 h-96 rounded-lg shadow-lg">
             <Chatbot userId={userId} />
           </View>
         </View>

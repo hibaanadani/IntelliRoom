@@ -2,7 +2,7 @@ import React from "react";
 import { Image, View } from "react-native";
 
 const TabIcon = ({ focused, icon }: any) => {
-  const tintColor = focused ? "#548E32" : "#FEF7E5";
+  const tintColor = focused ? "#CB572E" : "#FEF7E5";
 
   return (
     <View

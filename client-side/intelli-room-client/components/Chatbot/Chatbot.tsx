@@ -17,7 +17,6 @@ interface ChatbotProps {
 
 const Chatbot = ({ userId }: ChatbotProps) => {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
-
   const scrollViewRef = useRef<ScrollView | null>(null);
 
   const getBotResponse = async (userMessage: string): Promise<string> => {
@@ -65,7 +64,7 @@ const Chatbot = ({ userId }: ChatbotProps) => {
   }, [chatHistory]);
 
   return (
-    <View className="flex-1 rounded-lg overflow-hidden bg-backgroundclr">
+    <View className="flex-1 justify-between rounded-lg overflow-hidden bg-backgroundclr">
       <View className="flex-row items-center p-4 bg-primary rounded-t-lg">
         <Image source={icons.chatbot} className="w-8 h-8 mr-2" />
         <Text className="text-xl font-bold text-backgroundclr">
@@ -74,7 +73,7 @@ const Chatbot = ({ userId }: ChatbotProps) => {
       </View>
 
       <View className="flex-1">
-        <ScrollView className="flex-1 p-4" ref={scrollViewRef}>
+        <ScrollView className="p-4" ref={scrollViewRef}>
           <View className="flex-row items-start mb-4">
             <Image source={icons.chatbot} className="w-6 h-6 mr-2" />
             <View className="bg-beigeclr p-3 rounded-lg max-w-[80%]">
@@ -90,7 +89,7 @@ const Chatbot = ({ userId }: ChatbotProps) => {
         </ScrollView>
       </View>
 
-      <View className="px-4 pt-0 bg-backgroundclr border-greyclr">
+      <View className="px-4 py-2 bg-backgroundclr border-greyclr">
         <ChatForm setChatHistory={setChatHistory} />
       </View>
     </View>

@@ -12,6 +12,7 @@ import room from "../assets/icons/Room.png";
 import arrow from "../assets/icons/Arrow.png";
 import send from "../assets/icons/Send.png";
 import xicon from "../assets/icons/xicon.png";
+import logout from "../assets/icons/Logout.png";
 
 export const icons = {
   arrow,
@@ -28,4 +29,5 @@ export const icons = {
   bookings,
   send,
   xicon,
+  logout,
 };
