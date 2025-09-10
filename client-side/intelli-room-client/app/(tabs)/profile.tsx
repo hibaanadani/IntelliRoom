@@ -107,7 +107,7 @@ const Profile = () => {
         </Text>
       </View>
 
-      <View className="bg-white rounded-t-3xl pt-8 px-4">
+      <View className="pt-8 px-8">
         <View className="w-full">
           <Text className="text-greyclr text-base font-cinzel-semi-bold mb-2">
             Full Name

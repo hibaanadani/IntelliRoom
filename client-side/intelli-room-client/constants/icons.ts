@@ -10,6 +10,8 @@ import livingroom from "../assets/icons/LivingRoom.png";
 import plus from "../assets/icons/Plus.png";
 import room from "../assets/icons/Room.png";
 import arrow from "../assets/icons/Arrow.png";
+import send from "../assets/icons/Send.png";
+import xicon from "../assets/icons/xicon.png";
 
 export const icons = {
   arrow,
@@ -24,4 +26,6 @@ export const icons = {
   plus,
   edit,
   bookings,
+  send,
+  xicon,
 };

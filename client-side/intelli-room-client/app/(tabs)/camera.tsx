@@ -1,45 +1,50 @@
-import * as ImagePicker from 'expo-image-picker';
-import React, { useState } from 'react';
-import {
-  Image,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import * as ImagePicker from "expo-image-picker";
+import React, { useState } from "react";
+import { Image, ScrollView, Text, View } from "react-native";
+
+import AuthButton from "../../components/AuthButton";
 
 const UploadPhoto = () => {
-  const [selectedImage, setSelectedImage] = useState(null);
+  // --- This is the updated line ---
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // Function to handle camera launch
   const handleLaunchCamera = async () => {
-    // Request permission to access the camera
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-    
+
     if (permissionResult.granted === false) {
       alert("You've refused to allow this app to access your camera!");
       return;
     }
-    
+
     const result = await ImagePicker.launchCameraAsync();
-    
+
     if (!result.canceled) {
+      // The uri is a string, which now matches the state's type
+      setSelectedImage(result.assets[0].uri);
     }
   };
 
   // Function to handle gallery launch
   const handleLaunchGallery = async () => {
-    // Request permission to access the gallery
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (permissionResult.granted === false) {
       alert("You've refused to allow this app to access your photo gallery!");
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync();
-    
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
 
+    if (!result.canceled) {
+      // The uri is a string, which now matches the state's type
+      setSelectedImage(result.assets[0].uri);
+    }
   };
 
   return (
@@ -48,7 +53,7 @@ const UploadPhoto = () => {
         <Text className="text-primary text-2xl font-cinzel-bold mb-8">
           Upload a Photo
         </Text>
-        
+
         {selectedImage && (
           <Image
             source={{ uri: selectedImage }}
@@ -56,23 +61,17 @@ const UploadPhoto = () => {
           />
         )}
 
-        <TouchableOpacity 
+        <AuthButton
           onPress={handleLaunchCamera}
-          className="bg-primary rounded-full px-8 py-4 mb-4"
-        >
-          <Text className="text-white text-base font-semibold">
-            Open Camera
-          </Text>
-        </TouchableOpacity>
+          text="Open Camera"
+          variant="primary"
+        />
 
-        <TouchableOpacity 
+        <AuthButton
           onPress={handleLaunchGallery}
-          className="bg-primary rounded-full px-8 py-4"
-        >
-          <Text className="text-white text-base font-semibold">
-            Choose from Gallery
-          </Text>
-        </TouchableOpacity>
+          text="Choose from Gallery"
+          variant="primary"
+        />
       </View>
     </ScrollView>
   );

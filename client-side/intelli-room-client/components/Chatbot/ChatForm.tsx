@@ -37,7 +37,7 @@ const ChatForm = ({ setChatHistory }: ChatFormProps) => {
         onPress={handleFormSubmit}
         className="p-4 bg-secondary rounded-full"
       >
-        <Image source={icons.arrow} className="w-5 h-5 tint-white" />
+        <Image source={icons.send} className="w-5 h-5 tint-white" />
       </TouchableOpacity>
     </View>
   );

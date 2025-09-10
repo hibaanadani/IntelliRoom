@@ -34,7 +34,7 @@ const Chatbtn = () => {
           className="w-14 h-14 rounded-full bg-primary justify-center items-center shadow-lg"
         >
           <Image
-            source={isChatbotVisible ? icons.arrow : icons.chatbot}
+            source={isChatbotVisible ? icons.xicon : icons.chatbot}
             className="w-10 h-10"
             accessibilityLabel={isChatbotVisible ? "Close Chat" : "Open Chat"}
           />

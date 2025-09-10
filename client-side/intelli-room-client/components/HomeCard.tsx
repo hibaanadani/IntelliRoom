@@ -1,6 +1,6 @@
-import React from 'react';
-import { Image, TouchableOpacity, View } from 'react-native';
-import PageButton from './PageButton';
+import React from "react";
+import { Image, TouchableOpacity, View } from "react-native";
+import PageButton from "./PageButton";
 
 interface HomeCardProps {
   imageSource: any;
@@ -8,7 +8,6 @@ interface HomeCardProps {
 }
 
 const HomeCard = ({ imageSource, onPress }: HomeCardProps) => {
-
   return (
     <TouchableOpacity className="w-40 mr-4">
       <View className="bg-transparent rounded-xl">

@@ -65,7 +65,7 @@ const Login = () => {
           />
         </View>
 
-        <View className="w-full max-w-sm rounded-[50px] p-6 border border-primary">
+        <View className="w-full max-w-sm rounded-3xl p-6 border border-primary">
           <Text className="text-primary text-2xl font-cinzel-bold text-center mb-6">
             LOGIN
           </Text>
