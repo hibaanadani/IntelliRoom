@@ -10,11 +10,15 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 import {
   ApiCreatedResponse,
   ApiNotFoundResponse,
@@ -23,7 +27,18 @@ import {
   ApiTags,
   ApiOperation,
   ApiParam,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
+import { Request } from 'express';
+
+const storage = diskStorage({
+  destination: './uploads',
+  filename: (req, file, cb) => {
+    const filename = `${Date.now()}-${file.originalname}`;
+    cb(null, filename);
+  },
+});
 
 @ApiTags('Users')
 @Controller('users')
@@ -56,17 +71,12 @@ export class UsersController {
     return this.usersService.findByName(name);
   }
 
-  // : marks the id as a dynamic value URL parameter.
-  // parse the id from the URL and provide it to the service.
-  // param 1 to many, specify id and give it name id and type string.
-  // Added ApiOperation for better documentation.
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiParam({ name: 'id', description: 'User ID', type: 'integer' })
   @ApiOkResponse({ type: User, description: 'User found successfully' })
   @ApiNotFoundResponse({ description: 'User not found' })
   @Get(':id')
   async getUserById(@Param('id', ParseIntPipe) id: number): Promise<User> {
-    // The `ParseIntPipe` ensures the ID from the URL is a valid number.
     return this.usersService.findById(id);
   }
 
@@ -93,12 +103,57 @@ export class UsersController {
   @ApiParam({ name: 'id', description: 'User ID', type: 'integer' })
   @ApiOkResponse({ description: 'User deleted successfully' })
   @ApiNotFoundResponse({ description: 'User not found' })
-  // @HttpCode sets the response to 204 No Content (standard for successful DELETE)
-  // Instead of 200 OK, 204 means "success but no content to return"
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
-  // void return type since we don't return any data for DELETE
   async removeUser(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.usersService.removeUser(id);
+  }
+
+  @Post(':id/rooms/upload')
+  @UseInterceptors(FileInterceptor('image', { storage }))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+        },
+        roomData: { type: 'string' },
+      },
+    },
+  })
+  async uploadRoom(
+    @Param('id', ParseIntPipe) userId: number,
+    @UploadedFile() image: Express.Multer.File,
+    @Body('roomData') roomDataString: string,
+  ) {
+    return this.usersService.addRoomWithImage(userId, roomDataString, image);
+  }
+
+  @ApiOperation({ summary: 'Get all rooms for a specific user' })
+  @ApiParam({ name: 'id', description: 'User ID', type: 'integer' })
+  @ApiOkResponse({ type: User, description: 'Rooms retrieved successfully' })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  @Get(':id/rooms')
+  async getUserRooms(@Param('id', ParseIntPipe) userId: number) {
+    const user = await this.usersService.findByIdWithRooms(userId);
+    return user.rooms;
+  }
+
+  @ApiOperation({ summary: 'Delete a room for a user' })
+  @ApiParam({ name: 'id', description: 'User ID', type: 'integer' })
+  @ApiParam({ name: 'roomId', description: 'Room ID', type: 'string' })
+  @ApiOkResponse({ description: 'Room deleted successfully' })
+  @ApiNotFoundResponse({ description: 'User or room not found' })
+  @HttpCode(HttpStatus.OK)
+  @Delete(':id/rooms/:roomId')
+  async deleteRoom(
+    @Param('id', ParseIntPipe) userId: number,
+    @Param('roomId') roomId: string,
+  ) {
+    await this.usersService.removeRoom(userId, roomId);
+    return { message: 'Room deleted successfully' };
   }
 }

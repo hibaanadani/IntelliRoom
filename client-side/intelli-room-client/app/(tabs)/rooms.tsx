@@ -1,30 +1,101 @@
-import React from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  Image,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import RoomCard from "../../components/RoomCard";
 import { icons } from "../../constants/icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+import { deleteRoom, getUserRooms } from "../../services/rooms.service";
+import { useAuth } from "../context/AuthContext";
+import { useCallback } from "react";
 
-const myRooms = [
-  {
-    id: "1",
-    image: require("../../assets/images/Bedroom.png"),
-    title: "Bedroom",
-  },
-  {
-    id: "2",
-    image: require("../../assets/images/Livingroom.png"),
-    title: "Living Room",
-  },
-  {
-    id: "3",
-    image: require("../../assets/images/Library.png"),
-    title: "Library",
-  },
-];
+export interface Room {
+  id: string;
+  name: string;
+  imageUrl: string;
+  mlOutput: any;
+  createdAt: string;
+}
 
 const Rooms = () => {
-  const handleCardPress = (cardTitle: string) => {
-    console.log(`Opening room: ${cardTitle}`);
+  const { user, token, isLoading } = useAuth();
+  const [myRooms, setMyRooms] = useState<Room[]>([]);
+  const [isFetching, setIsFetching] = useState(true);
+
+  const fetchUserRooms = useCallback(async () => {
+    if (!user || !token) {
+      setIsFetching(false);
+      return;
+    }
+
+    try {
+      setIsFetching(true);
+      const roomsData = await getUserRooms(user.id, token);
+      setMyRooms(roomsData);
+    } catch (error) {
+      console.error("Error fetching rooms:", error);
+      Alert.alert(
+        "Error",
+        "Could not fetch your rooms. Please try again later."
+      );
+    } finally {
+      setIsFetching(false);
+    }
+  }, [user, token]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserRooms();
+    }, [fetchUserRooms])
+  );
+
+  const handleDeleteRoom = (roomId: string) => {
+    if (!user || !token) {
+      Alert.alert("Error", "You must be logged in to delete a room.");
+      return;
+    }
+
+    Alert.alert(
+      "Confirm Deletion",
+      "Are you sure you want to delete this room?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              await deleteRoom(user.id, roomId, token);
+              Alert.alert("Success", "Room deleted successfully!");
+              fetchUserRooms();
+            } catch (error) {
+              console.error("Error deleting room:", error);
+              Alert.alert("Error", "Failed to delete room. Please try again.");
+            }
+          },
+          style: "destructive",
+        },
+      ]
+    );
+  };
+
+  const handleCardPress = (room: Room) => {
+    router.push({
+      pathname: "/RoomDetails",
+      params: {
+        name: room.name,
+        mlOutput: JSON.stringify(room.mlOutput),
+        imageUrl: room.imageUrl,
+      },
+    });
   };
 
   const handleAddRoom = () => {
@@ -46,16 +117,27 @@ const Rooms = () => {
         </TouchableOpacity>
       </View>
 
-      <View className="space-y-4">
-        {myRooms.map((room) => (
-          <RoomCard
-            key={room.id}
-            imageSource={room.image}
-            title={room.title}
-            onPress={() => handleCardPress(room.title)}
-          />
-        ))}
-      </View>
+      {isFetching || isLoading ? (
+        <ActivityIndicator size="large" color="#DBAF8E" />
+      ) : (
+        <View className="space-y-4">
+          {myRooms.length > 0 ? (
+            myRooms.map((room) => (
+              <RoomCard
+                key={room.id}
+                imageSource={{ uri: room.imageUrl }}
+                title={room.name}
+                onPress={() => handleCardPress(room)}
+                onLongPress={() => handleDeleteRoom(room.id)}
+              />
+            ))
+          ) : (
+            <Text className="text-center text-greyclr mt-10">
+              No rooms found. Add a new one!
+            </Text>
+          )}
+        </View>
+      )}
     </ScrollView>
   );
 };

@@ -1,7 +1,7 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ChatbotService } from './chatbot.service';
-import { MessageDto } from '../chatbot/dto/message.dto';
+import { MessageDto } from './dto/message.dto';
 
 @ApiTags('Chatbot')
 @Controller('chatbot')

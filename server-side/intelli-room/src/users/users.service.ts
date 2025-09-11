@@ -5,16 +5,19 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+import { User, Room, MLOutput } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
+import { ObjectId } from 'mongodb';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: MongoRepository<User>,
+    private readonly configService: ConfigService,
   ) {}
 
   async findAll(): Promise<User[]> {
@@ -66,12 +69,10 @@ export class UsersService {
       password: hashedPassword,
     });
 
+    let savedUser: User;
     try {
-      await this.usersRepository.save(newUser);
-      const { password, ...userWithoutPassword } = newUser;
-      return userWithoutPassword as User;
+      savedUser = await this.usersRepository.save(newUser);
     } catch (error) {
-      // Check for the specific Mongo duplicate key error (code 11000)
       if (error.code === 11000) {
         throw new BadRequestException(
           `Email '${createUserDto.email}' is already registered.`,
@@ -79,6 +80,15 @@ export class UsersService {
       }
       throw error;
     }
+
+    await this.usersRepository.findOneAndUpdate(
+      { id: savedUser.id },
+      { $set: { rooms: [] } },
+      { returnDocument: 'after' },
+    );
+
+    const { password, ...userWithoutPassword } = savedUser;
+    return userWithoutPassword as User;
   }
 
   async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<User> {
@@ -119,5 +129,84 @@ export class UsersService {
       order: { id: 'DESC' },
     });
     return highestIdUser ? highestIdUser.id + 1 : 1;
+  }
+
+  async addRoomWithImage(
+    userId: number,
+    roomDataString: string,
+    image: Express.Multer.File,
+  ): Promise<User> {
+    if (!image) {
+      throw new BadRequestException('Image file is required.');
+    }
+
+    let parsedRoomData: { name: string; mlOutput: MLOutput };
+
+    // This handles the invalid JSON data from your frontend
+    try {
+      parsedRoomData = JSON.parse(roomDataString);
+    } catch (error) {
+      console.warn(
+        'Failed to parse mlOutput from frontend. Using default values.',
+      );
+      parsedRoomData = {
+        name: 'Default Room Name',
+        mlOutput: {
+          overallClassification: 'Unknown',
+          individualObjectAnalysis: [],
+          actionableReport: ['An error occurred with the ML output format.'],
+        },
+      };
+    }
+
+    const API_BASE_URL = this.configService.get<string>('API_BASE_URL');
+
+    const newRoom: Room = {
+      id: new ObjectId().toHexString(),
+      name: parsedRoomData.name,
+      mlOutput: parsedRoomData.mlOutput,
+      imageUrl: `${API_BASE_URL}/uploads/${image.filename}`,
+      createdAt: new Date(),
+    };
+
+    const updatedUserResult = await this.usersRepository.findOneAndUpdate(
+      { id: userId },
+      { $push: { rooms: newRoom } },
+      { returnDocument: 'after' },
+    );
+
+    if (!updatedUserResult) {
+      throw new NotFoundException(`User with ID "${userId}" not found.`);
+    }
+
+    return updatedUserResult.value;
+  }
+
+  async findByIdWithRooms(userId: number): Promise<User> {
+    const user = await this.usersRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found.`);
+    }
+    return user;
+  }
+
+  async removeRoom(userId: number, roomId: string): Promise<User> {
+    const updatedUserResult = await this.usersRepository.findOneAndUpdate(
+      { id: userId },
+      { $pull: { rooms: { id: roomId } } },
+      { returnDocument: 'after' },
+    );
+
+    if (!updatedUserResult) {
+      throw new NotFoundException(`User with ID "${userId}" not found.`);
+    }
+
+    if (!updatedUserResult.value) {
+      throw new NotFoundException(
+        `Room with ID "${roomId}" not found for user "${userId}".`,
+      );
+    }
+
+    return updatedUserResult.value;
   }
 }

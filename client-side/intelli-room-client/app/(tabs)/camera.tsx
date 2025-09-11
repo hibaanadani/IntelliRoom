@@ -1,31 +1,43 @@
 import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
-import { Image, ScrollView, Text, View } from "react-native";
+import { Image, ScrollView, Text, View, Alert, TextInput } from "react-native";
+import { router } from "expo-router";
 
 import AuthButton from "../../components/AuthButton";
+import { saveRoomWithImage } from "../../services/rooms.service";
+import { useAuth } from "../context/AuthContext";
 
 const UploadPhoto = () => {
-  // --- This is the updated line ---
+  const { user, token } = useAuth();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [roomName, setRoomName] = useState("");
 
-  // Function to handle camera launch
+  const mlOutputPlaceholder = {
+    overallClassification: "Clean and Tidy",
+    individualObjectAnalysis: [
+      { object: "Bed", classification: "Good" },
+      { object: "Desk", classification: "Good" },
+      { object: "Clutter", classification: "Bad" },
+    ],
+    actionableReport: [
+      "Tidy up the desk area.",
+      "Clear the clutter from the floor.",
+    ],
+  };
+
   const handleLaunchCamera = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-
     if (permissionResult.granted === false) {
       alert("You've refused to allow this app to access your camera!");
       return;
     }
-
     const result = await ImagePicker.launchCameraAsync();
-
     if (!result.canceled) {
-      // The uri is a string, which now matches the state's type
       setSelectedImage(result.assets[0].uri);
     }
   };
 
-  // Function to handle gallery launch
   const handleLaunchGallery = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -42,8 +54,42 @@ const UploadPhoto = () => {
     });
 
     if (!result.canceled) {
-      // The uri is a string, which now matches the state's type
       setSelectedImage(result.assets[0].uri);
+    }
+  };
+
+  const handleSaveRoom = async () => {
+    if (!selectedImage) {
+      Alert.alert("Error", "Please select or take a photo first.");
+      return;
+    }
+
+    if (!user || !token) {
+      Alert.alert("Error", "You must be logged in to save a room.");
+      return;
+    }
+
+    setLoading(true);
+    const finalRoomName =
+      roomName || `My New Room ${new Date().toLocaleTimeString()}`;
+
+    try {
+      await saveRoomWithImage(
+        user.id,
+        finalRoomName,
+        mlOutputPlaceholder,
+        selectedImage,
+        token
+      );
+      Alert.alert("Success", "Room saved successfully!");
+      setTimeout(() => {
+        router.replace("/(tabs)/rooms");
+      }, 500);
+    } catch (error) {
+      console.error("Failed to save room:", error);
+      Alert.alert("Error", "Failed to save room. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,6 +107,16 @@ const UploadPhoto = () => {
           />
         )}
 
+        {selectedImage && (
+          <TextInput
+            className="w-full h-12 bg-white rounded-lg mb-4 text-black text-center"
+            placeholder="Name your room"
+            placeholderTextColor="#666"
+            value={roomName}
+            onChangeText={setRoomName}
+          />
+        )}
+
         <AuthButton
           onPress={handleLaunchCamera}
           text="Open Camera"
@@ -72,6 +128,15 @@ const UploadPhoto = () => {
           text="Choose from Gallery"
           variant="primary"
         />
+
+        {selectedImage && (
+          <AuthButton
+            onPress={handleSaveRoom}
+            text={loading ? "Saving..." : "Save Room"}
+            variant="secondary"
+            disabled={loading}
+          />
+        )}
       </View>
     </ScrollView>
   );

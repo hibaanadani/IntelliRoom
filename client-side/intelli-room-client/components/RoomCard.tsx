@@ -5,12 +5,22 @@ import PageButton from "./PageButton";
 interface RoomCardProps {
   imageSource: any;
   onPress: () => void;
+  onLongPress: () => void;
   title: string;
 }
 
-const RoomCard = ({ imageSource, onPress, title }: RoomCardProps) => {
+const RoomCard = ({
+  imageSource,
+  onPress,
+  onLongPress,
+  title,
+}: RoomCardProps) => {
   return (
-    <TouchableOpacity className="w-full h-64 mb-6 rounded-2xl overflow-hidden shadow-lg">
+    <TouchableOpacity
+      className="w-full h-64 mb-6 rounded-2xl overflow-hidden shadow-lg"
+      onPress={onPress}
+      onLongPress={onLongPress}
+    >
       <View className="relative w-full h-full">
         <Image
           source={imageSource}
