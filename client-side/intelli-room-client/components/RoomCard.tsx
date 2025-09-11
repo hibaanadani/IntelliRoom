@@ -18,7 +18,6 @@ const RoomCard = ({
   return (
     <TouchableOpacity
       className="w-full h-64 mb-6 rounded-2xl overflow-hidden shadow-lg"
-      onPress={onPress}
       onLongPress={onLongPress}
     >
       <View className="relative w-full h-full">
