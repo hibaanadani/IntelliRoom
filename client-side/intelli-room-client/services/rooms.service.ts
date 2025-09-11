@@ -1,10 +1,7 @@
 import api from "./axiosInstance";
 import { Platform } from "react-native";
 import { Room } from "../app/(tabs)/rooms";
-
-const isAxiosError = (error: any): boolean => {
-  return error && typeof error === "object" && error.isAxiosError === true;
-};
+import { isAxiosError } from "./users.service";
 
 export const saveRoomWithImage = async (
   userId: number,
@@ -76,8 +73,14 @@ export const deleteRoom = async (
   roomId: string,
   token: string
 ) => {
+  console.log("DELETE REQUEST DETAILS");
+  console.log("User ID:", userId);
+  console.log("Room ID:", roomId);
+  const url = `/users/${userId}/rooms/${roomId}`;
+  console.log("DELETE URL:", url);
+
   try {
-    await api.delete(`/users/${userId}/rooms/${roomId}`, {
+    await api.delete(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

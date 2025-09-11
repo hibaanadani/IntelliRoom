@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -142,7 +143,6 @@ export class UsersService {
 
     let parsedRoomData: { name: string; mlOutput: MLOutput };
 
-    // This handles the invalid JSON data from your frontend
     try {
       parsedRoomData = JSON.parse(roomDataString);
     } catch (error) {
@@ -190,7 +190,17 @@ export class UsersService {
     return user;
   }
 
-  async removeRoom(userId: number, roomId: string): Promise<User> {
+  async removeRoom(
+    userId: number,
+    roomId: string,
+    authUserId: number,
+  ): Promise<User> {
+    if (userId !== authUserId) {
+      throw new ForbiddenException(
+        'You do not have permission to delete this room.',
+      );
+    }
+
     const updatedUserResult = await this.usersRepository.findOneAndUpdate(
       { id: userId },
       { $pull: { rooms: { id: roomId } } },

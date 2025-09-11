@@ -1,4 +1,8 @@
-import api from "./axiosInstance.ts";
+import api from "./axiosInstance";
+
+export const isAxiosError = (error: any): boolean => {
+  return error && typeof error === "object" && error.isAxiosError === true;
+};
 
 export const getUsers = (token: string) => {
   return api.get("/users", {
@@ -21,6 +25,10 @@ export const updateProfile = async (
     });
     return response.data;
   } catch (error) {
-    throw error;
+    if (isAxiosError(error)) {
+      throw error;
+    } else {
+      throw new Error("An unexpected error occurred during profile update.");
+    }
   }
 };

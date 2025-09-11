@@ -1,24 +1,26 @@
 import {
-  Body,
   Controller,
-  Delete,
   Get,
-  Param,
-  ParseIntPipe,
-  Patch,
   Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
   Query,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+  UseGuards,
+  Request,
   HttpCode,
   HttpStatus,
-  UploadedFile,
-  UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { AuthGuard } from '@nestjs/passport';
 import {
   ApiCreatedResponse,
   ApiNotFoundResponse,
@@ -30,7 +32,8 @@ import {
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
-import { Request } from 'express';
+import { User } from './entities/user.entity';
+import { diskStorage } from 'multer';
 
 const storage = diskStorage({
   destination: './uploads',
@@ -52,7 +55,7 @@ export class UsersController {
     description: 'List of all users',
   })
   @Get()
-  async getUsers(): Promise<User[]> {
+  async findAll(): Promise<User[]> {
     return this.usersService.findAll();
   }
 
@@ -67,7 +70,7 @@ export class UsersController {
   })
   @ApiQuery({ name: 'name', required: true, description: 'Name to search for' })
   @Get('search')
-  async getUsersByName(@Query('name') name: string): Promise<User[]> {
+  async findByName(@Query('name') name: string): Promise<User[]> {
     return this.usersService.findByName(name);
   }
 
@@ -76,7 +79,7 @@ export class UsersController {
   @ApiOkResponse({ type: User, description: 'User found successfully' })
   @ApiNotFoundResponse({ description: 'User not found' })
   @Get(':id')
-  async getUserById(@Param('id', ParseIntPipe) id: number): Promise<User> {
+  async findById(@Param('id', ParseIntPipe) id: number): Promise<User> {
     return this.usersService.findById(id);
   }
 
@@ -148,12 +151,24 @@ export class UsersController {
   @ApiOkResponse({ description: 'Room deleted successfully' })
   @ApiNotFoundResponse({ description: 'User or room not found' })
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':id/rooms/:roomId')
   async deleteRoom(
     @Param('id', ParseIntPipe) userId: number,
     @Param('roomId') roomId: string,
+    @Request() req: any,
   ) {
-    await this.usersService.removeRoom(userId, roomId);
+    console.log('DELETE REQUEST DETAILS:');
+    console.log('URL User ID:', userId, 'Type:', typeof userId);
+    console.log(
+      'Authenticated User ID:',
+      req.user.id,
+      'Type:',
+      typeof req.user.id,
+    );
+    console.log('Room ID:', roomId, 'Type:', typeof roomId);
+
+    await this.usersService.removeRoom(userId, roomId, req.user.id);
     return { message: 'Room deleted successfully' };
   }
 }
