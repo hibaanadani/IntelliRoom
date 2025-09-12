@@ -9,7 +9,7 @@ from transformers import CLIPProcessor, CLIPModel
 from ultralytics import YOLO
 import tempfile
 import os
-from typing import Dict
+from typing import Dict, List, Any
 
 app = FastAPI()
 
@@ -22,7 +22,6 @@ model_body = clip_model.vision_model
 print("Loading the custom aesthetic classifier head...")
 model_head_weights = torch.load('aesthetic_classifier_head.pt', map_location=torch.device('cpu'))
 
-# FIX: Create a linear layer with 2 output features to match the model weights
 model_head = nn.Linear(512, 2)
 
 model_head.weight = nn.Parameter(model_head_weights['weight'])
@@ -43,14 +42,13 @@ def get_full_analysis(image_path: str) -> Dict:
     with torch.no_grad():
         overall_features = model_body(**overall_inputs).pooler_output
         overall_outputs = model_head(overall_features)
-        # FIX: Use torch.argmax to get the class with the highest probability
         _, overall_pred_idx = torch.max(overall_outputs, 1)
         overall_classification = "Good Room" if overall_pred_idx.item() == 0 else "Bad Room"
 
     yolo_results = yolo_model(image_path)
-    per_object_report = []
+    per_object_report: List[Dict[str, str]] = []
     
-    actionable_report = []
+    actionable_report: List[str] = []
 
     for result in yolo_results:
         for box in result.boxes:
@@ -64,7 +62,6 @@ def get_full_analysis(image_path: str) -> Dict:
                 with torch.no_grad():
                     cropped_features = model_body(**cropped_inputs).pooler_output
                     cropped_outputs = model_head(cropped_features)
-                    # FIX: Use torch.argmax to get the class with the highest probability
                     _, cropped_pred_idx = torch.max(cropped_outputs, 1)
                     object_classification = "Good" if cropped_pred_idx.item() == 0 else "Bad"
                 
@@ -76,6 +73,20 @@ def get_full_analysis(image_path: str) -> Dict:
                     "classification": object_classification,
                 })
 
+    # FINAL LOGIC: Replace the actionableReport with a custom message
+    if overall_classification == "Bad Room" and not actionable_report:
+        actionable_report = [
+            "--- Actionable Report ---",
+            "The overall room is classified as 'Bad', but no individual objects were classified as 'Bad'.",
+            "This is likely due to the overall composition, lighting, or clutter that the model could not identify by object name.",
+            "Consider changing the color scheme, adjusting the lighting, or rearranging the space."
+        ]
+    elif overall_classification == "Good Room":
+        actionable_report = [
+            "--- Actionable Report ---",
+            "No individual objects were classified as 'Bad'. The room has a cohesive aesthetic."
+        ]
+        
     return {
         "overallClassification": overall_classification,
         "individualObjectAnalysis": per_object_report,
