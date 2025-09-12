@@ -69,7 +69,7 @@ const Profile = () => {
 
   const handleLogout = async () => {
     await logout();
-    router.replace("/Login");
+    router.replace("/onboarding");
   };
 
   return (
