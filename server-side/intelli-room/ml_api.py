@@ -14,40 +14,20 @@ from typing import Dict
 app = FastAPI()
 
 # --- Load Models ---
-class AestheticClassifier(nn.Module):
-    def __init__(self, output_dim=1):
-        super(AestheticClassifier, self).__init__()
-        self.conv1d = nn.Conv1d(512, 128, kernel_size=1)
-        self.relu = nn.ReLU()
-        self.pool = nn.AdaptiveAvgPool1d(1)
-        self.flatten = nn.Flatten()
-        self.fc1 = nn.Linear(128, 64)
-        self.fc2 = nn.Linear(64, output_dim)
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, x):
-        x = x.unsqueeze(2)
-        x = self.conv1d(x)
-        x = self.relu(x)
-        x = self.pool(x)
-        x = self.flatten(x)
-        x = self.fc1(x)
-        x = self.relu(x)
-        x = self.fc2(x)
-        x = self.sigmoid(x)
-        return x
-
-print("Loading the custom aesthetic classifier...")
-# FIX: Corrected the filename from aesthetic_classifier.pth to aesthetic_classifier_head.pt
-aesthetic_classifier = AestheticClassifier()
-aesthetic_classifier.load_state_dict(torch.load('aesthetic_classifier_head.pt'))
-aesthetic_classifier.eval()
-
 print("Loading the pre-trained CLIP model...")
-clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to('cpu')
 processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 model_body = clip_model.vision_model
-model_head = aesthetic_classifier
+
+print("Loading the custom aesthetic classifier head...")
+model_head_weights = torch.load('aesthetic_classifier_head.pt', map_location=torch.device('cpu'))
+
+# FIX: Create a linear layer with 2 output features to match the model weights
+model_head = nn.Linear(512, 2)
+
+model_head.weight = nn.Parameter(model_head_weights['weight'])
+model_head.bias = nn.Parameter(model_head_weights['bias'])
+model_head.eval()
 
 print("Loading the YOLOv8 object detection model...")
 yolo_model = YOLO('yolov8n.pt')
@@ -59,15 +39,14 @@ def get_full_analysis(image_path: str) -> Dict:
     except FileNotFoundError:
         return {"error": f"Oops! I can't find the picture at: {image_path}"}
     
-    # Overall Room Aesthetic Analysis
-    overall_inputs = processor(full_image).unsqueeze(0)
+    overall_inputs = processor(images=full_image, return_tensors="pt").to('cpu')
     with torch.no_grad():
-        overall_features = model_body(overall_inputs).pooler_output
+        overall_features = model_body(**overall_inputs).pooler_output
         overall_outputs = model_head(overall_features)
+        # FIX: Use torch.argmax to get the class with the highest probability
         _, overall_pred_idx = torch.max(overall_outputs, 1)
-    overall_classification = "Good Room" if overall_pred_idx.item() == 0 else "Bad Room"
+        overall_classification = "Good Room" if overall_pred_idx.item() == 0 else "Bad Room"
 
-    # Individual Object Analysis with YOLO and CLIP
     yolo_results = yolo_model(image_path)
     per_object_report = []
     
@@ -81,12 +60,13 @@ def get_full_analysis(image_path: str) -> Dict:
             cropped_image = full_image.crop((x1, y1, x2, y2))
             
             if min(cropped_image.size) > 0:
-                cropped_inputs = processor(cropped_image).unsqueeze(0)
+                cropped_inputs = processor(images=cropped_image, return_tensors="pt").to('cpu')
                 with torch.no_grad():
-                    cropped_features = model_body(cropped_inputs).pooler_output
+                    cropped_features = model_body(**cropped_inputs).pooler_output
                     cropped_outputs = model_head(cropped_features)
+                    # FIX: Use torch.argmax to get the class with the highest probability
                     _, cropped_pred_idx = torch.max(cropped_outputs, 1)
-                object_classification = "Good" if cropped_pred_idx.item() == 0 else "Bad"
+                    object_classification = "Good" if cropped_pred_idx.item() == 0 else "Bad"
                 
                 if object_classification == "Bad":
                     actionable_report.append(f"The {object_name} needs some tidying.")
