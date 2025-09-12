@@ -10,10 +10,8 @@ import {
   HttpStatus,
   UseInterceptors,
   UploadedFile,
-  Req,
 } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
-import { CreateRoomDto } from './dto/create-room.dto';
 import { RoomDto } from './dto/room.dto';
 import {
   ApiTags,
@@ -28,7 +26,7 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Request } from 'express';
+import { extname } from 'path';
 
 @ApiTags('Rooms')
 @Controller('users/:userObjectId/rooms')
@@ -40,7 +38,22 @@ export class RoomsController {
   @ApiParam({ name: 'userObjectId', description: 'User ID', type: 'string' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
-    // ...
+    schema: {
+      type: 'object',
+      properties: {
+        roomData: {
+          type: 'string',
+          format: 'json',
+          description:
+            'JSON string containing the room name and ML output. Example: {"name": "Living Room", "mlOutput": {...}}',
+        },
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'The room image file',
+        },
+      },
+    },
   })
   @ApiCreatedResponse({
     type: RoomDto,
@@ -48,17 +61,18 @@ export class RoomsController {
   })
   @ApiNotFoundResponse({ description: 'User not found' })
   @Post('upload')
-  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('image'))
   async saveRoomWithImage(
     @Param('userObjectId') userObjectId: string,
     @UploadedFile() file: Express.Multer.File,
     @Body('roomData') roomData: string,
   ): Promise<RoomDto> {
-    const createRoomDto: CreateRoomDto = JSON.parse(roomData);
-    const imageUrl = 'placeholder-url-for-your-image';
-    createRoomDto.imageUrl = imageUrl;
-    return this.roomsService.saveRoom(userObjectId, createRoomDto);
+    // The controller now simply passes the raw data to the service.
+    return this.roomsService.saveRoomWithImage(
+      userObjectId,
+      roomData, // Pass the raw JSON string
+      file,
+    );
   }
 
   @ApiOperation({ summary: 'Get all rooms for a user' })
@@ -69,7 +83,7 @@ export class RoomsController {
   })
   @ApiNotFoundResponse({ description: 'User not found' })
   @Get()
-  // @UseGuards(JwtAuthGuard) // <-- Commented out as you remembered
+  // @UseGuards(JwtAuthGuard)
   async getUserRooms(
     @Param('userObjectId') userObjectId: string,
   ): Promise<RoomDto[]> {
@@ -83,7 +97,7 @@ export class RoomsController {
   @ApiNotFoundResponse({ description: 'User or room not found' })
   @Delete(':roomId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   async deleteRoom(
     @Param('userObjectId') userObjectId: string,
     @Param('roomId') roomId: string,
