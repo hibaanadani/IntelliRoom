@@ -12,7 +12,6 @@ export class UsersSeeder implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    // Optional flag to disable on boot
     if (process.env.SEED_ON_BOOT === 'false') {
       return;
     }
@@ -38,7 +37,6 @@ export class UsersSeeder implements OnModuleInit {
       { fullname: 'Joseph Matta', email: 'joe@sefactory.com', password: 'joe' },
     ];
 
-    // Since we are not using the createUser service method, we'll manually hash the passwords and generate IDs here.
     const highestIdUser = await this.usersRepository.findOne({
       order: { id: 'DESC' },
     });

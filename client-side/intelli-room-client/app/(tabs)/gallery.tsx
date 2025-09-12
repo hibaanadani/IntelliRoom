@@ -1,30 +1,61 @@
 import GalleryCard from "@/components/GalleryCard";
 import { router } from "expo-router";
-import React from "react";
-import { ScrollView, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { getAllGalleries } from "../../services/gallary.service";
 
-const myRooms = [
-  { id: "1", image: require("../../assets/images/gallery.png"), title: "Daze" },
-  {
-    id: "2",
-    image: require("../../assets/images/gallery-1.png"),
-    title: "Istikbal",
-  },
-  {
-    id: "3",
-    image: require("../../assets/images/gallery-2.png"),
-    title: "Matta",
-  },
-];
+interface Gallery {
+  id: string;
+  name: string;
+  coverImage: string;
+  appointments: string[];
+}
 
-const gallery = () => {
-  const handleCardPress = (cardTitle: string) => {
-    console.log(`Opening room: ${cardTitle}`);
+const Gallery = () => {
+  const [galleries, setGalleries] = useState<Gallery[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchGalleries = async () => {
+      try {
+        const data = await getAllGalleries();
+        setGalleries(data);
+      } catch (err) {
+        console.error("Failed to fetch galleries:", err);
+        setError("Failed to load galleries. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGalleries();
+  }, []);
+
+  const handleBookings = (galleryId: string) => {
+    router.push({ pathname: "/bookings", params: { galleryId } });
   };
 
-  const handleBookings = () => {
-    router.push("/bookings");
-  };
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center bg-backgroundclr">
+        <ActivityIndicator size="large" color="#8C3B1E" />
+        <Text className="mt-4 text-primary font-cinzel-bold">
+          Loading Galleries...
+        </Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 justify-center items-center bg-backgroundclr">
+        <Text className="text-primary font-cinzel-bold text-center">
+          {error}
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -38,13 +69,15 @@ const gallery = () => {
       </View>
 
       <View className="space-y-4">
-        {myRooms.map((room) => (
+        {galleries.map((galleryItem) => (
           <GalleryCard
-            key={room.id}
-            imageSource={room.image}
-            title={room.title}
-            onPress={() => handleCardPress(room.title)}
-            onCalendarPress={handleBookings}
+            key={galleryItem.id}
+            imageSource={{
+              uri: `${process.env.EXPO_PUBLIC_API_URL}/${galleryItem.coverImage}`,
+            }}
+            title={galleryItem.name}
+            onPress={() => handleBookings(galleryItem.id)}
+            onCalendarPress={() => handleBookings(galleryItem.id)}
           />
         ))}
       </View>
@@ -52,4 +85,4 @@ const gallery = () => {
   );
 };
 
-export default gallery;
+export default Gallery;
