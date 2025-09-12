@@ -1,38 +1,65 @@
-import os
-import shutil
-from typing import Dict
-from fastapi import FastAPI, UploadFile, File, HTTPException
+# ml_api.py
 import torch
-from torch import nn
+import torch.nn as nn
+from torchvision import models, transforms
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import JSONResponse
 from PIL import Image
-from transformers import CLIPVisionModel
-from torchvision import transforms
+from transformers import CLIPProcessor, CLIPModel
 from ultralytics import YOLO
+import tempfile
+import os
+from typing import Dict
+
+app = FastAPI()
+
+# --- Load Models ---
+class AestheticClassifier(nn.Module):
+    def __init__(self, output_dim=1):
+        super(AestheticClassifier, self).__init__()
+        self.conv1d = nn.Conv1d(512, 128, kernel_size=1)
+        self.relu = nn.ReLU()
+        self.pool = nn.AdaptiveAvgPool1d(1)
+        self.flatten = nn.Flatten()
+        self.fc1 = nn.Linear(128, 64)
+        self.fc2 = nn.Linear(64, output_dim)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = x.unsqueeze(2)
+        x = self.conv1d(x)
+        x = self.relu(x)
+        x = self.pool(x)
+        x = self.flatten(x)
+        x = self.fc1(x)
+        x = self.relu(x)
+        x = self.fc2(x)
+        x = self.sigmoid(x)
+        return x
 
 print("Loading the custom aesthetic classifier...")
-model_head = nn.Linear(768, 2)
-model_head.load_state_dict(torch.load("aesthetic_classifier_head.pt"))
+# FIX: Corrected the filename from aesthetic_classifier.pth to aesthetic_classifier_head.pt
+aesthetic_classifier = AestheticClassifier()
+aesthetic_classifier.load_state_dict(torch.load('aesthetic_classifier_head.pt'))
+aesthetic_classifier.eval()
 
 print("Loading the pre-trained CLIP model...")
-model_body = CLIPVisionModel.from_pretrained("openai/clip-vit-base-patch32")
-model_body.eval()
-model_head.eval()
+clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+model_body = clip_model.vision_model
+model_head = aesthetic_classifier
 
 print("Loading the YOLOv8 object detection model...")
 yolo_model = YOLO('yolov8n.pt')
 
-processor = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-])
-
+# --- Analysis Function ---
 def get_full_analysis(image_path: str) -> Dict:
     try:
         full_image = Image.open(image_path).convert("RGB")
     except FileNotFoundError:
         return {"error": f"Oops! I can't find the picture at: {image_path}"}
     
+    # Overall Room Aesthetic Analysis
     overall_inputs = processor(full_image).unsqueeze(0)
     with torch.no_grad():
         overall_features = model_body(overall_inputs).pooler_output
@@ -40,8 +67,11 @@ def get_full_analysis(image_path: str) -> Dict:
         _, overall_pred_idx = torch.max(overall_outputs, 1)
     overall_classification = "Good Room" if overall_pred_idx.item() == 0 else "Bad Room"
 
+    # Individual Object Analysis with YOLO and CLIP
     yolo_results = yolo_model(image_path)
     per_object_report = []
+    
+    actionable_report = []
 
     for result in yolo_results:
         for box in result.boxes:
@@ -57,6 +87,10 @@ def get_full_analysis(image_path: str) -> Dict:
                     cropped_outputs = model_head(cropped_features)
                     _, cropped_pred_idx = torch.max(cropped_outputs, 1)
                 object_classification = "Good" if cropped_pred_idx.item() == 0 else "Bad"
+                
+                if object_classification == "Bad":
+                    actionable_report.append(f"The {object_name} needs some tidying.")
+
                 per_object_report.append({
                     "object": object_name,
                     "classification": object_classification,
@@ -64,35 +98,33 @@ def get_full_analysis(image_path: str) -> Dict:
 
     return {
         "overallClassification": overall_classification,
-        "individualObjectAnalysis": per_object_report
+        "individualObjectAnalysis": per_object_report,
+        "actionableReport": actionable_report
     }
 
-app = FastAPI()
-
-@app.get("/")
-def read_root():
-    return {"message": "ML API is running."}
-
+# --- API Endpoint ---
 @app.post("/analyze")
-async def analyze_image(file: UploadFile = File(...)):
-    if not file:
-        raise HTTPException(status_code=400, detail="No image file provided.")
+async def analyze_room(file: UploadFile = File(...)):
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid file type. Please upload an image."
+        )
 
-    temp_dir = "./temp"
-    os.makedirs(temp_dir, exist_ok=True)
-    temp_path = os.path.join(temp_dir, file.filename)
-    
     try:
-        with open(temp_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpeg") as temp_file:
+            temp_file.write(await file.read())
+            temp_file_path = temp_file.name
+
+        analysis_result = get_full_analysis(temp_file_path)
+
+        os.remove(temp_file_path)
+
+        if "error" in analysis_result:
+            raise HTTPException(status_code=500, detail=analysis_result["error"])
         
-        analysis = get_full_analysis(temp_path)
-        
-        os.remove(temp_path)
-        
-        return analysis
-    
+        return JSONResponse(content=analysis_result)
+
     except Exception as e:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
-        raise HTTPException(status_code=500, detail=f"An error occurred during analysis: {e}")
+        print(f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
