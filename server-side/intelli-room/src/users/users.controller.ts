@@ -8,18 +8,13 @@ import {
   Delete,
   ParseIntPipe,
   Query,
-  UseInterceptors,
-  UploadedFile,
-  BadRequestException,
   UseGuards,
-  Request,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiCreatedResponse,
@@ -29,19 +24,8 @@ import {
   ApiTags,
   ApiOperation,
   ApiParam,
-  ApiConsumes,
-  ApiBody,
 } from '@nestjs/swagger';
 import { User } from './entities/user.entity';
-import { diskStorage } from 'multer';
-
-const storage = diskStorage({
-  destination: './uploads',
-  filename: (req, file, cb) => {
-    const filename = `${Date.now()}-${file.originalname}`;
-    cb(null, filename);
-  },
-});
 
 @ApiTags('Users')
 @Controller('users')
@@ -110,65 +94,5 @@ export class UsersController {
   @Delete(':id')
   async removeUser(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.usersService.removeUser(id);
-  }
-
-  @Post(':id/rooms/upload')
-  @UseInterceptors(FileInterceptor('image', { storage }))
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        image: {
-          type: 'string',
-          format: 'binary',
-        },
-        roomData: { type: 'string' },
-      },
-    },
-  })
-  async uploadRoom(
-    @Param('id', ParseIntPipe) userId: number,
-    @UploadedFile() image: Express.Multer.File,
-    @Body('roomData') roomDataString: string,
-  ) {
-    return this.usersService.addRoomWithImage(userId, roomDataString, image);
-  }
-
-  @ApiOperation({ summary: 'Get all rooms for a specific user' })
-  @ApiParam({ name: 'id', description: 'User ID', type: 'integer' })
-  @ApiOkResponse({ type: User, description: 'Rooms retrieved successfully' })
-  @ApiNotFoundResponse({ description: 'User not found' })
-  @Get(':id/rooms')
-  async getUserRooms(@Param('id', ParseIntPipe) userId: number) {
-    const user = await this.usersService.findByIdWithRooms(userId);
-    return user.rooms;
-  }
-
-  @ApiOperation({ summary: 'Delete a room for a user' })
-  @ApiParam({ name: 'id', description: 'User ID', type: 'integer' })
-  @ApiParam({ name: 'roomId', description: 'Room ID', type: 'string' })
-  @ApiOkResponse({ description: 'Room deleted successfully' })
-  @ApiNotFoundResponse({ description: 'User or room not found' })
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthGuard('jwt'))
-  @Delete(':id/rooms/:roomId')
-  async deleteRoom(
-    @Param('id', ParseIntPipe) userId: number,
-    @Param('roomId') roomId: string,
-    @Request() req: any,
-  ) {
-    console.log('DELETE REQUEST DETAILS:');
-    console.log('URL User ID:', userId, 'Type:', typeof userId);
-    console.log(
-      'Authenticated User ID:',
-      req.user.id,
-      'Type:',
-      typeof req.user.id,
-    );
-    console.log('Room ID:', roomId, 'Type:', typeof roomId);
-
-    await this.usersService.removeRoom(userId, roomId, req.user.id);
-    return { message: 'Room deleted successfully' };
   }
 }

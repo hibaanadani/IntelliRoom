@@ -13,7 +13,6 @@ import {
   Min,
 } from 'class-validator';
 
-// This class defines what data we need to create a new user
 export class CreateUserDto {
   @ApiProperty({ description: 'User full name', example: 'John Doe' })
   @IsString()

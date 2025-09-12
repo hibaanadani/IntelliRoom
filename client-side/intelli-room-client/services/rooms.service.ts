@@ -1,15 +1,17 @@
+import axios from "axios";
 import api from "./axiosInstance";
 import { Platform } from "react-native";
 import { Room } from "../app/(tabs)/rooms";
 import { isAxiosError } from "./users.service";
 
 export const saveRoomWithImage = async (
-  userId: number,
+  userObjectId: string,
   roomName: string,
   mlOutput: any,
   imageUri: string,
   token: string
 ) => {
+  console.log("SAVE ROOM: Attempting to save a room for userId:", userObjectId);
   const formData = new FormData();
 
   const fileExtension = imageUri.split(".").pop();
@@ -31,12 +33,16 @@ export const saveRoomWithImage = async (
   );
 
   try {
-    const response = await api.post(`/users/${userId}/rooms/upload`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await axios.post(
+      `http://192.168.1.110:9000/users/${userObjectId}/rooms/upload`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
 
     return response.data;
   } catch (error) {
@@ -49,11 +55,15 @@ export const saveRoomWithImage = async (
 };
 
 export const getUserRooms = async (
-  userId: number,
+  userObjectId: string,
   token: string
 ): Promise<Room[]> => {
+  console.log("GET ROOMS: Attempting to fetch rooms for userId:", userObjectId);
+  const url = `http://192.168.1.110:9000/users/${userObjectId}/rooms`;
+  console.log("GET ROOMS: Full URL being requested:", url);
+  console.log("GET ROOMS: Token value:", token);
   try {
-    const response = await api.get(`/users/${userId}/rooms`, {
+    const response = await axios.get(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -69,18 +79,18 @@ export const getUserRooms = async (
 };
 
 export const deleteRoom = async (
-  userId: number,
+  userObjectId: string,
   roomId: string,
   token: string
 ) => {
-  console.log("DELETE REQUEST DETAILS");
-  console.log("User ID:", userId);
+  console.log("DELETE ROOM: Attempting to delete room.");
+  console.log("User ID:", userObjectId);
   console.log("Room ID:", roomId);
-  const url = `/users/${userId}/rooms/${roomId}`;
+  const url = `http://192.168.1.110:9000/users/${userObjectId}/rooms/${roomId}`;
   console.log("DELETE URL:", url);
 
   try {
-    await api.delete(url, {
+    await axios.delete(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
