@@ -1,8 +1,7 @@
-import axios from "axios";
-import api from "./axiosInstance";
 import { Platform } from "react-native";
 import { Room } from "../app/(tabs)/rooms";
 import { isAxiosError } from "./users.service";
+import api from "./axiosInstance";
 
 export const saveRoomWithImage = async (
   userObjectId: string,
@@ -18,11 +17,13 @@ export const saveRoomWithImage = async (
   const fileName = `room_image_${Date.now()}.${fileExtension}`;
   const fileType = `image/${fileExtension}`;
 
-  formData.append("image", {
+  const imageFormData: any = {
     uri: Platform.OS === "android" ? imageUri : imageUri.replace("file://", ""),
     name: fileName,
     type: fileType,
-  } as any);
+  };
+
+  formData.append("image", imageFormData);
 
   formData.append(
     "roomData",
@@ -33,8 +34,8 @@ export const saveRoomWithImage = async (
   );
 
   try {
-    const response = await axios.post(
-      `http://192.168.1.110:9000/users/${userObjectId}/rooms/upload`,
+    const response = await api.post(
+      `/users/${userObjectId}/rooms/upload`,
       formData,
       {
         headers: {
@@ -59,11 +60,10 @@ export const getUserRooms = async (
   token: string
 ): Promise<Room[]> => {
   console.log("GET ROOMS: Attempting to fetch rooms for userId:", userObjectId);
-  const url = `http://192.168.1.110:9000/users/${userObjectId}/rooms`;
+  const url = `/users/${userObjectId}/rooms`;
   console.log("GET ROOMS: Full URL being requested:", url);
-  console.log("GET ROOMS: Token value:", token);
   try {
-    const response = await axios.get(url, {
+    const response = await api.get(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -86,11 +86,11 @@ export const deleteRoom = async (
   console.log("DELETE ROOM: Attempting to delete room.");
   console.log("User ID:", userObjectId);
   console.log("Room ID:", roomId);
-  const url = `http://192.168.1.110:9000/users/${userObjectId}/rooms/${roomId}`;
+  const url = `/users/${userObjectId}/rooms/${roomId}`;
   console.log("DELETE URL:", url);
 
   try {
-    await axios.delete(url, {
+    await api.delete(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
