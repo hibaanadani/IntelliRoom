@@ -1,3 +1,4 @@
+// RoomDetails.tsx
 import { Stack, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { ScrollView, Text, View, Image } from "react-native";
@@ -15,23 +16,31 @@ interface MLOutput {
 const RoomDetails = () => {
   const { name, mlOutput, imageUrl } = useLocalSearchParams();
 
+  let parsedMlOutput: MLOutput | undefined;
   // Safely parse the JSON data from the route parameters
-  let parsedMlOutput: MLOutput;
-  try {
-    parsedMlOutput = JSON.parse(mlOutput as string);
-  } catch (e) {
-    console.error("Failed to parse ML output:", e);
-    return (
-      <View className="flex-1 justify-center items-center bg-backgroundclr">
-        <Text className="text-red-500 text-lg">
-          Error loading room details.
-        </Text>
-      </View>
-    );
+  if (mlOutput) {
+    // <-- FIX 1: Check if mlOutput exists before trying to parse it
+    try {
+      parsedMlOutput = JSON.parse(mlOutput as string);
+    } catch (e) {
+      console.error("Failed to parse ML output:", e);
+      // Optional: Handle the error in the UI if needed
+    }
   }
 
   const roomName = name as string;
   const roomImageUrl = imageUrl as string;
+
+  // We will only render the analysis if the data was parsed correctly
+  if (!parsedMlOutput) {
+    return (
+      <View className="flex-1 justify-center items-center bg-backgroundclr">
+        <Text className="text-red-500 text-lg">
+          No analysis data available for this room.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundclr">
@@ -70,7 +79,8 @@ const RoomDetails = () => {
           <Text className="text-lg font-bold text-gray-700 mb-2">
             Object Analysis
           </Text>
-          {parsedMlOutput.individualObjectAnalysis.map((item, index) => (
+          {/* FIX 2: Ensure the map call is safe with optional chaining */}
+          {parsedMlOutput.individualObjectAnalysis?.map((item, index) => (
             <Text key={index} className="text-base text-gray-600">
               - {item.object}:{" "}
               <Text
@@ -91,7 +101,8 @@ const RoomDetails = () => {
           <Text className="text-lg font-bold text-gray-700 mb-2">
             Actionable Report
           </Text>
-          {parsedMlOutput.actionableReport.map((item, index) => (
+          {/* FIX 2: Ensure the map call is safe with optional chaining */}
+          {parsedMlOutput.actionableReport?.map((item, index) => (
             <Text key={index} className="text-base text-gray-600">
               - {item}
             </Text>

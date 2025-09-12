@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { User } from './users/entities/user.entity';
 import { RoomsModule } from './rooms/rooms.module';
 import { AiAgentModule } from './ai-agent/ai-agent.module';
+import { MlModelModule } from './ml-model/ml-model.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AiAgentModule } from './ai-agent/ai-agent.module';
     AuthModule,
     RoomsModule,
     AiAgentModule,
+    MlModelModule,
   ],
   controllers: [AppController],
   providers: [AppService],

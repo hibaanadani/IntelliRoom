@@ -12,6 +12,7 @@ import { ObjectId } from 'mongodb';
 import * as fs from 'fs';
 import { extname } from 'path';
 import { ConfigService } from '@nestjs/config';
+import { MlModelService } from 'src/ml-model/ml-model.service'; // <-- Import the new service
 
 @Injectable()
 export class RoomsService {
@@ -19,6 +20,7 @@ export class RoomsService {
     @InjectRepository(User)
     private readonly usersRepository: MongoRepository<User>,
     private configService: ConfigService,
+    private readonly mlModelService: MlModelService, // <-- Inject the new service
   ) {}
 
   private async findUserByObjectIdOrId(
@@ -44,6 +46,11 @@ export class RoomsService {
       throw new BadRequestException('Image file is required.');
     }
     const createRoomDto: CreateRoomDto = JSON.parse(roomData);
+
+    // --- NEW LOGIC: Get ML Analysis ---
+    const mlOutput = await this.mlModelService.analyzeRoom(file);
+    createRoomDto.mlOutput = mlOutput;
+    // --- END NEW LOGIC ---
 
     const randomName = Array(32)
       .fill(null)

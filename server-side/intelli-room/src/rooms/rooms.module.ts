@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { UsersModule } from 'src/users/users.module';
 import { MulterModule } from '@nestjs/platform-express';
+import { MlModelModule } from 'src/ml-model/ml-model.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { MulterModule } from '@nestjs/platform-express';
     MulterModule.register({
       storage: null,
     }),
+    MlModelModule,
   ],
   controllers: [RoomsController],
   providers: [RoomsService],

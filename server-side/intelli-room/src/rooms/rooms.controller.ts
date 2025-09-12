@@ -67,12 +67,7 @@ export class RoomsController {
     @UploadedFile() file: Express.Multer.File,
     @Body('roomData') roomData: string,
   ): Promise<RoomDto> {
-    // The controller now simply passes the raw data to the service.
-    return this.roomsService.saveRoomWithImage(
-      userObjectId,
-      roomData, // Pass the raw JSON string
-      file,
-    );
+    return this.roomsService.saveRoomWithImage(userObjectId, roomData, file);
   }
 
   @ApiOperation({ summary: 'Get all rooms for a user' })
@@ -83,7 +78,6 @@ export class RoomsController {
   })
   @ApiNotFoundResponse({ description: 'User not found' })
   @Get()
-  // @UseGuards(JwtAuthGuard)
   async getUserRooms(
     @Param('userObjectId') userObjectId: string,
   ): Promise<RoomDto[]> {
@@ -97,7 +91,6 @@ export class RoomsController {
   @ApiNotFoundResponse({ description: 'User or room not found' })
   @Delete(':roomId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  // @UseGuards(JwtAuthGuard)
   async deleteRoom(
     @Param('userObjectId') userObjectId: string,
     @Param('roomId') roomId: string,
