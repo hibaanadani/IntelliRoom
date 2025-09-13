@@ -7,15 +7,17 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { useAuth } from "./context/AuthContext";
 import { useLocalSearchParams } from "expo-router";
 import { getGalleryById } from "../services/gallary.service";
 import { Gallery } from "../interfaces/gallery.interface";
+import { createBooking, getAvailableTimes } from "../services/booking.service";
 
 const Booking = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { galleryId } = useLocalSearchParams();
 
   const [selectedGallery, setSelectedGallery] = useState<Gallery | null>(null);
@@ -23,6 +25,12 @@ const Booking = () => {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [timesLoading, setTimesLoading] = useState(false);
+  const [timesError, setTimesError] = useState<string | null>(null);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!galleryId) {
@@ -46,13 +54,80 @@ const Booking = () => {
     fetchGallery();
   }, [galleryId]);
 
+  const fetchAndSetAvailableTimes = async (date: string) => {
+    setTimesLoading(true);
+    setTimesError(null);
+    setSelectedTime(null);
+
+    try {
+      const fullDate = new Date(date).toISOString();
+      console.log("Date being sent to backend:", fullDate); // <--- ADDED console.log HERE
+
+      const times = await getAvailableTimes(fullDate);
+      setAvailableTimes(times);
+    } catch (err) {
+      console.error("Failed to fetch available times:", err);
+      setTimesError("Failed to load times. Please try another day.");
+      setAvailableTimes([]);
+    } finally {
+      setTimesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedDate) {
+      fetchAndSetAvailableTimes(selectedDate);
+    }
+  }, [selectedDate]);
+
   const onDayPress = (day: any) => {
     setSelectedDate(day.dateString);
-    setSelectedTime(null);
   };
 
   const onTimePress = (time: string) => {
     setSelectedTime(time);
+  };
+
+  const handleBooking = async () => {
+    if (!selectedDate || !selectedTime || !user || !token) {
+      Alert.alert(
+        "Error",
+        "Please select a date and time to book and ensure you are logged in."
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const [hour, minute] = selectedTime.split(":").map(Number);
+      const startTime = new Date(selectedDate);
+      startTime.setHours(hour, minute, 0, 0);
+
+      const endTime = new Date(startTime);
+      endTime.setHours(startTime.getHours() + 1);
+
+      const bookingData = {
+        title: `Booking for ${selectedGallery?.name || "Gallery"}`,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        email: user.email,
+        fullname: user.fullname,
+        participants: [user.email],
+        notes: `Booking for ${
+          selectedGallery?.name || "the gallery"
+        } at ${selectedTime} on ${selectedDate}`,
+      };
+
+      await createBooking(bookingData, token);
+
+      Alert.alert("Success", "Your booking has been successfully created!");
+    } catch (error) {
+      console.error("Booking failed:", error);
+      Alert.alert("Error", "Failed to create booking. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -128,14 +203,66 @@ const Booking = () => {
             textDayHeaderFontSize: 16,
           }}
         />
-        <View className="flex-1 justify-center items-center mt-4">
-          <Image
-            source={icons.bookings}
-            className="w-44 h-44"
-            resizeMode="contain"
-          />
-          <Text className="text-primary">No Bookings, YET!</Text>
+
+        <View className="flex-1 mt-4">
+          {timesLoading ? (
+            <ActivityIndicator size="large" color="#8C3B1E" />
+          ) : timesError ? (
+            <View className="justify-center items-center">
+              <Text className="text-red-500 font-cinzel-bold text-center">
+                {timesError}
+              </Text>
+            </View>
+          ) : availableTimes.length > 0 ? (
+            <View>
+              <Text className="text-primary text-lg font-cinzel-bold text-center mb-4">
+                Available Times for {selectedDate}
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {availableTimes.map((time, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => onTimePress(time)}
+                    className={`bg-white rounded-full p-3 mr-2 ${
+                      selectedTime === time ? "border-2 border-primary" : ""
+                    }`}
+                  >
+                    <Text className="text-primary font-cinzel-semi-bold">
+                      {time}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          ) : (
+            <View className="flex-1 justify-center items-center">
+              <Image
+                source={icons.bookings}
+                className="w-44 h-44"
+                resizeMode="contain"
+              />
+              <Text className="text-primary mt-2">
+                No Bookings, YET! Select a date to see available times.
+              </Text>
+            </View>
+          )}
         </View>
+
+        {selectedTime && (
+          <TouchableOpacity
+            className="mt-6 p-4 rounded-xl bg-primary flex-row justify-center items-center"
+            onPress={handleBooking}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text className="text-white text-lg font-cinzel-bold">
+                Book Now
+              </Text>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
     </ScrollView>
   );

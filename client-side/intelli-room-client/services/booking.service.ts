@@ -4,6 +4,8 @@ export interface CreateBookingPayload {
   title: string;
   startTime: string;
   endTime: string;
+  email: string;
+  fullname: string;
   participants?: string[];
   notes?: string;
 }
@@ -30,6 +32,19 @@ export const createBooking = async (
     return response.data;
   } catch (error) {
     console.error("Error creating booking:", error);
+    throw error;
+  }
+};
+
+export const getAvailableTimes = async (date: string): Promise<string[]> => {
+  try {
+    const response = await api.post<{ availableSlots: string[] }>( // <--- CHANGE IS HERE
+      "/ai-agent/get-times",
+      { date: date }
+    );
+    return response.data.availableSlots;
+  } catch (error) {
+    console.error("Error fetching available times:", error);
     throw error;
   }
 };

@@ -13,6 +13,7 @@ import { GalleryModule } from './gallery/gallery.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { Gallery } from './gallery/entities/gallery.entity';
+import { ChatbotModule } from './chatbot/chatbot.module'; // Add this line
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { Gallery } from './gallery/entities/gallery.entity';
     AiAgentModule,
     MlModelModule,
     GalleryModule,
+    ChatbotModule,
   ],
   controllers: [AppController],
   providers: [AppService],

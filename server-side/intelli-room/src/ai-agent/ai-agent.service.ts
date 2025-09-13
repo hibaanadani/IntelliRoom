@@ -1,5 +1,3 @@
-// src/ai-agent/ai-agent.service.ts
-
 import {
   Injectable,
   Logger,
@@ -12,7 +10,6 @@ import { AxiosError } from 'axios';
 import { FrontendBookingDto, GetTimesDto } from './dto/ai-agent.dto';
 import { ConfigService } from '@nestjs/config';
 
-// Define a type for the data we'll send to n8n to get available times
 interface N8nGetTimesPayload {
   action: 'get_available_times';
   date: string;
@@ -22,8 +19,8 @@ interface N8nGetTimesPayload {
 export class AiAgentService implements OnModuleInit {
   private readonly logger = new Logger(AiAgentService.name);
 
-  // Single webhook URL for both actions
-  private n8nWebhookUrl: string;
+  private n8nBookingWebhookUrl: string;
+  private n8nAvailableTimesWebhookUrl: string;
 
   constructor(
     private readonly httpService: HttpService,
@@ -31,16 +28,31 @@ export class AiAgentService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    const url = this.configService.get<string>('N8N_WEBHOOK_URL_Calendar');
-    if (!url) {
-      this.logger.error(
-        'N8N_WEBHOOK_URL_Calendar is not defined in the environment!',
-      );
+    const bookingUrl = this.configService.get<string>(
+      'N8N_WEBHOOK_URL_Calendar',
+    );
+    if (!bookingUrl) {
+      this.logger.error('N8N_WEBHOOK_URL_Calendar is not defined!');
       throw new Error(
         'Configuration error: N8N_WEBHOOK_URL_Calendar not found.',
       );
     }
-    this.n8nWebhookUrl = url;
+    this.n8nBookingWebhookUrl = bookingUrl;
+
+    const availableTimesUrl = this.configService.get<string>(
+      'N8N_WEBHOOK_URL_Availabile',
+    );
+    if (!availableTimesUrl) {
+      this.logger.error('N8N_WEBHOOK_URL_Availabile is not defined!');
+      throw new Error(
+        'Configuration error: N8N_WEBHOOK_URL_Availabile not found.',
+      );
+    }
+    this.n8nAvailableTimesWebhookUrl = availableTimesUrl;
+
+    this.logger.log(
+      `Initialized with N8N_WEBHOOK_URL_Availabile: ${this.n8nAvailableTimesWebhookUrl}`,
+    );
   }
 
   async processBooking(bookingData: FrontendBookingDto): Promise<any> {
@@ -49,8 +61,7 @@ export class AiAgentService implements OnModuleInit {
 
     try {
       const response = await lastValueFrom(
-        // Send the booking data as is, as n8n will know how to handle it.
-        this.httpService.post(this.n8nWebhookUrl, bookingData).pipe(
+        this.httpService.post(this.n8nBookingWebhookUrl, bookingData).pipe(
           catchError((error: AxiosError) => {
             this.logger.error(
               `Failed to send data to n8n. Status: ${error.response?.status}, Message: ${error.message}`,
@@ -79,21 +90,19 @@ export class AiAgentService implements OnModuleInit {
     }
   }
 
-  async getAvailableTimes(dateData: GetTimesDto): Promise<string[]> {
+  async getAvailableTimes(dateData: GetTimesDto): Promise<any> {
     this.logger.log(
       `Request for available times for date: ${dateData.date}. Forwarding to n8n webhook.`,
     );
+    this.logger.log(
+      `Using n8n webhook URL: ${this.n8nAvailableTimesWebhookUrl}`,
+    );
 
-    // Create a payload that explicitly tells n8n what to do.
-    const n8nPayload: N8nGetTimesPayload = {
-      action: 'get_available_times',
-      date: dateData.date,
-    };
+    const urlWithQuery = `${this.n8nAvailableTimesWebhookUrl}?action=get_available_times&date=${dateData.date}`;
 
     try {
-      // Send a POST request with the action payload to the single n8n webhook URL.
       const response = await lastValueFrom(
-        this.httpService.post<string[]>(this.n8nWebhookUrl, n8nPayload).pipe(
+        this.httpService.get(urlWithQuery).pipe(
           catchError((error: AxiosError) => {
             this.logger.error(
               `Failed to get times from n8n. Status: ${error.response?.status}, Message: ${error.message}`,
@@ -106,7 +115,6 @@ export class AiAgentService implements OnModuleInit {
       );
 
       this.logger.log('Available times successfully received from n8n.');
-      // The response from n8n should be the array of available times.
       return response.data;
     } catch (error) {
       if (error instanceof BadRequestException) {

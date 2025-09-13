@@ -1,5 +1,3 @@
-// src/ai-agent/dto/ai-agent.dto.ts
-
 import {
   IsString,
   IsObject,
