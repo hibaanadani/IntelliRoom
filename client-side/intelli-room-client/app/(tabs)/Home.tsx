@@ -1,10 +1,18 @@
 import { router } from "expo-router";
-import React from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+  ActivityIndicator,
+} from "react-native";
 import AuthButton from "../../components/AuthButton";
 import HomeCard from "../../components/HomeCard";
 import Chatbtn from "../../components/Chatbtn.tsx";
 import { useAuth } from "../context/AuthContext.tsx";
+import { getAllGalleries } from "../../services/gallary.service";
+import { Gallery } from "../../interfaces/gallery.interface";
 
 const suggestedItems = [
   {
@@ -24,22 +32,28 @@ const suggestedItems = [
   },
 ];
 
-const nearbyStores = [
-  { id: "1", title: "Daze", image: require("../../assets/images/Daze.png") },
-  {
-    id: "2",
-    title: "The Concept",
-    image: require("../../assets/images/Concept.png"),
-  },
-  {
-    id: "3",
-    title: "Home Decor",
-    image: require("../../assets/images/HomeH.png"),
-  },
-];
-
 const home = () => {
   const { user } = useAuth();
+
+  const [galleries, setGalleries] = useState<Gallery[]>([]);
+  const [galleriesLoading, setGalleriesLoading] = useState(true);
+  const [galleriesError, setGalleriesError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchGalleries = async () => {
+      try {
+        const data = await getAllGalleries();
+        setGalleries(data);
+      } catch (err) {
+        console.error("Failed to fetch galleries:", err);
+        setGalleriesError("Failed to load galleries.");
+      } finally {
+        setGalleriesLoading(false);
+      }
+    };
+    fetchGalleries();
+  }, []);
+
   const handleScanNow = () => {
     router.push("/camera");
   };
@@ -48,8 +62,8 @@ const home = () => {
     router.push({ pathname: "/camera", params: { mode: "gallery" } });
   };
 
-  const handleCardPress = (title: string) => {
-    console.log(`Card "${title}" was pressed.`);
+  const handleCardPress = (id: string) => {
+    router.push({ pathname: "/bookings", params: { galleryId: id } });
   };
 
   return (
@@ -57,7 +71,7 @@ const home = () => {
       <ScrollView className="flex-1 bg-backgroundclr pt-16 px-4">
         <View className="items-center mb-8">
           <Text className="text-primary text-2xl font-cinzel-bold">
-            WELCOME {user?.fullname?.toUpperCase() || "GUEST"}!
+            WELCOME {user?.fullname?.toUpperCase()}!
           </Text>
         </View>
 
@@ -81,7 +95,7 @@ const home = () => {
               <HomeCard
                 key={item.id}
                 imageSource={item.image}
-                onPress={() => handleCardPress(item.title)}
+                onPress={() => console.log(`Card "${item.title}" was pressed.`)}
               />
             ))}
           </ScrollView>
@@ -89,17 +103,26 @@ const home = () => {
 
         <View className="mb-8">
           <Text className="text-black text-lg font-cinzel-semi-bold mb-4">
-            Nearby Stores
+            Galleries
           </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {nearbyStores.map((item) => (
-              <HomeCard
-                key={item.id}
-                imageSource={item.image}
-                onPress={() => handleCardPress(item.title)}
-              />
-            ))}
-          </ScrollView>
+          {galleriesLoading ? (
+            <ActivityIndicator size="large" color="#8C3B1E" />
+          ) : galleriesError ? (
+            <Text className="text-red-500 text-center">{galleriesError}</Text>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {galleries.map((gallery) => {
+                const fullImageUrl = `${process.env.EXPO_PUBLIC_API_URL}/${gallery.coverImage}`;
+                return (
+                  <HomeCard
+                    key={gallery._id}
+                    imageSource={{ uri: fullImageUrl }}
+                    onPress={() => handleCardPress(gallery._id)}
+                  />
+                );
+              })}
+            </ScrollView>
+          )}
         </View>
       </ScrollView>
 

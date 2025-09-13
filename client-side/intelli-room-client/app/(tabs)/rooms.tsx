@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Image,
   ScrollView,
@@ -9,12 +9,11 @@ import {
   Alert,
 } from "react-native";
 import RoomCard from "../../components/RoomCard";
+import Chatbtn from "@/components/Chatbtn";
 import { icons } from "../../constants/icons";
 import { router, useFocusEffect } from "expo-router";
 import { deleteRoom, getUserRooms } from "../../services/rooms.service";
 import { useAuth } from "../context/AuthContext";
-import { useCallback } from "react";
-
 
 export interface Room {
   id: string;
@@ -37,7 +36,7 @@ const Rooms = () => {
 
     try {
       setIsFetching(true);
-      const roomsData = await getUserRooms(user.id, token);
+      const roomsData = await getUserRooms(String(user.id), token);
       setMyRooms(roomsData);
     } catch (error) {
       console.error("Error fetching rooms:", error);
@@ -74,7 +73,7 @@ const Rooms = () => {
           text: "Delete",
           onPress: async () => {
             try {
-              await deleteRoom(user.id, roomId, token);
+              await deleteRoom(String(user.id), roomId, token);
               Alert.alert("Success", "Room deleted successfully!");
               fetchUserRooms();
             } catch (error) {
@@ -104,42 +103,49 @@ const Rooms = () => {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-backgroundclr pt-16 px-4"
-      contentContainerStyle={{ paddingBottom: 100 }}
-    >
-      <View className="flex-row justify-between items-center mb-8">
-        <Text className="text-primary text-2xl font-cinzel-bold">Rooms</Text>
-        <TouchableOpacity
-          onPress={handleAddRoom}
-          className="py-2 pl-2 pr-6 bg-primary rounded-se-3xl rounded-ss-3xl -mr-4"
-        >
-          <Image source={icons.plus} className="w-8 h-8" resizeMode="contain" />
-        </TouchableOpacity>
-      </View>
-
-      {isFetching || isLoading ? (
-        <ActivityIndicator size="large" color="#DBAF8E" />
-      ) : (
-        <View className="space-y-4">
-          {myRooms.length > 0 ? (
-            myRooms.map((room) => (
-              <RoomCard
-                key={room.id}
-                imageSource={{ uri: room.imageUrl }}
-                title={room.name}
-                onPress={() => handleCardPress(room)}
-                onLongPress={() => handleDeleteRoom(room.id)}
-              />
-            ))
-          ) : (
-            <Text className="text-center text-greyclr mt-10">
-              No rooms found. Add a new one!
-            </Text>
-          )}
+    <View className="flex-1">
+      <ScrollView
+        className="flex-1 bg-backgroundclr pt-16 px-4"
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
+        <View className="flex-row justify-between items-center mb-8">
+          <Text className="text-primary text-2xl font-cinzel-bold">Rooms</Text>
+          <TouchableOpacity
+            onPress={handleAddRoom}
+            className="py-2 pl-2 pr-6 bg-primary rounded-se-3xl rounded-ss-3xl -mr-4"
+          >
+            <Image
+              source={icons.plus}
+              className="w-8 h-8"
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
         </View>
-      )}
-    </ScrollView>
+
+        {isFetching || isLoading ? (
+          <ActivityIndicator size="large" color="#DBAF8E" />
+        ) : (
+          <View className="space-y-4">
+            {myRooms.length > 0 ? (
+              myRooms.map((room) => (
+                <RoomCard
+                  key={room.id}
+                  imageSource={{ uri: room.imageUrl }}
+                  title={room.name}
+                  onPress={() => handleCardPress(room)}
+                  onLongPress={() => handleDeleteRoom(room.id)}
+                />
+              ))
+            ) : (
+              <Text className="text-center text-greyclr mt-10">
+                No rooms found. Add a new one!
+              </Text>
+            )}
+          </View>
+        )}
+      </ScrollView>
+      <Chatbtn />
+    </View>
   );
 };
 

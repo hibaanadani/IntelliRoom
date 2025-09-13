@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { getAllGalleries } from "../../services/gallary.service";
 import { Gallery as GalleryInterface } from "../../interfaces/gallery.interface";
+import Chatbtn from "@/components/Chatbtn";
 
 const Gallery = () => {
   const [galleries, setGalleries] = useState<GalleryInterface[]>([]);
@@ -56,30 +57,33 @@ const Gallery = () => {
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-backgroundclr pt-16 px-4"
-      contentContainerStyle={{ paddingBottom: 100 }}
-    >
-      <View className="flex-row justify-between items-center mb-8">
-        <Text className="text-primary text-2xl font-cinzel-bold">
-          Galleries
-        </Text>
-      </View>
+    <View className="flex-1">
+      <ScrollView
+        className="flex-1 bg-backgroundclr pt-16 px-4"
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
+        <View className="flex-row justify-between items-center mb-8">
+          <Text className="text-primary text-2xl font-cinzel-bold">
+            Galleries
+          </Text>
+        </View>
 
-      <View className="space-y-4">
-        {galleries.map((galleryItem) => (
-          <GalleryCard
-            key={galleryItem._id}
-            imageSource={{
-              uri: `${process.env.EXPO_PUBLIC_API_URL}/${galleryItem.coverImage}`,
-            }}
-            title={galleryItem.name}
-            onPress={() => handleViewCatalogue(galleryItem._id)}
-            onCalendarPress={() => handleBookings(galleryItem._id)}
-          />
-        ))}
-      </View>
-    </ScrollView>
+        <View className="space-y-4">
+          {galleries.map((galleryItem) => (
+            <GalleryCard
+              key={galleryItem._id}
+              imageSource={{
+                uri: `${process.env.EXPO_PUBLIC_API_URL}/${galleryItem.coverImage}`,
+              }}
+              title={galleryItem.name}
+              onPress={() => handleViewCatalogue(galleryItem._id)}
+              onCalendarPress={() => handleBookings(galleryItem._id)}
+            />
+          ))}
+        </View>
+      </ScrollView>
+      <Chatbtn />
+    </View>
   );
 };
 
