@@ -29,7 +29,10 @@ const UploadPhoto = () => {
   const handleLaunchCamera = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (permissionResult.granted === false) {
-      alert("You've refused to allow this app to access your camera!");
+      Alert.alert(
+        "Error",
+        "You've refused to allow this app to access your camera!"
+      );
       return;
     }
     const result = await ImagePicker.launchCameraAsync();
@@ -43,7 +46,10 @@ const UploadPhoto = () => {
       await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (permissionResult.granted === false) {
-      alert("You've refused to allow this app to access your photo gallery!");
+      Alert.alert(
+        "Error",
+        "You've refused to allow this app to access your photo gallery!"
+      );
       return;
     }
 
@@ -75,7 +81,7 @@ const UploadPhoto = () => {
 
     try {
       await saveRoomWithImage(
-        user.id,
+        String(user.id),
         finalRoomName,
         mlOutputPlaceholder,
         selectedImage,
