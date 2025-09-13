@@ -34,7 +34,7 @@ export class GallerySeeder implements OnModuleInit {
       },
       {
         name: 'Concept',
-        catalogue: 'uploads/gallery/FRIGERIO 2023.pdf',
+        catalogue: 'uploads/gallery/FRIGERIO2023.pdf',
         coverImage: 'uploads/gallery/Concept.png',
       },
     ];
