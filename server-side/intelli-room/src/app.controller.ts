@@ -1,6 +1,3 @@
-// This is the main controller - it handles basic app endpoints
-// Controllers are like "traffic directors" that handle incoming HTTP requests
-
 import { Controller, Get, Post, Request, UseGuards } from '@nestjs/common';
 import { LocalAuthGuard } from './auth/local-auth.guard';
 import { AuthService } from './auth/auth.service';

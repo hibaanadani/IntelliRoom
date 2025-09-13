@@ -24,9 +24,7 @@ import {
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { extname } from 'path';
 
 @ApiTags('Rooms')
 @Controller('users/:userObjectId/rooms')

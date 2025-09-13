@@ -26,6 +26,7 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { User } from './entities/user.entity';
+import { AdminGuard } from 'src/auth/admin.guard';
 
 @ApiTags('Users')
 @Controller('users')
@@ -38,6 +39,7 @@ export class UsersController {
     isArray: true,
     description: 'List of all users',
   })
+  @UseGuards(AdminGuard)
   @Get()
   async findAll(): Promise<User[]> {
     return this.usersService.findAll();
@@ -53,6 +55,7 @@ export class UsersController {
     description: 'No users found with the specified name',
   })
   @ApiQuery({ name: 'name', required: true, description: 'Name to search for' })
+  @UseGuards(AdminGuard)
   @Get('search')
   async findByName(@Query('name') name: string): Promise<User[]> {
     return this.usersService.findByName(name);
