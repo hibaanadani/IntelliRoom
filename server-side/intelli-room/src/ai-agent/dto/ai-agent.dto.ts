@@ -1,21 +1,33 @@
 import {
   IsString,
-  IsObject,
   IsOptional,
   IsArray,
   IsDateString,
-  ValidateNested,
-  IsEnum,
+  IsEmail,
+  IsNotEmpty,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 
 export class FrontendBookingDto {
+  @IsNotEmpty()
   @IsString()
   title: string;
 
+  @IsNotEmpty()
+  @IsString()
+  @IsEmail()
+  email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  fullname: string;
+
+  @IsNotEmpty()
+  @IsString()
   @IsDateString()
   startTime: string;
 
+  @IsNotEmpty()
+  @IsString()
   @IsDateString()
   endTime: string;
 
@@ -30,6 +42,7 @@ export class FrontendBookingDto {
 }
 
 export class GetTimesDto {
+  @IsString()
   @IsDateString()
   date: string;
 }

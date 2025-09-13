@@ -1,130 +1,113 @@
 import {
-  Injectable,
-  Logger,
   BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
   OnModuleInit,
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { lastValueFrom, catchError } from 'rxjs';
-import { AxiosError } from 'axios';
-import { FrontendBookingDto, GetTimesDto } from './dto/ai-agent.dto';
 import { ConfigService } from '@nestjs/config';
-
-interface N8nGetTimesPayload {
-  action: 'get_available_times';
-  date: string;
-}
+import { FrontendBookingDto, GetTimesDto } from './dto/ai-agent.dto';
+import { firstValueFrom, catchError } from 'rxjs';
+import { AxiosError } from 'axios';
 
 @Injectable()
 export class AiAgentService implements OnModuleInit {
   private readonly logger = new Logger(AiAgentService.name);
 
-  private n8nBookingWebhookUrl: string;
-  private n8nAvailableTimesWebhookUrl: string;
+  private n8nBookingWebhookUrl: string | undefined;
+  private n8nAvailableTimesWebhookUrl: string | undefined;
 
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {}
 
-  onModuleInit() {
-    const bookingUrl = this.configService.get<string>(
+  async onModuleInit() {
+    this.n8nBookingWebhookUrl = this.configService.get<string>(
       'N8N_WEBHOOK_URL_Calendar',
     );
-    if (!bookingUrl) {
-      this.logger.error('N8N_WEBHOOK_URL_Calendar is not defined!');
-      throw new Error(
-        'Configuration error: N8N_WEBHOOK_URL_Calendar not found.',
-      );
-    }
-    this.n8nBookingWebhookUrl = bookingUrl;
-
-    const availableTimesUrl = this.configService.get<string>(
+    this.n8nAvailableTimesWebhookUrl = this.configService.get<string>(
       'N8N_WEBHOOK_URL_Availabile',
     );
-    if (!availableTimesUrl) {
-      this.logger.error('N8N_WEBHOOK_URL_Availabile is not defined!');
-      throw new Error(
-        'Configuration error: N8N_WEBHOOK_URL_Availabile not found.',
+
+    if (!this.n8nBookingWebhookUrl) {
+      this.logger.error(
+        'N8N_WEBHOOK_URL_Calendar is not defined. Cannot process bookings.',
+      );
+      throw new InternalServerErrorException(
+        'N8N booking URL is not configured.',
       );
     }
-    this.n8nAvailableTimesWebhookUrl = availableTimesUrl;
 
-    this.logger.log(
-      `Initialized with N8N_WEBHOOK_URL_Availabile: ${this.n8nAvailableTimesWebhookUrl}`,
-    );
+    if (!this.n8nAvailableTimesWebhookUrl) {
+      this.logger.error(
+        'N8N_WEBHOOK_URL_Availabile is not defined. Cannot get available times.',
+      );
+      throw new InternalServerErrorException(
+        'N8N available times URL is not configured.',
+      );
+    }
   }
 
   async processBooking(bookingData: FrontendBookingDto): Promise<any> {
-    this.logger.log('Forwarding booking data to n8n webhook.');
-    this.logger.debug(`Payload: ${JSON.stringify(bookingData)}`);
-
     try {
-      const response = await lastValueFrom(
-        this.httpService.post(this.n8nBookingWebhookUrl, bookingData).pipe(
+      const response = await firstValueFrom(
+        this.httpService.post(this.n8nBookingWebhookUrl!, bookingData).pipe(
           catchError((error: AxiosError) => {
             this.logger.error(
               `Failed to send data to n8n. Status: ${error.response?.status}, Message: ${error.message}`,
+              error.stack,
             );
             throw new BadRequestException(
-              'Failed to process request with n8n.',
+              'Request could not be processed due to an external error.',
             );
           }),
         ),
       );
-
-      this.logger.log('Data successfully forwarded to n8n.');
+      this.logger.log(
+        `Booking request forwarded to n8n: ${JSON.stringify(response.data)}`,
+      );
       return {
         message: 'Booking request acknowledged and forwarded to n8n.',
         n8nResponse: response.data,
       };
     } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
       this.logger.error(
-        'An unexpected error occurred while processing the booking.',
-        error.stack,
+        `Failed to send data to n8n. Status: ${error.response?.status}, Message: ${error.message}`,
       );
-      throw new BadRequestException('An internal server error occurred.');
+      throw new BadRequestException(
+        'Request could not be processed due to an external error.',
+      );
     }
   }
 
-  async getAvailableTimes(dateData: GetTimesDto): Promise<any> {
-    this.logger.log(
-      `Request for available times for date: ${dateData.date}. Forwarding to n8n webhook.`,
-    );
-    this.logger.log(
-      `Using n8n webhook URL: ${this.n8nAvailableTimesWebhookUrl}`,
-    );
-
-    const urlWithQuery = `${this.n8nAvailableTimesWebhookUrl}?action=get_available_times&date=${dateData.date}`;
-
+  async getAvailableTimes(dateData: GetTimesDto): Promise<string[]> {
     try {
-      const response = await lastValueFrom(
-        this.httpService.get(urlWithQuery).pipe(
+      const { date } = dateData;
+      const url = `${this.n8nAvailableTimesWebhookUrl!}?action=get_available_times&date=${date}`;
+
+      const response = await firstValueFrom(
+        this.httpService.get(url).pipe(
           catchError((error: AxiosError) => {
             this.logger.error(
               `Failed to get times from n8n. Status: ${error.response?.status}, Message: ${error.message}`,
+              error.stack,
             );
-            throw new BadRequestException(
-              'Failed to fetch available times from n8n.',
-            );
+            throw new BadRequestException('Could not retrieve times from n8n.');
           }),
         ),
       );
 
-      this.logger.log('Available times successfully received from n8n.');
+      this.logger.log(
+        `Available times received from n8n: ${JSON.stringify(response.data)}`,
+      );
       return response.data;
     } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
       this.logger.error(
-        'An unexpected error occurred while fetching available times.',
-        error.stack,
+        `Failed to get times from n8n. Status: ${error.response?.status}, Message: ${error.message}`,
       );
-      throw new BadRequestException('An internal server error occurred.');
+      throw new BadRequestException('Could not retrieve times from n8n.');
     }
   }
 }

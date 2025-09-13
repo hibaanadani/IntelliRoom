@@ -12,7 +12,7 @@ import { ObjectId } from 'mongodb';
 import * as fs from 'fs';
 import { extname } from 'path';
 import { ConfigService } from '@nestjs/config';
-import { MlModelService } from 'src/ml-model/ml-model.service'; // <-- Import the new service
+import { MlModelService } from 'src/ml-model/ml-model.service';
 
 @Injectable()
 export class RoomsService {
@@ -20,7 +20,7 @@ export class RoomsService {
     @InjectRepository(User)
     private readonly usersRepository: MongoRepository<User>,
     private configService: ConfigService,
-    private readonly mlModelService: MlModelService, // <-- Inject the new service
+    private readonly mlModelService: MlModelService,
   ) {}
 
   private async findUserByObjectIdOrId(
@@ -35,22 +35,18 @@ export class RoomsService {
     }
   }
 
-  // New method to handle the file and room creation
   async saveRoomWithImage(
     userObjectId: string,
-    roomData: string, // <-- Now a plain string
+    roomData: string,
     file: Express.Multer.File,
   ): Promise<RoomDto> {
-    // Business logic and validation now live here
     if (!file) {
       throw new BadRequestException('Image file is required.');
     }
     const createRoomDto: CreateRoomDto = JSON.parse(roomData);
 
-    // --- NEW LOGIC: Get ML Analysis ---
     const mlOutput = await this.mlModelService.analyzeRoom(file);
     createRoomDto.mlOutput = mlOutput;
-    // --- END NEW LOGIC ---
 
     const randomName = Array(32)
       .fill(null)
@@ -70,7 +66,6 @@ export class RoomsService {
     return this.saveRoom(userObjectId, createRoomDto);
   }
 
-  // The rest of your service methods remain the same...
   async saveRoom(
     userObjectId: string,
     createRoomDto: CreateRoomDto,

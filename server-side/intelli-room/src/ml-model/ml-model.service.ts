@@ -1,18 +1,34 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  OnModuleInit,
+  Logger,
+} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import FormData from 'form-data';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, catchError } from 'rxjs';
+import { AxiosError } from 'axios';
 
 @Injectable()
-export class MlModelService {
-  private readonly mlApiUrl: string;
+export class MlModelService implements OnModuleInit {
+  private readonly logger = new Logger(MlModelService.name);
+  private mlApiUrl: string | undefined;
 
   constructor(
     private readonly httpService: HttpService,
     private configService: ConfigService,
-  ) {
-    this.mlApiUrl = this.configService.get<string>('ML_API_URL')!;
+  ) {}
+
+  async onModuleInit() {
+    const url = this.configService.get<string>('ML_API_URL');
+    if (!url) {
+      this.logger.error('ML_API_URL is not defined!');
+      throw new InternalServerErrorException(
+        'Configuration error: ML_API_URL not found.',
+      );
+    }
+    this.mlApiUrl = url;
   }
 
   async analyzeRoom(file: Express.Multer.File): Promise<any> {
@@ -24,20 +40,35 @@ export class MlModelService {
 
     try {
       const response = await firstValueFrom(
-        this.httpService.post(`${this.mlApiUrl}/analyze`, formData, {
-          headers: {
-            ...formData.getHeaders(),
-          },
-        }),
+        this.httpService
+          .post(`${this.mlApiUrl!}/analyze`, formData, {
+            headers: {
+              ...formData.getHeaders(),
+            },
+          })
+          .pipe(
+            catchError((error: AxiosError) => {
+              this.logger.error(
+                'Error communicating with ML API:',
+                error.response?.data || error.message,
+              );
+              throw new InternalServerErrorException(
+                'Failed to get analysis from ML model.',
+              );
+            }),
+          ),
       );
       return response.data;
     } catch (error) {
-      console.error(
-        'Error communicating with ML API:',
-        error.response?.data || error.message,
+      if (error instanceof InternalServerErrorException) {
+        throw error;
+      }
+      this.logger.error(
+        'An unexpected error occurred during ML model analysis.',
+        error.stack,
       );
       throw new InternalServerErrorException(
-        'Failed to get analysis from ML model.',
+        'An unexpected internal server error occurred.',
       );
     }
   }

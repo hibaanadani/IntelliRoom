@@ -24,6 +24,10 @@ export class AuthService {
   }
 
   async login(user: any) {
+    if (!user) {
+      throw new UnauthorizedException('Invalid user object for login.');
+    }
+
     const id = user.id;
 
     if (!id || !user.email) {
