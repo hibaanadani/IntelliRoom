@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -13,7 +11,7 @@ import { GalleryModule } from './gallery/gallery.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { Gallery } from './gallery/entities/gallery.entity';
-import { ChatbotModule } from './chatbot/chatbot.module'; // Add this line
+import { ChatbotModule } from './chatbot/chatbot.module';
 
 @Module({
   imports: [
@@ -45,7 +43,5 @@ import { ChatbotModule } from './chatbot/chatbot.module'; // Add this line
     GalleryModule,
     ChatbotModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
