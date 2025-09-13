@@ -16,6 +16,23 @@ import { getGalleryById } from "../services/gallary.service";
 import { Gallery } from "../interfaces/gallery.interface";
 import { createBooking, getAvailableTimes } from "../services/booking.service";
 
+// Helper function to convert 12-hour time to 24-hour time
+const convertTo24Hour = (time: string): string => {
+  if (!time) return "";
+  const [h, modifier] = time.split(" ");
+  let [hours, minutes] = h.split(":");
+
+  if (hours === "12") {
+    hours = "00";
+  }
+
+  if (modifier === "PM") {
+    hours = (parseInt(hours, 10) + 12).toString();
+  }
+
+  return `${hours}:${minutes}`;
+};
+
 const Booking = () => {
   const { user, token } = useAuth();
   const { galleryId } = useLocalSearchParams();
@@ -89,6 +106,9 @@ const Booking = () => {
   };
 
   const handleBooking = async () => {
+    console.log("handleBooking: selectedDate =", selectedDate);
+    console.log("handleBooking: selectedTime =", selectedTime);
+
     if (!selectedDate || !selectedTime || !user || !token) {
       Alert.alert(
         "Error",
@@ -100,7 +120,10 @@ const Booking = () => {
     setIsSubmitting(true);
 
     try {
-      const [hour, minute] = selectedTime.split(":").map(Number);
+      // Use the helper function to get the correct time format
+      const formattedTime = convertTo24Hour(selectedTime);
+
+      const [hour, minute] = formattedTime.split(":").map(Number);
       const startTime = new Date(selectedDate);
       startTime.setHours(hour, minute, 0, 0);
 
@@ -118,6 +141,8 @@ const Booking = () => {
           selectedGallery?.name || "the gallery"
         } at ${selectedTime} on ${selectedDate}`,
       };
+
+      console.log("Sending booking data:", bookingData);
 
       await createBooking(bookingData, token);
 
@@ -242,7 +267,9 @@ const Booking = () => {
                 className="w-44 h-44"
                 resizeMode="contain"
               />
-              <Text className="text-primary mt-2">No Bookings, YET!</Text>
+              <Text className="text-primary mt-2">
+                No Bookings, YET! Select a date to see available times.
+              </Text>
             </View>
           )}
         </View>
