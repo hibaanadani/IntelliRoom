@@ -16,7 +16,6 @@ import { getGalleryById } from "../services/gallary.service";
 import { Gallery } from "../interfaces/gallery.interface";
 import { createBooking, getAvailableTimes } from "../services/booking.service";
 
-// Helper function to convert 12-hour time to 24-hour time
 const convertTo24Hour = (time: string): string => {
   if (!time) return "";
   const [h, modifier] = time.split(" ");
