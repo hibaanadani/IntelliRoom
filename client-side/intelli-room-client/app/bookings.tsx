@@ -242,9 +242,7 @@ const Booking = () => {
                 className="w-44 h-44"
                 resizeMode="contain"
               />
-              <Text className="text-primary mt-2">
-                No Bookings, YET! Select a date to see available times.
-              </Text>
+              <Text className="text-primary mt-2">No Bookings, YET!</Text>
             </View>
           )}
         </View>
