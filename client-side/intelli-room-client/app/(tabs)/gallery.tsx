@@ -1,14 +1,20 @@
 import GalleryCard from "@/components/GalleryCard";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
-import { getAllGalleries } from "../../services/gallary.service";
+import { ActivityIndicator, ScrollView, Text, View, Alert } from "react-native";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
+import {
+  getAllGalleries,
+  getGalleryById,
+} from "../../services/gallary.service";
 import { Gallery as GalleryInterface } from "../../interfaces/gallery.interface";
 import Chatbtn from "@/components/Chatbtn";
 
 const Gallery = () => {
   const [galleries, setGalleries] = useState<GalleryInterface[]>([]);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,16 +37,69 @@ const Gallery = () => {
     router.push(`/bookings?galleryId=${galleryId}`);
   };
 
-  const handleViewCatalogue = (galleryId: string) => {
-    router.push(`/catalogue?galleryId=${galleryId}`);
+  const handleDownloadCatalogue = async (galleryId: string) => {
+    if (downloading) {
+      return;
+    }
+    setDownloading(true);
+
+    try {
+      const galleryItem = await getGalleryById(galleryId);
+      if (!galleryItem?.catalogue) {
+        Alert.alert(
+          "No Catalogue",
+          "This gallery does not have a catalogue available."
+        );
+        return;
+      }
+
+      const cataloguePath = galleryItem.catalogue.startsWith("/")
+        ? galleryItem.catalogue.substring(1)
+        : galleryItem.catalogue;
+
+      const fileUrl = `${process.env.EXPO_PUBLIC_API_URL}/${cataloguePath}`;
+      const fileName = cataloguePath.split("/").pop() || "catalogue.pdf";
+      const localUri = FileSystem.documentDirectory + fileName;
+
+      console.log("Attempting to download from URL:", fileUrl);
+
+      const { uri: downloadedUri, status } = await FileSystem.downloadAsync(
+        fileUrl,
+        localUri
+      );
+
+      if (status !== 200) {
+        throw new Error(`Download failed with status code ${status}`);
+      }
+
+      console.log("Download successful. File saved to:", downloadedUri);
+
+      if (!(await Sharing.isAvailableAsync())) {
+        Alert.alert(
+          "Sharing Not Available",
+          "Saving files is not available on your device."
+        );
+        return;
+      }
+      await Sharing.shareAsync(downloadedUri);
+    } catch (err: unknown) {
+      console.error("Failed to download catalogue:", err);
+      if (err instanceof Error) {
+        Alert.alert("Error", `Failed to download catalogue: ${err.message}`);
+      } else {
+        Alert.alert("Error", "An unknown error occurred during download.");
+      }
+    } finally {
+      setDownloading(false);
+    }
   };
 
-  if (loading) {
+  if (loading || downloading) {
     return (
       <View className="flex-1 justify-center items-center bg-backgroundclr">
         <ActivityIndicator size="large" color="#8C3B1E" />
         <Text className="mt-4 text-primary font-cinzel-bold">
-          Loading Galleries...
+          {loading ? "Loading Galleries..." : "Downloading Catalogue..."}
         </Text>
       </View>
     );
@@ -76,7 +135,7 @@ const Gallery = () => {
                 uri: `${process.env.EXPO_PUBLIC_API_URL}/${galleryItem.coverImage}`,
               }}
               title={galleryItem.name}
-              onPress={() => handleViewCatalogue(galleryItem._id)}
+              onPress={() => handleDownloadCatalogue(galleryItem._id)}
               onCalendarPress={() => handleBookings(galleryItem._id)}
             />
           ))}

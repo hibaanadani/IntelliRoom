@@ -29,7 +29,7 @@ export class GallerySeeder implements OnModuleInit {
       },
       {
         name: 'Daze',
-        catalogue: 'uploads/gallery/GALLERY_FURNITURE_CATALOG.pdf',
+        catalogue: 'uploads/gallery/GALLERYFURNITURECATALOG.pdf',
         coverImage: 'uploads/gallery/Daze.png',
       },
       {

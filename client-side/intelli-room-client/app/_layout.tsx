@@ -32,7 +32,6 @@ const RootLayoutContent = () => {
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="bookings" options={{ headerShown: false }} />
-      <Stack.Screen name="catalogue" options={{ headerShown: false }} />
     </Stack>
   );
 };
