@@ -12,13 +12,7 @@ import { Calendar } from "react-native-calendars";
 import { useAuth } from "./context/AuthContext";
 import { useLocalSearchParams } from "expo-router";
 import { getGalleryById } from "../services/gallary.service";
-
-interface Gallery {
-  id: string;
-  name: string;
-  coverImage: string | null;
-  appointments: string[];
-}
+import { Gallery } from "../interfaces/gallery.interface";
 
 const Booking = () => {
   const { user } = useAuth();
@@ -61,23 +55,6 @@ const Booking = () => {
     setSelectedTime(time);
   };
 
-  const getAvailableTimes = () => {
-    if (!selectedGallery || !selectedDate) {
-      return [];
-    }
-    const filteredAppointments = selectedGallery.appointments.filter((app) => {
-      const appointmentDate = app.split("T")[0];
-      return appointmentDate === selectedDate;
-    });
-
-    return filteredAppointments.map((app) =>
-      new Date(app).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    );
-  };
-
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-backgroundclr">
@@ -98,8 +75,6 @@ const Booking = () => {
       </View>
     );
   }
-
-  const availableTimes = getAvailableTimes();
 
   return (
     <ScrollView
@@ -153,48 +128,14 @@ const Booking = () => {
             textDayHeaderFontSize: 16,
           }}
         />
-
-        {selectedDate ? (
-          <View className="items-center mt-4">
-            <Text className="text-primary text-base font-cinzel-semi-bold mb-4">
-              Available Times
-            </Text>
-            {availableTimes.length > 0 ? (
-              availableTimes.map((time, index) => {
-                const isSelected = selectedTime === time;
-                const buttonClassName = isSelected
-                  ? "w-36 rounded-full py-4 mb-4 items-center bg-primary"
-                  : "w-36 rounded-full border border-primary py-4 mb-4 items-center";
-                const textClassName = isSelected
-                  ? "text-white font-cinzel-bold"
-                  : "text-primary font-cinzel-bold";
-
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    className={buttonClassName}
-                    onPress={() => onTimePress(time)}
-                  >
-                    <Text className={textClassName}>{time}</Text>
-                  </TouchableOpacity>
-                );
-              })
-            ) : (
-              <Text className="text-primary text-center">
-                No available times for this day.
-              </Text>
-            )}
-          </View>
-        ) : (
-          <View className="flex-1 justify-center items-center mt-4">
-            <Image
-              source={icons.bookings}
-              className="w-44 h-44"
-              resizeMode="contain"
-            />
-            <Text className="text-primary">No Bookings, YET!</Text>
-          </View>
-        )}
+        <View className="flex-1 justify-center items-center mt-4">
+          <Image
+            source={icons.bookings}
+            className="w-44 h-44"
+            resizeMode="contain"
+          />
+          <Text className="text-primary">No Bookings, YET!</Text>
+        </View>
       </View>
     </ScrollView>
   );

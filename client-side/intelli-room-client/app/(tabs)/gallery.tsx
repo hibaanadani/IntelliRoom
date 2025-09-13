@@ -3,16 +3,10 @@ import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { getAllGalleries } from "../../services/gallary.service";
-
-interface Gallery {
-  id: string;
-  name: string;
-  coverImage: string;
-  appointments: string[];
-}
+import { Gallery as GalleryInterface } from "../../interfaces/gallery.interface";
 
 const Gallery = () => {
-  const [galleries, setGalleries] = useState<Gallery[]>([]);
+  const [galleries, setGalleries] = useState<GalleryInterface[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,7 +27,11 @@ const Gallery = () => {
   }, []);
 
   const handleBookings = (galleryId: string) => {
-    router.push({ pathname: "/bookings", params: { galleryId } });
+    router.push(`/bookings?galleryId=${galleryId}`);
+  };
+
+  const handleViewCatalogue = (galleryId: string) => {
+    router.push(`/catalogue?galleryId=${galleryId}`);
   };
 
   if (loading) {
@@ -71,13 +69,13 @@ const Gallery = () => {
       <View className="space-y-4">
         {galleries.map((galleryItem) => (
           <GalleryCard
-            key={galleryItem.id}
+            key={galleryItem._id}
             imageSource={{
               uri: `${process.env.EXPO_PUBLIC_API_URL}/${galleryItem.coverImage}`,
             }}
             title={galleryItem.name}
-            onPress={() => handleBookings(galleryItem.id)}
-            onCalendarPress={() => handleBookings(galleryItem.id)}
+            onPress={() => handleViewCatalogue(galleryItem._id)}
+            onCalendarPress={() => handleBookings(galleryItem._id)}
           />
         ))}
       </View>

@@ -1,10 +1,11 @@
 import api from "./axiosInstance";
+import { Gallery } from "../interfaces/gallery.interface";
 
-interface Gallery {
+interface RawGalleryResponse {
   id: string;
   name: string;
   coverImage: string;
-  appointments: string[];
+  catalogue?: string;
 }
 
 export const getAllGalleries = async (): Promise<Gallery[]> => {
@@ -19,8 +20,17 @@ export const getAllGalleries = async (): Promise<Gallery[]> => {
 
 export const getGalleryById = async (id: string): Promise<Gallery> => {
   try {
-    const response = await api.get<Gallery>(`/gallery/${id}`);
-    return response.data;
+    const response = await api.get<RawGalleryResponse>(`/gallery/${id}`);
+    const data = response.data;
+
+    const gallery: Gallery = {
+      _id: data.id,
+      name: data.name,
+      coverImage: data.coverImage,
+      catalogue: data.catalogue,
+    };
+
+    return gallery;
   } catch (error) {
     console.error(`Error fetching gallery with ID ${id}:`, error);
     throw error;
