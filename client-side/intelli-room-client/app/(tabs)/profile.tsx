@@ -178,7 +178,7 @@ const Profile = () => {
           <AuthButton
             text="Confirm"
             variant="primary"
-            onPress={handleConfirm} // Correctly passing the function reference
+            onPress={handleConfirm}
           />
         </View>
       </ScrollView>
