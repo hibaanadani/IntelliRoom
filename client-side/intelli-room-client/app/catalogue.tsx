@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { View, Text, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import { WebView } from "react-native-webview";
 import { getGalleryById } from "../services/gallary.service";
 import { Gallery as GalleryInterface } from "../interfaces/gallery.interface";
-import Pdf from "react-native-pdf";
 
 const Catalogue = () => {
   const { galleryId } = useLocalSearchParams();
@@ -32,72 +32,37 @@ const Catalogue = () => {
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
+      <View className="flex-1 justify-center items-center bg-backgroundclr">
         <ActivityIndicator size="large" color="#8C3B1E" />
-        <Text style={styles.loadingText}>Loading Catalogue...</Text>
+        <Text className="mt-4 text-primary font-cinzel-bold">
+          Loading Catalogue...
+        </Text>
       </View>
     );
   }
 
   if (!gallery?.catalogue) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>
+      <View className="flex-1 justify-center items-center bg-backgroundclr">
+        <Text className="text-xl font-cinzel-bold text-primary">
           No catalogue available for this gallery.
         </Text>
       </View>
     );
   }
 
+  // CONSTRUCT THE PDF URI WITH THE GOOGLE VIEWER
   const pdfSource = {
-    uri: `${process.env.EXPO_PUBLIC_API_URL}/${gallery.catalogue}`,
+    uri: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
+      `${process.env.EXPO_PUBLIC_API_URL}/${gallery.catalogue}`
+    )}`,
   };
 
   return (
-    <View style={styles.pdfContainer}>
-      <Pdf
-        source={pdfSource}
-        onLoadComplete={(numberOfPages, filePath) => {
-          console.log(`Number of pages: ${numberOfPages}`);
-        }}
-        onError={(error) => {
-          console.log(error);
-        }}
-        style={styles.pdf}
-      />
+    <View className="flex-1">
+      <WebView source={pdfSource} style={{ flex: 1 }} />
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  pdfContainer: {
-    flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "center",
-    marginTop: 25,
-  },
-  pdf: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#FAF5EE",
-  },
-  loadingText: {
-    marginTop: 10,
-    color: "#8C3B1E",
-    fontFamily: "cinzel-bold",
-  },
-  errorText: {
-    fontSize: 20,
-    fontFamily: "cinzel-bold",
-    color: "#8C3B1E",
-    textAlign: "center",
-  },
-});
 
 export default Catalogue;

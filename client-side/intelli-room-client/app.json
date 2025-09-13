@@ -7,19 +7,6 @@
     "icon": "./assets/images/IntelliRoom.png",
     "scheme": "intelliroomclient",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/IntelliRoom.png",
-        "backgroundColor": "#FEF7E5"
-      },
-      "edgeToEdgeEnabled": true,
-      "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
-      ]
-    },
     "web": {
       "bundler": "metro",
       "output": "static",
