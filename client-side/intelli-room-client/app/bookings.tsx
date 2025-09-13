@@ -16,6 +16,7 @@ import { getGalleryById } from "../services/gallary.service";
 import { Gallery } from "../interfaces/gallery.interface";
 import { createBooking, getAvailableTimes } from "../services/booking.service";
 
+// Helper function to convert 12-hour time to 24-hour time
 const convertTo24Hour = (time: string): string => {
   if (!time) return "";
   const [h, modifier] = time.split(" ");
@@ -119,9 +120,7 @@ const Booking = () => {
     setIsSubmitting(true);
 
     try {
-      // Use the helper function to get the correct time format
       const formattedTime = convertTo24Hour(selectedTime);
-
       const [hour, minute] = formattedTime.split(":").map(Number);
       const startTime = new Date(selectedDate);
       startTime.setHours(hour, minute, 0, 0);
@@ -146,6 +145,10 @@ const Booking = () => {
       await createBooking(bookingData, token);
 
       Alert.alert("Success", "Your booking has been successfully created!");
+
+      // Re-fetch the available times to refresh the list
+      await fetchAndSetAvailableTimes(selectedDate);
+      setSelectedTime(null); // Clear the selected time as it's no longer available
     } catch (error) {
       console.error("Booking failed:", error);
       Alert.alert("Error", "Failed to create booking. Please try again.");
@@ -175,6 +178,8 @@ const Booking = () => {
     );
   }
 
+  const isBookingReady = selectedDate && selectedTime;
+
   return (
     <ScrollView className="flex-1 bg-backgroundclr pt-16">
       <View className="flex-row items-center justify-between px-4 mb-8">
@@ -186,8 +191,26 @@ const Booking = () => {
             {user?.fullname || "Guest"}
           </Text>
         </View>
-        <TouchableOpacity className="flex-row items-center bg-transparent rounded-full border border-secondary px-4 py-2">
-          <Text className="text-secondary font-cinzel-semi-bold">+ Book</Text>
+        <TouchableOpacity
+          className={`flex-row items-center rounded-full px-4 py-2 ${
+            isBookingReady
+              ? "bg-secondary"
+              : "bg-transparent border border-secondary"
+          }`}
+          onPress={handleBooking}
+          disabled={!isBookingReady || isSubmitting}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text
+              className={`font-cinzel-semi-bold ${
+                isBookingReady ? "text-white" : "text-secondary"
+              }`}
+            >
+              + Book
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -273,21 +296,6 @@ const Booking = () => {
           )}
         </View>
 
-        {selectedTime && (
-          <TouchableOpacity
-            className="mt-6 p-4 rounded-xl bg-primary flex-row justify-center items-center"
-            onPress={handleBooking}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text className="text-white text-lg font-cinzel-bold">
-                Book Now
-              </Text>
-            )}
-          </TouchableOpacity>
-        )}
         <View className="h-16" />
       </View>
     </ScrollView>
