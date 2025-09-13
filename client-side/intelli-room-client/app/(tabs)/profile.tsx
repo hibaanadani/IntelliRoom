@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import AuthButton from "../../components/AuthButton";
-import InputField from "../../components/InputField";
 import Chatbtn from "@/components/Chatbtn";
+import InputField from "../../components/InputField";
 import { icons } from "../../constants/icons";
 import { useAuth } from "../context/AuthContext";
 import { updateProfile } from "../../services/users.service";
@@ -48,21 +48,23 @@ const Profile = () => {
     if (formData.fullname !== user.fullname) {
       updatedData.fullname = formData.fullname;
     }
+
     if (formData.email !== user.email) {
       updatedData.email = formData.email;
     }
+
     if (formData.password) {
       updatedData.password = formData.password;
     }
 
-    const ageValue = formData.age ? Number(formData.age) : null;
-    const phoneValue = formData.phone || null;
-
-    if (ageValue !== user.age) {
-      updatedData.age = ageValue;
+    const newAge = formData.age ? Number(formData.age) : null;
+    if (newAge !== user.age) {
+      updatedData.age = newAge;
     }
-    if (phoneValue !== user.phone) {
-      updatedData.phone = phoneValue;
+
+    const newPhone = formData.phone || null;
+    if (newPhone !== user.phone) {
+      updatedData.phone = newPhone;
     }
 
     if (Object.keys(updatedData).length === 0) {
@@ -176,7 +178,7 @@ const Profile = () => {
           <AuthButton
             text="Confirm"
             variant="primary"
-            onPress={handleConfirm}
+            onPress={handleConfirm} // Correctly passing the function reference
           />
         </View>
       </ScrollView>
