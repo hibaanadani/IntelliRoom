@@ -2,10 +2,19 @@ import { createContext, useState, useContext, useEffect } from "react";
 import { login, signUp } from "../../services/auth.service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+const parseNumberInt = (data: any) => {
+  if (data && typeof data === "object" && data["$numberInt"]) {
+    return Number(data["$numberInt"]);
+  }
+  return data;
+};
+
 interface User {
   id: number;
   email: string;
   fullname: string;
+  age: number | null;
+  phone: string | null;
 }
 
 interface AuthContextType {
@@ -25,11 +34,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const handleAuthSuccess = async (accessToken: string, userData: User) => {
+  const handleAuthSuccess = async (accessToken: string, userData: any) => {
+    const formattedUser: User = {
+      id: userData.id,
+      email: userData.email,
+      fullname: userData.fullname,
+      age: parseNumberInt(userData.age),
+      phone: userData.phone || null,
+    };
+
     setToken(accessToken);
-    setUser(userData);
+    setUser(formattedUser);
     await AsyncStorage.setItem("access_token", accessToken);
-    await AsyncStorage.setItem("user", JSON.stringify(userData));
+    await AsyncStorage.setItem("user", JSON.stringify(formattedUser));
   };
 
   useEffect(() => {
@@ -39,8 +56,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const storedUser = await AsyncStorage.getItem("user");
 
         if (storedToken && storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+
+          const formattedUser: User = {
+            id: parsedUser.id,
+            email: parsedUser.email,
+            fullname: parsedUser.fullname,
+            age: parseNumberInt(parsedUser.age),
+            phone: parsedUser.phone || null,
+          };
+
           setToken(storedToken);
-          setUser(JSON.parse(storedUser) as User);
+          setUser(formattedUser);
         }
       } catch (error) {
         console.error("Failed to load auth data:", error);

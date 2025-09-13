@@ -46,6 +46,8 @@ export class AuthService {
           id: id,
           fullname: fullname,
           email: user.email,
+          age: user.age,
+          phone: user.phone,
         },
       };
     } catch (error) {

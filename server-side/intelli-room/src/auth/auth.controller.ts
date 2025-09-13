@@ -1,5 +1,3 @@
-// This controller handles authentication-related API endpoints.
-
 import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
