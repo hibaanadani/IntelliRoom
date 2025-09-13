@@ -13,7 +13,6 @@ export class FrontendBookingDto {
   title: string;
 
   @IsNotEmpty()
-  @IsString()
   @IsEmail()
   email: string;
 
@@ -22,18 +21,16 @@ export class FrontendBookingDto {
   fullname: string;
 
   @IsNotEmpty()
-  @IsString()
   @IsDateString()
   startTime: string;
 
   @IsNotEmpty()
-  @IsString()
   @IsDateString()
   endTime: string;
 
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
+  @IsEmail({}, { each: true })
   participants?: string[];
 
   @IsOptional()
