@@ -39,7 +39,7 @@ export class UsersController {
     isArray: true,
     description: 'List of all users',
   })
-  @UseGuards(AdminGuard)
+  // @UseGuards(AdminGuard)
   @Get()
   async findAll(): Promise<User[]> {
     return this.usersService.findAll();
