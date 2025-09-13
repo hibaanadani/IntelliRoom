@@ -154,7 +154,7 @@ const Booking = () => {
   return (
     <ScrollView
       className="flex-1 bg-backgroundclr pt-16"
-      contentContainerStyle={{ flexGrow: 1 }}
+      // Removed the large padding from here
     >
       <View className="flex-row items-center justify-between px-4 mb-8">
         <View>
@@ -170,7 +170,7 @@ const Booking = () => {
         </TouchableOpacity>
       </View>
 
-      <View className="flex-1 bg-beigeclr rounded-xl overflow-hidden p-4">
+      <View className="bg-beigeclr rounded-xl overflow-hidden p-4">
         <Calendar
           onDayPress={onDayPress}
           markedDates={{
@@ -204,7 +204,7 @@ const Booking = () => {
           }}
         />
 
-        <View className="flex-1 mt-4">
+        <View className="mt-4">
           {timesLoading ? (
             <ActivityIndicator size="large" color="#8C3B1E" />
           ) : timesError ? (
@@ -214,25 +214,29 @@ const Booking = () => {
               </Text>
             </View>
           ) : availableTimes.length > 0 ? (
-            <View>
+            <View className="flex-col justify-center items-center">
               <Text className="text-primary text-lg font-cinzel-bold text-center mb-4">
                 Available Times for {selectedDate}
               </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {availableTimes.map((time, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    onPress={() => onTimePress(time)}
-                    className={`bg-white rounded-full p-3 mr-2 ${
-                      selectedTime === time ? "border-2 border-primary" : ""
+              {availableTimes.map((time, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => onTimePress(time)}
+                  className={`rounded-full p-3 mb-2 w-48 items-center ${
+                    selectedTime === time
+                      ? "bg-primary"
+                      : "border-2 border-primary"
+                  }`}
+                >
+                  <Text
+                    className={`font-cinzel-semi-bold ${
+                      selectedTime === time ? "text-white" : "text-primary"
                     }`}
                   >
-                    <Text className="text-primary font-cinzel-semi-bold">
-                      {time}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+                    {time}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
           ) : (
             <View className="flex-1 justify-center items-center">
@@ -263,6 +267,8 @@ const Booking = () => {
             )}
           </TouchableOpacity>
         )}
+        {/* Added a spacing View to create padding at the bottom */}
+        <View className="h-16" />
       </View>
     </ScrollView>
   );
