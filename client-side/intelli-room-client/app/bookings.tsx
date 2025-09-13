@@ -61,7 +61,7 @@ const Booking = () => {
 
     try {
       const fullDate = new Date(date).toISOString();
-      console.log("Date being sent to backend:", fullDate); // <--- ADDED console.log HERE
+      console.log("Date being sent to backend:", fullDate);
 
       const times = await getAvailableTimes(fullDate);
       setAvailableTimes(times);
