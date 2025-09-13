@@ -152,10 +152,7 @@ const Booking = () => {
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-backgroundclr pt-16"
-      // Removed the large padding from here
-    >
+    <ScrollView className="flex-1 bg-backgroundclr pt-16">
       <View className="flex-row items-center justify-between px-4 mb-8">
         <View>
           <Text className="text-secondary text-base font-cinzel-semi-bold">
@@ -267,7 +264,6 @@ const Booking = () => {
             )}
           </TouchableOpacity>
         )}
-        {/* Added a spacing View to create padding at the bottom */}
         <View className="h-16" />
       </View>
     </ScrollView>
