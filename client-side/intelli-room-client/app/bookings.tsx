@@ -290,7 +290,7 @@ const Booking = () => {
                 resizeMode="contain"
               />
               <Text className="text-primary mt-2">
-                No Bookings, YET! Select a date to see available times.
+                Select a date to see available times!
               </Text>
             </View>
           )}
