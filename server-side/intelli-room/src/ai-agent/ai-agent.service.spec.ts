@@ -78,7 +78,7 @@ describe('AiAgentService', () => {
 
     mockConfigService.get.mockImplementation((key: string) => {
       if (key === 'N8N_WEBHOOK_URL_Calendar') return bookingUrl;
-      if (key === 'N8N_WEBHOOK_URL_Availabile') return availableTimesUrl;
+      if (key === 'N8N_WEBHOOK_URL_Available') return availableTimesUrl;
       return null;
     });
 
@@ -122,7 +122,7 @@ describe('AiAgentService', () => {
     it('should throw an error if booking URL is not defined', async () => {
       mockConfigService.get.mockImplementation((key: string) => {
         if (key === 'N8N_WEBHOOK_URL_Calendar') return null;
-        if (key === 'N8N_WEBHOOK_URL_Availabile') return availableTimesUrl;
+        if (key === 'N8N_WEBHOOK_URL_Available') return availableTimesUrl;
         return null;
       });
 
@@ -138,7 +138,7 @@ describe('AiAgentService', () => {
     it('should throw an error if available times URL is not defined', async () => {
       mockConfigService.get.mockImplementation((key: string) => {
         if (key === 'N8N_WEBHOOK_URL_Calendar') return bookingUrl;
-        if (key === 'N8N_WEBHOOK_URL_Availabile') return null;
+        if (key === 'N8N_WEBHOOK_URL_Available') return null;
         return null;
       });
 

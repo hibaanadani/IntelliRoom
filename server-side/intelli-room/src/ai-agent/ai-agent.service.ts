@@ -28,7 +28,7 @@ export class AiAgentService implements OnModuleInit {
       'N8N_WEBHOOK_URL_Calendar',
     );
     this.n8nAvailableTimesWebhookUrl = this.configService.get<string>(
-      'N8N_WEBHOOK_URL_Availabile',
+      'N8N_WEBHOOK_URL_Available',
     );
 
     if (!this.n8nBookingWebhookUrl) {
@@ -42,7 +42,7 @@ export class AiAgentService implements OnModuleInit {
 
     if (!this.n8nAvailableTimesWebhookUrl) {
       this.logger.error(
-        'N8N_WEBHOOK_URL_Availabile is not defined. Cannot get available times.',
+        'N8N_WEBHOOK_URL_Available is not defined. Cannot get available times.',
       );
       throw new InternalServerErrorException(
         'N8N available times URL is not configured.',
