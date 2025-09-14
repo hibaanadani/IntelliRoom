@@ -1,4 +1,4 @@
-# defines how to build and run both the client and server services together.
+# docker-compose.yml: # defines how to build and run both the client and server services together.
 # here we are using it to run the image only
 # Version of the Docker Compose file format. Using '3.8' is a common and stable choice.
 version: '3.8'
@@ -9,18 +9,33 @@ services:
   # This is the name of our server-side service
   server:
     # not needed files not on server to build
+    # Using 'build' instead of 'image' because we have a Dockerfile ---
+    # This tells Docker Compose to build the server's image using the Dockerfile
+    # in the current directory (`.`), before starting the container.
+    build: .
     # 'image' gives a name and tag to the image that will be built.
     # We use 'latest' to indicate it's the most recent build.
     image: ${{ secrets.DOCKERHUB_USERNAME }}/docker-backend:22
     # using service database
     environment:
       # we're now using env variables from our CI/CD pipeline
-      - MONGODB_DATABASE_HOST=${MONGODB_DATABASE_HOST}
+      # The backend connects to 'mongodb_db' service name, not a URL
+      # Inside the Docker network, services find each other by their name.
+      - MONGODB_DATABASE_HOST=mongodb_db
       - MONGODB_USERNAME=${MONGODB_USERNAME}
       - MONGODB_PASSWORD=${MONGODB_PASSWORD}
       - MONGODB_DB=${MONGODB_DB}
+      # The webhook URLs are now pulled from the environment
       - N8N_WEBHOOK_URL_Calendar=${N8N_WEBHOOK_URL_Calendar}
+      - N8N_WEBHOOK_URL_Available=${N8N_WEBHOOK_URL_Available}
       - CHATBOT_WEBHOOK_URL=${CHATBOT_WEBHOOK_URL}
+      # Other variables are passed through from your .env file
+      - PORT=${PORT}
+      - API_BASE_URL=${API_BASE_URL}
+      - ML_API_URL=${ML_API_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - NODE_ENV=${NODE_ENV}
     # 'ports' maps a port on the host machine to a port in the container.
     # The format is "HOST_PORT:CONTAINER_PORT".
     # This allows us to access the server from our local machine at http://localhost:9000.
@@ -47,8 +62,8 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
       # Create an initial database on startup.
       MONGO_INITDB_DATABASE: ${MONGODB_DB}
-      # set the connection
-      MONGODB_DATABASE_HOST: ${MONGODB_DATABASE_HOST}
+      # The host variable is for a client (like your backend) to connect to the database,
+      # not for the database itself to know its own address.
     # Persist data using a named volume.
     volumes:
       - mongodb_data:/data/db
@@ -60,13 +75,16 @@ services:
 
   # A new service to run n8n alongside our server and database.
   n8n:
+    # ... The n8n service configuration remains unchanged.
     image: n8n.io/n8n
     container_name: n8n
     environment:
       # these are the environment variables n8n needs to work
+      # N8N_HOST tells the n8n container its own host name within Docker
       - N8N_HOST=n8n
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
+      # WEBHOOK_URL is the base URL for n8n to generate its own webhooks
       - WEBHOOK_URL=http://n8n:5678/
       - NODE_ENV=production
     ports:
