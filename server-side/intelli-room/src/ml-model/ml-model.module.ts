@@ -9,3 +9,6 @@ import { ConfigModule } from '@nestjs/config';
   exports: [MlModelService],
 })
 export class MlModelModule {}
+
+// .\venv\Scripts\activate
+// uvicorn ml_api:app --host 0.0.0.0 --port 5000

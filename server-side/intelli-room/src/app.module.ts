@@ -45,3 +45,4 @@ import { ChatbotModule } from './chatbot/chatbot.module';
   ],
 })
 export class AppModule {}
+// npm run start:dev
