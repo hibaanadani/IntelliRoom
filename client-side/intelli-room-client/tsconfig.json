@@ -17,8 +17,7 @@
     "noEmit": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "types": ["jest"]
+    "forceConsistentCasingInFileNames": true
   },
   "include": [
     "**/*.ts",
@@ -27,6 +26,6 @@
     "**/*.jsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.d.ts"
+    "nativewind-env.d.ts"
   ]
 }
