@@ -98,7 +98,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "{\n  \"error_message\": \"ma meshe l7all ya m3alem\"\n  \"slots\":\"\"\n}",
+        "responseBody": "{\n  \"error_message\": \"an error occured, please try again layer\"\n  \"slots\":\"\"\n}",
         "options": {
           "responseCode": 200
         }
@@ -549,7 +549,7 @@
     {
       "parameters": {
         "mode": "retrieve-as-tool",
-        "toolDescription": "this is repository for mahdi cv",
+        "toolDescription": "this is a booking agent",
         "memoryKey": {
           "__rl": true,
           "mode": "list",
@@ -904,52 +904,5 @@
         ]
       ]
     }
-  },
-  "pinData": {
-    "Google Calendar Trigger1": [
-      {
-        "kind": "calendar#event",
-        "etag": "\"3515420235192510\"",
-        "id": "doin5oej5f46s9ou8ouivi1b34",
-        "status": "confirmed",
-        "htmlLink": "https://www.google.com/calendar/event?eid=ZG9pbjVvZWo1ZjQ2czlvdThvdWl2aTFiMzQgaGliYWFuYWRhbmkxQG0",
-        "created": "2025-09-12T20:47:05.000Z",
-        "updated": "2025-09-12T20:48:37.596Z",
-        "summary": "testtttttttttttttttttttttttttttttttttt",
-        "description": "test",
-        "creator": {
-          "email": "hibaanadani1@gmail.com",
-          "self": true
-        },
-        "organizer": {
-          "email": "hibaanadani1@gmail.com",
-          "self": true
-        },
-        "start": {
-          "dateTime": "2025-09-13T00:47:05+03:00",
-          "timeZone": "America/New_York"
-        },
-        "end": {
-          "dateTime": "2025-09-13T01:47:05+03:00",
-          "timeZone": "America/New_York"
-        },
-        "iCalUID": "doin5oej5f46s9ou8ouivi1b34@google.com",
-        "sequence": 0,
-        "attendees": [
-          {
-            "email": "mahditalal.789@gmail.com",
-            "responseStatus": "declined"
-          }
-        ],
-        "reminders": {
-          "useDefault": true
-        },
-        "eventType": "default"
-      }
-    ]
-  },
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "0dfdd65f438ca4668643edcc3c30a88b11306a89d4f9a9410bb12c54ceb14ccb"
   }
 }

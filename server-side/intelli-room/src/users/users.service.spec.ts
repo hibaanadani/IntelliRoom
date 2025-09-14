@@ -1,4 +1,3 @@
-// src/users/users.service.spec.ts
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
@@ -9,13 +8,11 @@ import * as bcrypt from 'bcryptjs';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ObjectId } from 'mongodb';
 
-// Mocks for bcrypt functions
 jest.mock('bcryptjs', () => ({
   hash: jest.fn().mockResolvedValue('hashedPassword123'),
   compare: jest.fn().mockResolvedValue(true),
 }));
 
-// Helper function to create a mock for the MongoRepository
 const mockMongoRepository = () => ({
   findOneBy: jest.fn(),
   find: jest.fn(),
@@ -127,7 +124,6 @@ describe('UsersService', () => {
 
       const result = await service.findByName('Test');
       expect(result).toEqual(users);
-      // CORRECTED: The RegExp expected must match the case of the input string
       expect(usersRepository.find).toHaveBeenCalledWith({
         where: { name: new RegExp('Test', 'i') },
       });
@@ -159,7 +155,6 @@ describe('UsersService', () => {
         id: 2,
         fullname: 'New User',
         email: 'newuser@example.com',
-        // CORRECTED: The password is removed by the service, so we don't expect it here
         rooms: [],
       };
 
@@ -186,7 +181,6 @@ describe('UsersService', () => {
         password: 'hashedPassword123',
       });
       expect(usersRepository.save).toHaveBeenCalled();
-      // CORRECTED: The service strips the password, so we expect the user object without the password
       expect(result).toEqual(mockReturnedUser);
     });
 
