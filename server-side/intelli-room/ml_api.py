@@ -1,7 +1,5 @@
-# ml_api.py
 import torch
 import torch.nn as nn
-from torchvision import models, transforms
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 from PIL import Image
@@ -23,7 +21,6 @@ print("Loading the custom aesthetic classifier head...")
 model_head_weights = torch.load('aesthetic_classifier_head.pt', map_location=torch.device('cpu'))
 
 model_head = nn.Linear(512, 2)
-
 model_head.weight = nn.Parameter(model_head_weights['weight'])
 model_head.bias = nn.Parameter(model_head_weights['bias'])
 model_head.eval()
@@ -33,11 +30,16 @@ yolo_model = YOLO('yolov8n.pt')
 
 # --- Analysis Function ---
 def get_full_analysis(image_path: str) -> Dict:
+    """
+    Performs both overall and per-object aesthetic analysis using the loaded models,
+    with an improved actionable report.
+    """
     try:
         full_image = Image.open(image_path).convert("RGB")
     except FileNotFoundError:
         return {"error": f"Oops! I can't find the picture at: {image_path}"}
     
+    # --- Overall Room Analysis ---
     overall_inputs = processor(images=full_image, return_tensors="pt").to('cpu')
     with torch.no_grad():
         overall_features = model_body(**overall_inputs).pooler_output
@@ -45,11 +47,13 @@ def get_full_analysis(image_path: str) -> Dict:
         _, overall_pred_idx = torch.max(overall_outputs, 1)
         overall_classification = "Good Room" if overall_pred_idx.item() == 0 else "Bad Room"
 
+    # --- Per-Object Analysis (using YOLOv8 and aesthetic classifier) ---
     yolo_results = yolo_model(image_path)
     per_object_report: List[Dict[str, str]] = []
     
-    actionable_report: List[str] = []
-
+    # Count how many of each object type are classified as "Bad"
+    bad_object_counts: Dict[str, int] = {}
+    
     for result in yolo_results:
         for box in result.boxes:
             class_id = int(box.cls)
@@ -65,28 +69,37 @@ def get_full_analysis(image_path: str) -> Dict:
                     _, cropped_pred_idx = torch.max(cropped_outputs, 1)
                     object_classification = "Good" if cropped_pred_idx.item() == 0 else "Bad"
                 
-                if object_classification == "Bad":
-                    actionable_report.append(f"The {object_name} needs some tidying.")
-
                 per_object_report.append({
                     "object": object_name,
                     "classification": object_classification,
                 })
+                
+                if object_classification == "Bad":
+                    bad_object_counts[object_name] = bad_object_counts.get(object_name, 0) + 1
 
-    # FINAL LOGIC: Replace the actionableReport with a custom message
-    if overall_classification == "Bad Room" and not actionable_report:
-        actionable_report = [
-            "--- Actionable Report ---",
-            "The overall room is classified as 'Bad', but no individual objects were classified as 'Bad'.",
-            "This is likely due to the overall composition, lighting, or clutter that the model could not identify by object name.",
-            "Consider changing the color scheme, adjusting the lighting, or rearranging the space."
-        ]
-    elif overall_classification == "Good Room":
-        actionable_report = [
-            "--- Actionable Report ---",
-            "No individual objects were classified as 'Bad'. The room has a cohesive aesthetic."
-        ]
-        
+    # --- Final Actionable Report Logic ---
+    actionable_report: List[str] = []
+
+    if overall_classification == "Good Room":
+        if not bad_object_counts:
+            actionable_report.append("Your room is beautiful! No actionable changes are needed based on the analysis.")
+        else:
+            actionable_report.append("Your room is classified as 'Good', but the following objects could be improved:")
+            for obj, count in bad_object_counts.items():
+                s = "" if count == 1 else "s"
+                actionable_report.append(f"Consider tidying or improving the {count} '{obj}' object{s}.")
+                
+    elif overall_classification == "Bad Room":
+        if bad_object_counts:
+            actionable_report.append("The overall room is classified as 'Bad'. Focus on improving these areas:")
+            for obj, count in bad_object_counts.items():
+                s = "" if count == 1 else "s"
+                actionable_report.append(f"Consider tidying or improving the {count} '{obj}' object{s}.")
+        else:
+            actionable_report.append("The overall room is classified as 'Bad', but no individual objects were a clear cause.")
+            actionable_report.append("This is likely due to the overall composition, lighting, or unidentifiable clutter.")
+            actionable_report.append("Consider changing the color scheme, adjusting the lighting, or rearranging the space.")
+            
     return {
         "overallClassification": overall_classification,
         "individualObjectAnalysis": per_object_report,
@@ -119,3 +132,7 @@ async def analyze_room(file: UploadFile = File(...)):
     except Exception as e:
         print(f"An error occurred: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/")
+async def read_root():
+    return {"message": "Welcome to the Room Analyzer API. Use the /analyze endpoint to upload an image."}
