@@ -11,13 +11,14 @@ import { router } from "expo-router";
 const profilePicture = require("../../assets/images/profilepic.png");
 
 const Profile = () => {
-  const { user, logout, token } = useAuth();
+  const { user, logout, token, updateUser } = useAuth();
+
   const [formData, setFormData] = useState({
     fullname: user?.fullname || "",
     email: user?.email || "",
     password: "",
     age: user?.age?.toString() || "",
-    phone: user?.phone || "",
+    phone: user?.phone?.toString() || "",
   });
 
   useEffect(() => {
@@ -28,7 +29,7 @@ const Profile = () => {
         email: user.email,
         password: "",
         age: user.age?.toString() || "",
-        phone: user.phone || "",
+        phone: user.phone?.toString() || "",
       });
     }
   }, [user]);
@@ -62,7 +63,7 @@ const Profile = () => {
       updatedData.age = newAge;
     }
 
-    const newPhone = formData.phone || null;
+    const newPhone = formData.phone ? Number(formData.phone) : null;
     if (newPhone !== user.phone) {
       updatedData.phone = newPhone;
     }
@@ -73,9 +74,13 @@ const Profile = () => {
     }
 
     try {
-      console.log("Attempting to update profile for user ID:", user.id);
+      console.log("Attempting to update profile for user ID:", user._id);
       console.log("Data being sent:", updatedData);
-      await updateProfile(user.id, updatedData, token);
+
+      const updatedUser = await updateProfile(user._id, updatedData, token);
+
+      await updateUser(updatedUser);
+
       console.log("Profile updated successfully!");
       router.replace("/(tabs)/profile");
     } catch (error) {

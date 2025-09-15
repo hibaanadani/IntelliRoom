@@ -1,4 +1,5 @@
 import api from "./axiosInstance";
+import { User } from "../app/context/AuthContext";
 
 export const isAxiosError = (error: any): boolean => {
   return error && typeof error === "object" && error.isAxiosError === true;
@@ -13,17 +14,17 @@ export const getUsers = (token: string) => {
 };
 
 export const updateProfile = async (
-  userId: number,
+  userId: string,
   data: any,
   token: string
-) => {
+): Promise<User> => {
   try {
     const response = await api.patch(`/users/${userId}`, data, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    return response.data;
+    return response.data as User;
   } catch (error) {
     if (isAxiosError(error)) {
       throw error;

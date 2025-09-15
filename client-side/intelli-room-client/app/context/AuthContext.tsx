@@ -9,8 +9,9 @@ const parseNumberInt = (data: any) => {
   return data;
 };
 
-interface User {
-  id: number;
+export interface User {
+  id: string;
+  _id: string;
   email: string;
   fullname: string;
   age: number | null;
@@ -25,6 +26,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signUp: (userData: Omit<User, "id">) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (updatedUserData: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -34,9 +36,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const updateUser = (updatedUserData: User) => {
+    setUser(updatedUserData);
+  };
+
   const handleAuthSuccess = async (accessToken: string, userData: any) => {
     const formattedUser: User = {
-      id: userData.id,
+      id: userData._id || userData.id,
+      _id: userData._id || userData.id,
       email: userData.email,
       fullname: userData.fullname,
       age: parseNumberInt(userData.age),
@@ -59,7 +66,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const parsedUser = JSON.parse(storedUser);
 
           const formattedUser: User = {
-            id: parsedUser.id,
+            id: parsedUser._id || parsedUser.id,
+            _id: parsedUser._id || parsedUser.id,
             email: parsedUser.email,
             fullname: parsedUser.fullname,
             age: parseNumberInt(parsedUser.age),
@@ -113,6 +121,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     login: handleLogin,
     signUp: handleSignUp,
     logout: handleLogout,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
