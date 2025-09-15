@@ -14,7 +14,6 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 
-// Mocks for DTOs
 class FrontendBookingDto {
   @IsNotEmpty()
   @IsString()
@@ -95,7 +94,6 @@ describe('AiAgentService', () => {
     service = module.get<AiAgentService>(AiAgentService);
     httpService = module.get<HttpService>(HttpService);
 
-    // IMPORTANT: Call onModuleInit to set the private URL properties
     await service.onModuleInit();
   });
 

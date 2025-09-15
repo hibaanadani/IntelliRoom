@@ -53,7 +53,6 @@ describe('MlModelService', () => {
 
     service = module.get<MlModelService>(MlModelService);
 
-    // IMPORTANT: Call onModuleInit to set the private URL property
     await service.onModuleInit();
   });
 
