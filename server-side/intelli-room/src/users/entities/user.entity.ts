@@ -44,5 +44,5 @@ export class User {
   phone?: number;
 
   @Column()
-  rooms: Room[];
+  rooms: Room[] | null;
 }

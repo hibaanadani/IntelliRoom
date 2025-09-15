@@ -79,6 +79,10 @@ export class RoomsService {
       ...createRoomDto,
       createdAt: new Date(),
     };
+    if (!user.rooms) {
+      user.rooms = [];
+    }
+
     user.rooms.push(newRoom);
     await this.usersRepository.save(user);
     return newRoom;
@@ -89,7 +93,7 @@ export class RoomsService {
     if (!user) {
       throw new NotFoundException(`User with ID ${userObjectId} not found`);
     }
-    return user.rooms;
+    return user.rooms || [];
   }
 
   async deleteRoom(userObjectId: string, roomId: string): Promise<void> {
@@ -97,8 +101,10 @@ export class RoomsService {
     if (!user) {
       throw new NotFoundException(`User with ID ${userObjectId} not found`);
     }
-    const initialRoomCount = user.rooms.length;
-    user.rooms = user.rooms.filter((room) => room.id !== roomId);
+
+    const initialRoomCount = user.rooms ? user.rooms.length : 0;
+    user.rooms = (user.rooms || []).filter((room) => room.id !== roomId);
+
     if (user.rooms.length === initialRoomCount) {
       throw new NotFoundException(
         `Room with ID ${roomId} not found for user ${userObjectId}`,

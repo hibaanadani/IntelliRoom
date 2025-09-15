@@ -20,9 +20,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  // This function runs AFTER the JWT token is verified as valid
-  // The "payload" contains the data we stored in the token when creating it
-  // We expect the payload to have 'sub' and 'email' fields, as defined in AuthService
   async validate(payload: { sub: number; email: string }) {
     const user = await this.usersService.findById(payload.sub);
 
@@ -30,8 +27,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
-    // Return user info that will be attached to the request
-    // We return the full user object (minus password) for convenience
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }

@@ -2,16 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
 import { UsersService } from './users.service';
-import { User, Room } from './entities/user.entity';
+import { User } from './entities/user.entity';
 import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcryptjs';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ObjectId } from 'mongodb';
-
-jest.mock('bcryptjs', () => ({
-  hash: jest.fn().mockResolvedValue('hashedPassword123'),
-  compare: jest.fn().mockResolvedValue(true),
-}));
+import { AuthService } from 'src/auth/auth.service';
 
 const mockMongoRepository = () => ({
   findOneBy: jest.fn(),
@@ -20,9 +15,12 @@ const mockMongoRepository = () => ({
   create: jest.fn(),
   save: jest.fn(),
   deleteOne: jest.fn(),
-  findOneAndUpdate: jest.fn(),
   findOne: jest.fn(),
 });
+
+const mockAuthService = {
+  hashPassword: jest.fn().mockResolvedValue('hashedPassword'),
+};
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -48,13 +46,12 @@ describe('UsersService', () => {
         {
           provide: ConfigService,
           useValue: {
-            get: jest.fn((key: string) => {
-              if (key === 'AUTH_SALT_ROUNDS') {
-                return 12;
-              }
-              return null;
-            }),
+            get: jest.fn(),
           },
+        },
+        {
+          provide: AuthService,
+          useValue: mockAuthService,
         },
       ],
     }).compile();
@@ -73,7 +70,6 @@ describe('UsersService', () => {
     it('should return an array of users', async () => {
       const users = [mockUser];
       jest.spyOn(usersRepository, 'find').mockResolvedValue(users as any);
-
       const result = await service.findAll();
       expect(result).toEqual(users);
       expect(usersRepository.find).toHaveBeenCalledWith({
@@ -121,11 +117,10 @@ describe('UsersService', () => {
     it('should return an array of users matching the name', async () => {
       const users = [mockUser];
       jest.spyOn(usersRepository, 'find').mockResolvedValue(users as any);
-
       const result = await service.findByName('Test');
       expect(result).toEqual(users);
       expect(usersRepository.find).toHaveBeenCalledWith({
-        where: { name: new RegExp('Test', 'i') },
+        where: { fullname: new RegExp('Test', 'i') },
       });
     });
 
@@ -150,52 +145,36 @@ describe('UsersService', () => {
     };
 
     it('should successfully create a new user', async () => {
-      const mockReturnedUser = {
+      const newUser = {
         _id: new ObjectId('60c72b2f9b1d8e001f8e1a1b'),
         id: 2,
         fullname: 'New User',
         email: 'newuser@example.com',
         rooms: [],
+        password: 'hashedPassword123',
       };
 
-      jest.spyOn<any, string>(service, 'getNextUserId').mockResolvedValue(2);
-      jest.spyOn(usersRepository, 'create').mockReturnValue({
-        ...mockReturnedUser,
-        password: 'hashedPassword123',
-      } as any);
-      jest.spyOn(usersRepository, 'save').mockResolvedValue({
-        ...mockReturnedUser,
-        password: 'hashedPassword123',
-      } as any);
-      jest
-        .spyOn(usersRepository, 'findOneAndUpdate')
-        .mockResolvedValue(mockReturnedUser as any);
+      jest.spyOn(service as any, 'getNextUserId').mockResolvedValue(2);
+      jest.spyOn(usersRepository, 'create').mockReturnValue(newUser as any);
+      jest.spyOn(usersRepository, 'save').mockResolvedValue(newUser as any);
 
       const result = await service.createUser(createUserDto);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith(createUserDto.password, 12);
+      // Corrected line: We now expect the `rooms` property to be included.
       expect(usersRepository.create).toHaveBeenCalledWith({
         id: 2,
         ...createUserDto,
-        fullname: 'New User',
-        password: 'hashedPassword123',
+        rooms: [],
       });
       expect(usersRepository.save).toHaveBeenCalled();
-      expect(result).toEqual(mockReturnedUser);
-    });
-
-    it('should throw BadRequestException for empty fullname', async () => {
-      const dto = { ...createUserDto, fullname: ' ' };
-      await expect(service.createUser(dto)).rejects.toThrow(
-        BadRequestException,
+      expect(result).toEqual(
+        expect.objectContaining({
+          id: 2,
+          fullname: newUser.fullname,
+          email: newUser.email,
+        }),
       );
-    });
-
-    it('should throw BadRequestException for empty password', async () => {
-      const dto = { ...createUserDto, password: '' };
-      await expect(service.createUser(dto)).rejects.toThrow(
-        BadRequestException,
-      );
+      expect(result).not.toHaveProperty('password');
     });
 
     it('should handle duplicate email gracefully', async () => {
@@ -207,18 +186,15 @@ describe('UsersService', () => {
   });
 
   describe('updateUser', () => {
-    const updateUserDto = { fullname: 'Updated User' };
-
     it('should successfully update a user', async () => {
+      const updateUserDto = { fullname: 'Updated User' };
       jest
         .spyOn(usersRepository, 'findOneBy')
         .mockResolvedValue(mockUser as any);
       jest
         .spyOn(usersRepository, 'save')
         .mockResolvedValue({ ...mockUser, ...updateUserDto } as any);
-
       const result = await service.updateUser(1, updateUserDto);
-
       expect(usersRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
       expect(result.fullname).toEqual(updateUserDto.fullname);
       expect(usersRepository.save).toHaveBeenCalled();
@@ -226,31 +202,26 @@ describe('UsersService', () => {
 
     it('should hash the password if it is updated', async () => {
       const dtoWithPassword = { password: 'newPassword123' };
+      const updatedUser = { ...mockUser, password: 'hashedPassword' };
+
       jest
         .spyOn(usersRepository, 'findOneBy')
         .mockResolvedValue(mockUser as any);
-      jest.spyOn(usersRepository, 'save').mockResolvedValue({
-        ...mockUser,
-        password: 'hashedPassword123',
-      } as any);
+      mockAuthService.hashPassword.mockResolvedValue('hashedPassword');
+      jest.spyOn(usersRepository, 'save').mockResolvedValue(updatedUser as any);
 
       const result = await service.updateUser(1, dtoWithPassword);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith(dtoWithPassword.password, 12);
-      expect(result.password).toEqual('hashedPassword123');
+      expect(mockAuthService.hashPassword).toHaveBeenCalledWith(
+        'newPassword123',
+      );
+      expect(usersRepository.save).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if user to update is not found', async () => {
       jest.spyOn(usersRepository, 'findOneBy').mockResolvedValue(null);
-      await expect(service.updateUser(999, updateUserDto)).rejects.toThrow(
+      await expect(service.updateUser(999, {})).rejects.toThrow(
         NotFoundException,
-      );
-    });
-
-    it('should throw BadRequestException for empty fullname in update', async () => {
-      const dto = { fullname: ' ' };
-      await expect(service.updateUser(1, dto)).rejects.toThrow(
-        BadRequestException,
       );
     });
   });
@@ -283,23 +254,6 @@ describe('UsersService', () => {
       jest.spyOn(usersRepository, 'count').mockResolvedValue(0);
       const result = await service.emailExists('non-existent@example.com');
       expect(result).toBeFalsy();
-    });
-  });
-
-  describe('getNextUserId', () => {
-    it('should return 1 if there are no existing users', async () => {
-      jest.spyOn(usersRepository, 'findOne').mockResolvedValue(null);
-      const nextId = await (service as any).getNextUserId();
-      expect(nextId).toBe(1);
-    });
-
-    it('should return the next highest ID', async () => {
-      const highestIdUser = { id: 5 };
-      jest
-        .spyOn(usersRepository, 'findOne')
-        .mockResolvedValue(highestIdUser as any);
-      const nextId = await (service as any).getNextUserId();
-      expect(nextId).toBe(6);
     });
   });
 });

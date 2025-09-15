@@ -56,6 +56,15 @@ const mockUser: User = {
   rooms: [mockRoom],
 };
 
+const mockUserWithNoRooms: User = {
+  _id: new ObjectId('60c72b2f9b1d8e001f8e1a1b'),
+  id: 2,
+  fullname: 'No Rooms User',
+  email: 'noroom@example.com',
+  password: 'hashedPassword456',
+  rooms: null,
+};
+
 describe('RoomsService', () => {
   let service: RoomsService;
   let usersRepository: MongoRepository<User>;
@@ -121,7 +130,7 @@ describe('RoomsService', () => {
       jest.spyOn(usersRepository, 'save').mockResolvedValue({
         ...mockUser,
         rooms: [
-          ...mockUser.rooms,
+          ...(mockUser.rooms || []),
           { ...mockRoom, id: new ObjectId().toString() },
         ],
       } as any);
@@ -141,6 +150,30 @@ describe('RoomsService', () => {
           name: mockCreateRoomDto.name,
           mlOutput: mockMlOutput,
           imageUrl: expect.stringContaining('http://localhost:9000/uploads/'),
+        }),
+      );
+    });
+
+    it('should save a room for a user with a null rooms array', async () => {
+      jest
+        .spyOn(usersRepository, 'findOneBy')
+        .mockResolvedValue(mockUserWithNoRooms as any);
+
+      jest.spyOn(usersRepository, 'save').mockResolvedValue({
+        ...mockUserWithNoRooms,
+        rooms: [mockRoom],
+      } as any);
+
+      const result = await service.saveRoom(
+        mockUserWithNoRooms.id.toString(),
+        mockCreateRoomDto,
+      );
+
+      expect(usersRepository.save).toHaveBeenCalled();
+      expect(result).toEqual(
+        expect.objectContaining({
+          name: mockCreateRoomDto.name,
+          mlOutput: mockMlOutput,
         }),
       );
     });
@@ -213,6 +246,17 @@ describe('RoomsService', () => {
         .mockResolvedValue(mockUser as any);
       await expect(
         service.deleteRoom(mockUser.id.toString(), 'non-existent-room-id'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should handle deleting a room when user has no rooms', async () => {
+      const userWithNoRooms = { ...mockUserWithNoRooms, rooms: null };
+      jest
+        .spyOn(usersRepository, 'findOneBy')
+        .mockResolvedValue(userWithNoRooms as any);
+
+      await expect(
+        service.deleteRoom(userWithNoRooms.id.toString(), 'some-room-id'),
       ).rejects.toThrow(NotFoundException);
     });
   });

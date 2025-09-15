@@ -35,8 +35,8 @@ import { ChatbotModule } from './chatbot/chatbot.module';
       serveRoot: '/uploads',
     }),
 
-    UsersModule,
     AuthModule,
+    UsersModule,
     RoomsModule,
     AiAgentModule,
     MlModelModule,
@@ -45,4 +45,3 @@ import { ChatbotModule } from './chatbot/chatbot.module';
   ],
 })
 export class AppModule {}
-// npm run start:dev
