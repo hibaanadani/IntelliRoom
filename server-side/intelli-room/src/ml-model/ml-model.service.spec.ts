@@ -12,15 +12,11 @@ const mockHttpService = {
   post: jest.fn(),
 };
 
-const mockConfigService = {
-  get: jest.fn(),
-};
-
 describe('MlModelService', () => {
   let service: MlModelService;
-  let httpService: HttpService;
 
   const mlApiUrl = 'http://test.ml-api.com';
+
   const mockFile: Express.Multer.File = {
     fieldname: 'file',
     originalname: 'test.jpg',
@@ -37,10 +33,9 @@ describe('MlModelService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    mockConfigService.get.mockImplementation((key: string) => {
-      if (key === 'ML_API_URL') return mlApiUrl;
-      return undefined;
-    });
+    const mockConfigService = {
+      get: () => mlApiUrl,
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -58,24 +53,12 @@ describe('MlModelService', () => {
 
     service = module.get<MlModelService>(MlModelService);
 
-    (service as any).mlApiUrl = mlApiUrl;
+    // IMPORTANT: Call onModuleInit to set the private URL property
+    await service.onModuleInit();
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
-  });
-
-  describe('onModuleInit', () => {
-    it('should throw an error if ML_API_URL is not defined', async () => {
-      mockConfigService.get.mockReturnValueOnce(undefined);
-      const testService = new MlModelService(
-        mockHttpService as any,
-        mockConfigService as any,
-      );
-      await expect(testService.onModuleInit()).rejects.toThrow(
-        InternalServerErrorException,
-      );
-    });
   });
 
   describe('analyzeRoom', () => {

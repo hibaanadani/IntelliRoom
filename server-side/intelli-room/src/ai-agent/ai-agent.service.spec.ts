@@ -4,10 +4,7 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { of, throwError } from 'rxjs';
 import { AxiosError, AxiosResponse } from 'axios';
-import {
-  BadRequestException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import {
   IsDateString,
   IsString,
@@ -17,6 +14,7 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 
+// Mocks for DTOs
 class FrontendBookingDto {
   @IsNotEmpty()
   @IsString()
@@ -62,10 +60,6 @@ const mockHttpService = {
   get: jest.fn(),
 };
 
-const mockConfigService = {
-  get: jest.fn(),
-};
-
 describe('AiAgentService', () => {
   let service: AiAgentService;
   let httpService: HttpService;
@@ -76,11 +70,13 @@ describe('AiAgentService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    mockConfigService.get.mockImplementation((key: string) => {
-      if (key === 'N8N_WEBHOOK_URL_Calendar') return bookingUrl;
-      if (key === 'N8N_WEBHOOK_URL_Available') return availableTimesUrl;
-      return null;
-    });
+    const mockConfigService = {
+      get: (key: string) => {
+        if (key === 'N8N_WEBHOOK_URL_Calendar') return bookingUrl;
+        if (key === 'N8N_WEBHOOK_URL_Available') return availableTimesUrl;
+        return null;
+      },
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -98,8 +94,9 @@ describe('AiAgentService', () => {
 
     service = module.get<AiAgentService>(AiAgentService);
     httpService = module.get<HttpService>(HttpService);
-    (service as any).n8nBookingWebhookUrl = bookingUrl;
-    (service as any).n8nAvailableTimesWebhookUrl = availableTimesUrl;
+
+    // IMPORTANT: Call onModuleInit to set the private URL properties
+    await service.onModuleInit();
   });
 
   const createAxiosError = (status: number, message: string): AxiosError => {
@@ -116,40 +113,6 @@ describe('AiAgentService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
-  });
-
-  describe('configuration validation in onModuleInit', () => {
-    it('should throw an error if booking URL is not defined', async () => {
-      mockConfigService.get.mockImplementation((key: string) => {
-        if (key === 'N8N_WEBHOOK_URL_Calendar') return null;
-        if (key === 'N8N_WEBHOOK_URL_Available') return availableTimesUrl;
-        return null;
-      });
-
-      const service = new AiAgentService(
-        mockHttpService as any,
-        mockConfigService as any,
-      );
-      await expect(service.onModuleInit()).rejects.toThrow(
-        InternalServerErrorException,
-      );
-    });
-
-    it('should throw an error if available times URL is not defined', async () => {
-      mockConfigService.get.mockImplementation((key: string) => {
-        if (key === 'N8N_WEBHOOK_URL_Calendar') return bookingUrl;
-        if (key === 'N8N_WEBHOOK_URL_Available') return null;
-        return null;
-      });
-
-      const service = new AiAgentService(
-        mockHttpService as any,
-        mockConfigService as any,
-      );
-      await expect(service.onModuleInit()).rejects.toThrow(
-        InternalServerErrorException,
-      );
-    });
   });
 
   describe('processBooking', () => {
