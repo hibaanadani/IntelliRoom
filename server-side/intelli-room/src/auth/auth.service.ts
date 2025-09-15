@@ -1,14 +1,18 @@
-// src/auth/auth.service.ts
-
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { User } from '../users/entities/user.entity';
+import {
+  Injectable,
+  UnauthorizedException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
+    @Inject(forwardRef(() => UsersService))
     private usersService: UsersService,
     private jwtService: JwtService,
   ) {}
@@ -17,7 +21,6 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
 
     if (user && (await bcrypt.compare(password, user.password))) {
-      // Return user object without the password
       const { password: userPassword, ...userWithoutPassword } = user;
       return userWithoutPassword;
     }
@@ -28,16 +31,32 @@ export class AuthService {
   async login(user: any) {
     const payload = {
       email: user.email,
-      sub: user.id,
+      sub: user._id.toString(),
     };
 
     return {
       access_token: this.jwtService.sign(payload),
       user: {
-        id: user.id,
+        id: user._id,
         fullname: user.fullname,
         email: user.email,
+        age: user.age,
+        phone: user.phone,
       },
     };
+  }
+
+  async signup(createUserDto: CreateUserDto) {
+    const hashedPassword = await this.hashPassword(createUserDto.password);
+    const newUser = await this.usersService.createUser({
+      ...createUserDto,
+      password: hashedPassword,
+    });
+    return this.login(newUser);
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    const saltRounds = 12;
+    return bcrypt.hash(password, saltRounds);
   }
 }

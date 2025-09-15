@@ -2,23 +2,32 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
+import { ConfigService } from '@nestjs/config';
+import { AuthService } from 'src/auth/auth.service';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: MongoRepository<User>,
+    private readonly configService: ConfigService,
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
   ) {}
 
   async findAll(): Promise<User[]> {
-    return this.usersRepository.find();
+    return this.usersRepository.find({
+      order: { id: 'ASC' },
+    });
   }
 
   async findById(userId: number): Promise<User> {
@@ -34,11 +43,11 @@ export class UsersService {
   }
 
   async findByName(name: string): Promise<User[]> {
-    if (!name?.trim()) {
+    if (!name) {
       return [];
     }
     const users = await this.usersRepository.find({
-      where: { name: new RegExp(name.trim(), 'i') },
+      where: { fullname: new RegExp(name.trim(), 'i') },
     });
     if (users.length === 0) {
       throw new NotFoundException(`No users found with name: ${name}`);
@@ -47,54 +56,54 @@ export class UsersService {
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
-    if (!createUserDto.fullname?.trim()) {
-      throw new BadRequestException(
-        'Full name is required and cannot be empty',
-      );
-    }
-    if (!createUserDto.password) {
-      throw new BadRequestException('Password is required');
-    }
-
-    const emailExists = await this.emailExists(createUserDto.email);
-    if (emailExists) {
-      throw new BadRequestException(
-        `Email '${createUserDto.email}' is already registered.`,
-      );
-    }
-
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 12);
     const nextId = await this.getNextUserId();
 
     const newUser = this.usersRepository.create({
       id: nextId,
       ...createUserDto,
-      fullname: createUserDto.fullname.trim(),
-      password: hashedPassword,
+      rooms: [],
     });
 
-    await this.usersRepository.save(newUser);
-    const { password, ...userWithoutPassword } = newUser;
+    let savedUser: User;
+    try {
+      savedUser = await this.usersRepository.save(newUser);
+    } catch (error) {
+      if (error.code === 11000) {
+        throw new BadRequestException(
+          `Email '${createUserDto.email}' is already registered.`,
+        );
+      }
+      throw error;
+    }
+
+    const { password, ...userWithoutPassword } = savedUser;
     return userWithoutPassword as User;
   }
 
-  async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<User> {
-    if (updateUserDto.fullname !== undefined) {
-      if (!updateUserDto.fullname?.trim()) {
-        throw new BadRequestException('Full name cannot be empty');
-      }
-      updateUserDto.fullname = updateUserDto.fullname.trim();
+  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    if (!ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid user ID format.');
     }
-    const user = await this.usersRepository.findOneBy({ id });
+
+    const user = await this.usersRepository.findOne({
+      where: { _id: new ObjectId(id) },
+    });
+
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-    Object.assign(user, updateUserDto);
+
     if (updateUserDto.password) {
-      user.password = await bcrypt.hash(updateUserDto.password, 12);
+      updateUserDto.password = await this.authService.hashPassword(
+        updateUserDto.password,
+      );
     }
+
+    Object.assign(user, updateUserDto);
+
     const updatedUser = await this.usersRepository.save(user);
-    return updatedUser;
+    const { password, ...userWithoutPassword } = updatedUser;
+    return userWithoutPassword as User;
   }
 
   async removeUser(id: number): Promise<void> {

@@ -1,0 +1,14 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit",
+    "source.sortMembers": "explicit"
+  },
+  // This tells VS Code to treat all .css files as 'tailwindcss' language files.
+  // This is the most effective way to fix syntax highlighting and linting.
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  // This disables the specific linter rule that causes the "Unknown at rule @tailwind" error.
+  "css.lint.unknownAtRules": "ignore"
+}

@@ -1,6 +1,3 @@
-// This is the Local Strategy - it handles email/password login
-// When someone tries to login with email and password, this code runs
-
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';

@@ -1,7 +1,3 @@
-// DTO = Data Transfer Object
-// Think of this as a "form" that defines what data we expect when creating a user
-// It helps us validate the data before saving it to the database
-
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
@@ -12,12 +8,13 @@ import {
   IsNumber,
   Min,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
-// This class defines what data we need to create a new user
 export class CreateUserDto {
   @ApiProperty({ description: 'User full name', example: 'John Doe' })
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }) => value.trim())
   fullname: string;
 
   @ApiProperty({
@@ -26,6 +23,7 @@ export class CreateUserDto {
   })
   @IsEmail()
   @IsNotEmpty()
+  @Transform(({ value }) => value.trim())
   email: string;
 
   @ApiProperty({

@@ -1,5 +1,3 @@
-// src/auth/dto/login.dto.ts
-
 // This DTO defines the expected structure of the login request body.
 // It uses decorators from `class-validator` and `class-transformer` for validation.
 

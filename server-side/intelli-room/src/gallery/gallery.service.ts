@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
+import { ObjectId } from 'mongodb';
 import { Gallery } from './entities/gallery.entity';
 import { CreateGalleryDto } from './dto/create-gallery.dto';
 import { UpdateGalleryDto } from './dto/update-gallery.dto';
@@ -12,19 +17,21 @@ export class GalleryService {
     private readonly galleryRepository: MongoRepository<Gallery>,
   ) {}
 
-  private async getNextGalleryId(): Promise<number> {
-    const highestIdGallery = await this.galleryRepository.findOne({
-      order: { id: 'DESC' },
+  private async findGalleryItemById(id: string): Promise<Gallery> {
+    if (!ObjectId.isValid(id)) {
+      throw new BadRequestException(`Invalid ID format.`);
+    }
+    const galleryItem = await this.galleryRepository.findOneBy({
+      _id: new ObjectId(id),
     });
-    return highestIdGallery ? highestIdGallery.id + 1 : 1;
+    if (!galleryItem) {
+      throw new NotFoundException(`Gallery item with ID "${id}" not found.`);
+    }
+    return galleryItem;
   }
 
   async create(createGalleryDto: CreateGalleryDto): Promise<Gallery> {
-    const nextId = await this.getNextGalleryId();
-    const newGallery = this.galleryRepository.create({
-      id: nextId,
-      ...createGalleryDto,
-    });
+    const newGallery = this.galleryRepository.create(createGalleryDto);
     return this.galleryRepository.save(newGallery);
   }
 
@@ -32,30 +39,43 @@ export class GalleryService {
     return this.galleryRepository.find();
   }
 
-  async findById(id: number): Promise<Gallery> {
-    const gallery = await this.galleryRepository.findOneBy({ id });
-    if (!gallery) {
-      throw new NotFoundException(`Gallery with ID ${id} not found`);
-    }
-    return gallery;
+  async findOne(id: string): Promise<Gallery> {
+    return this.findGalleryItemById(id);
   }
 
   async update(
-    id: number,
+    id: string,
     updateGalleryDto: UpdateGalleryDto,
   ): Promise<Gallery> {
-    const gallery = await this.galleryRepository.findOneBy({ id });
-    if (!gallery) {
-      throw new NotFoundException(`Gallery with ID ${id} not found`);
-    }
-    Object.assign(gallery, updateGalleryDto);
-    return this.galleryRepository.save(gallery);
+    const galleryItem = await this.findGalleryItemById(id);
+    this.galleryRepository.merge(galleryItem, updateGalleryDto);
+    return this.galleryRepository.save(galleryItem);
   }
 
-  async remove(id: number): Promise<void> {
-    const result = await this.galleryRepository.deleteOne({ id });
+  async updateCatalogue(id: string, cataloguePath: string): Promise<Gallery> {
+    if (!cataloguePath) {
+      throw new BadRequestException('A catalogue file is required.');
+    }
+    const galleryItem = await this.findGalleryItemById(id);
+    galleryItem.catalogue = cataloguePath;
+    return this.galleryRepository.save(galleryItem);
+  }
+
+  async updateCoverImage(id: string, coverImagePath: string): Promise<Gallery> {
+    if (!coverImagePath) {
+      throw new BadRequestException('A cover image file is required.');
+    }
+    const galleryItem = await this.findGalleryItemById(id);
+    galleryItem.coverImage = coverImagePath;
+    return this.galleryRepository.save(galleryItem);
+  }
+
+  async remove(id: string): Promise<void> {
+    const result = await this.galleryRepository.deleteOne({
+      _id: new ObjectId(id),
+    });
     if (result.deletedCount === 0) {
-      throw new NotFoundException(`Gallery with ID ${id} not found`);
+      throw new NotFoundException(`Gallery item with ID "${id}" not found.`);
     }
   }
 }
