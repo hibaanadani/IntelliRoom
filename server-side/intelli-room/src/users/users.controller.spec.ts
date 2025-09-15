@@ -20,8 +20,9 @@ describe('UsersController', () => {
   let controller: UsersController;
   let service: UsersService;
 
+  const mockObjectId = new ObjectId('60c72b2f9b1d8e001f8e1a1a');
   const mockUser: User = {
-    _id: new ObjectId('60c72b2f9b1d8e001f8e1a1a'),
+    _id: mockObjectId,
     id: 1,
     fullname: 'Test User',
     email: 'test@example.com',
@@ -102,12 +103,16 @@ describe('UsersController', () => {
 
   describe('updateUser', () => {
     it('should successfully update and return a user', async () => {
-      const updateUserDto = { fullname: 'Updated Name' };
+      const updateUserDto: UpdateUserDto = { fullname: 'Updated Name' };
       const updatedUser = { ...mockUser, ...updateUserDto };
       jest.spyOn(service, 'updateUser').mockResolvedValue(updatedUser as any);
-      const result = await controller.updateUser(1, updateUserDto);
+      const idToUpdate = mockObjectId.toHexString();
+      const result = await controller.updateUser(idToUpdate, updateUserDto);
       expect(result).toEqual(updatedUser);
-      expect(service.updateUser).toHaveBeenCalledWith(1, updateUserDto);
+      expect(service.updateUser).toHaveBeenCalledWith(
+        idToUpdate,
+        updateUserDto,
+      );
     });
   });
 

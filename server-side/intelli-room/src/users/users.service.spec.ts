@@ -26,8 +26,9 @@ describe('UsersService', () => {
   let service: UsersService;
   let usersRepository: MongoRepository<User>;
 
+  const mockObjectId = new ObjectId('60c72b2f9b1d8e001f8e1a1a');
   const mockUser: User = {
-    _id: new ObjectId('60c72b2f9b1d8e001f8e1a1a'),
+    _id: mockObjectId,
     id: 1,
     fullname: 'Test User',
     email: 'test@example.com',
@@ -160,7 +161,6 @@ describe('UsersService', () => {
 
       const result = await service.createUser(createUserDto);
 
-      // Corrected line: We now expect the `rooms` property to be included.
       expect(usersRepository.create).toHaveBeenCalledWith({
         id: 2,
         ...createUserDto,
@@ -188,14 +188,15 @@ describe('UsersService', () => {
   describe('updateUser', () => {
     it('should successfully update a user', async () => {
       const updateUserDto = { fullname: 'Updated User' };
-      jest
-        .spyOn(usersRepository, 'findOneBy')
-        .mockResolvedValue(mockUser as any);
+      jest.spyOn(usersRepository, 'findOne').mockResolvedValue(mockUser as any);
       jest
         .spyOn(usersRepository, 'save')
         .mockResolvedValue({ ...mockUser, ...updateUserDto } as any);
-      const result = await service.updateUser(1, updateUserDto);
-      expect(usersRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      const idToUpdate = mockObjectId.toHexString();
+      const result = await service.updateUser(idToUpdate, updateUserDto);
+      expect(usersRepository.findOne).toHaveBeenCalledWith({
+        where: { _id: new ObjectId(idToUpdate) },
+      });
       expect(result.fullname).toEqual(updateUserDto.fullname);
       expect(usersRepository.save).toHaveBeenCalled();
     });
@@ -203,15 +204,11 @@ describe('UsersService', () => {
     it('should hash the password if it is updated', async () => {
       const dtoWithPassword = { password: 'newPassword123' };
       const updatedUser = { ...mockUser, password: 'hashedPassword' };
-
-      jest
-        .spyOn(usersRepository, 'findOneBy')
-        .mockResolvedValue(mockUser as any);
+      jest.spyOn(usersRepository, 'findOne').mockResolvedValue(mockUser as any);
       mockAuthService.hashPassword.mockResolvedValue('hashedPassword');
       jest.spyOn(usersRepository, 'save').mockResolvedValue(updatedUser as any);
-
-      const result = await service.updateUser(1, dtoWithPassword);
-
+      const idToUpdate = mockObjectId.toHexString();
+      const result = await service.updateUser(idToUpdate, dtoWithPassword);
       expect(mockAuthService.hashPassword).toHaveBeenCalledWith(
         'newPassword123',
       );
@@ -219,10 +216,10 @@ describe('UsersService', () => {
     });
 
     it('should throw NotFoundException if user to update is not found', async () => {
-      jest.spyOn(usersRepository, 'findOneBy').mockResolvedValue(null);
-      await expect(service.updateUser(999, {})).rejects.toThrow(
-        NotFoundException,
-      );
+      jest.spyOn(usersRepository, 'findOne').mockResolvedValue(null);
+      await expect(
+        service.updateUser(new ObjectId().toHexString(), {}),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
