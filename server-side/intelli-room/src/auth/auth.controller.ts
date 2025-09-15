@@ -15,7 +15,8 @@ export class AuthController {
   @UseGuards(AuthGuard('local'))
   @Post('login')
   async login(@Request() req: any) {
-    return this.authService.login(req.user);
+    // async login(@Body() loginDto: LoginDto) {
+    return this.authService.login(req);
   }
 
   @ApiOperation({ summary: 'Register a new user and log them in' })
