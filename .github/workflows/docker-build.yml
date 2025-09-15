@@ -37,22 +37,24 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Injecting secrets to env.example
+        working-directory: server-side/intelli-room
         run: |
-          sed -i "s|MONGODB_USERNAME=.*|MONGODB_USERNAME=${{ secrets.MONGODB_USERNAME }}|g" env.example
-          sed -i "s|MONGODB_PASSWORD=.*|MONGODB_PASSWORD=${{ secrets.MONGODB_PASSWORD }}|g" env.example
-          sed -i "s|MONGODB_DB=.*|MONGODB_DB=${{ secrets.MONGODB_DB }}|g" env.example
-          sed -i "s|MONGODB_DATABASE_HOST=.*|MONGODB_DATABASE_HOST=${{ secrets.MONGODB_DATABASE_HOST }}|g" env.example
-          sed -i "s|MONGODB_DATABASE_URI=.*|MONGODB_DATABASE_URI=${{ secrets.MONGODB_DATABASE_URI }}|g" env.example
-          sed -i "s|N8N_WEBHOOK_URL_Calendar=.*|N8N_WEBHOOK_URL_Calendar=${{ secrets.N8N_WEBHOOK_URL_Calendar }}|g" env.example
-          sed -i "s|N8N_WEBHOOK_URL_Available=.*|N8N_WEBHOOK_URL_Available=${{ secrets.N8N_WEBHOOK_URL_Available }}|g" env.example
-          sed -i "s|CHATBOT_WEBHOOK_URL=.*|CHATBOT_WEBHOOK_URL=${{ secrets.CHATBOT_WEBHOOK_URL }}|g" env.example
-          sed -i "s|ADMIN_EMAIL=.*|ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}|g" env.example
-          sed -i "s|JWT_SECRET=.*|JWT_SECRET=${{ secrets.JWT_SECRET }}|g" env.example
-          sed -i "s|ML_API_URL=.*|ML_API_URL=${{ secrets.ML_API_URL }}|g" env.example
-          sed -i "s|API_BASE_URL=.*|API_BASE_URL=${{ secrets.API_BASE_URL }}|g" env.example
-          sed -i "s|PORT=.*|PORT=${{ secrets.PORT }}|g" env.example
+          sed -i "s|MONGODB_USERNAME=.*|MONGODB_USERNAME=${{ secrets.MONGODB_USERNAME }}|g" .env.example
+          sed -i "s|MONGODB_PASSWORD=.*|MONGODB_PASSWORD=${{ secrets.MONGODB_PASSWORD }}|g" .env.example
+          sed -i "s|MONGODB_DB=.*|MONGODB_DB=${{ secrets.MONGODB_DB }}|g" .env.example
+          sed -i "s|MONGODB_DATABASE_HOST=.*|MONGODB_DATABASE_HOST=${{ secrets.MONGODB_DATABASE_HOST }}|g" .env.example
+          sed -i "s|MONGODB_DATABASE_URI=.*|MONGODB_DATABASE_URI=${{ secrets.MONGODB_DATABASE_URI }}|g" .env.example
+          sed -i "s|N8N_WEBHOOK_URL_Calendar=.*|N8N_WEBHOOK_URL_Calendar=${{ secrets.N8N_WEBHOOK_URL_Calendar }}|g" .env.example
+          sed -i "s|N8N_WEBHOOK_URL_Available=.*|N8N_WEBHOOK_URL_Available=${{ secrets.N8N_WEBHOOK_URL_Available }}|g" .env.example
+          sed -i "s|CHATBOT_WEBHOOK_URL=.*|CHATBOT_WEBHOOK_URL=${{ secrets.CHATBOT_WEBHOOK_URL }}|g" .env.example
+          sed -i "s|ADMIN_EMAIL=.*|ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}|g" .env.example
+          sed -i "s|JWT_SECRET=.*|JWT_SECRET=${{ secrets.JWT_SECRET }}|g" .env.example
+          sed -i "s|ML_API_URL=.*|ML_API_URL=${{ secrets.ML_API_URL }}|g" .env.example
+          sed -i "s|API_BASE_URL=.*|API_BASE_URL=${{ secrets.API_BASE_URL }}|g" .env.example
+          sed -i "s|PORT=.*|PORT=${{ secrets.PORT }}|g" .env.example
 
       - name: Copy .enc.example to .env
+        working-directory: server-side/intelli-room
         run: cp .env.example .env
 
       # This step uses the 'docker-compose' command to build and push both images.
