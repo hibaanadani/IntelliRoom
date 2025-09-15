@@ -43,9 +43,9 @@ export class GallerySeeder implements OnModuleInit {
         coverImage: 'uploads/gallery/alberta.png',
       },
       {
-        name: 'Mobilitop',
+        name: 'Silva',
         catalogue: 'uploads/gallery/FRIGERIODAVISSystem.pdf',
-        coverImage: 'uploads/gallery/MobilitopLogo.png',
+        coverImage: 'uploads/gallery/silvafurniture.png',
       },
     ];
 

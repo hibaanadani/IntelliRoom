@@ -12,11 +12,9 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Login with username and password' })
   @ApiBody({ type: LoginDto })
-  @UseGuards(AuthGuard('local'))
   @Post('login')
-  async login(@Request() req: any) {
-    // async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(req);
+  async login(@Body() loginDto: LoginDto) {
+    return this.authService.login(loginDto);
   }
 
   @ApiOperation({ summary: 'Register a new user and log them in' })

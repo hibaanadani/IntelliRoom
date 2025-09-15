@@ -3,14 +3,12 @@ import {
   UnauthorizedException,
   Inject,
   forwardRef,
-  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
-import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class AuthService {
@@ -31,15 +29,21 @@ export class AuthService {
     return null;
   }
 
-  // async login(loginDto: LoginDto) {
-  async login(user: any) {
+  async login(loginDto: LoginDto) {
+    const user = await this.validateUser(loginDto.email, loginDto.password);
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     const payload = {
-      email: user.email,
       sub: user._id.toString(),
+      fullname: user.fullname,
+      email: user.email,
     };
 
     return {
-      access_token: this.jwtService.sign(payload), //just send the access token and decode it in the frontend
+      access_token: this.jwtService.sign(payload),
       user: {
         id: user._id,
         fullname: user.fullname,
@@ -48,21 +52,6 @@ export class AuthService {
         phone: user.phone,
       },
     };
-    //   const user = await this.usersService.findByEmail(loginDto.email);
-    //   if (!user) {
-    //     throw new NotFoundException('user not found');
-    //   }
-    //   if (await this.validateUser(loginDto.email, loginDto.password)) {
-    //     const payload = {
-    //       id: user._id,
-    //       fullname: user.fullname,
-    //       email: user.email,
-    //       age: user.age,
-    //       phone: user.phone,
-    //     };
-    //     return this.jwtService.sign(payload);
-    //   }
-    //   throw new UnauthorizedException('invalid password');
   }
 
   async signup(createUserDto: CreateUserDto) {
@@ -71,7 +60,20 @@ export class AuthService {
       ...createUserDto,
       password: hashedPassword,
     });
-    return this.login(newUser);
+
+    const payload = {
+      sub: newUser._id.toString(),
+      fullname: newUser.fullname,
+      email: newUser.email,
+    };
+
+    const accessToken = this.jwtService.sign(payload);
+    const { password, ...userWithoutPassword } = newUser;
+
+    return {
+      access_token: accessToken,
+      user: userWithoutPassword,
+    };
   }
 
   async hashPassword(password: string): Promise<string> {
