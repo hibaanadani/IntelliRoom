@@ -1,14 +1,18 @@
 import {
   Injectable,
-  CanActivate,
   ExecutionContext,
   ForbiddenException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AdminGuard extends AuthGuard('jwt') {
+  constructor(private configService: ConfigService) {
+    super();
+  }
+
   canActivate(context: ExecutionContext) {
     return super.canActivate(context);
   }
@@ -18,7 +22,9 @@ export class AdminGuard extends AuthGuard('jwt') {
       throw err || new UnauthorizedException();
     }
 
-    if (user.email === 'hibaanadani1@gmail.com') {
+    const adminEmail = this.configService.get<string>('ADMIN_EMAIL');
+
+    if (user.email === adminEmail) {
       return user;
     } else {
       throw new ForbiddenException(

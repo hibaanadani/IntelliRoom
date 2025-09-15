@@ -4,7 +4,6 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { ObjectId } from 'mongodb';
-import { UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 
 jest.mock('bcryptjs', () => ({
@@ -23,6 +22,7 @@ const mockJwtService = () => ({
 
 const mockUser = {
   id: new ObjectId(),
+  _id: new ObjectId(),
   fullname: 'Test User',
   email: 'test@example.com',
   password: 'hashedPassword',
@@ -83,6 +83,7 @@ describe('AuthService', () => {
       );
       expect(result).toEqual({
         id: mockUser.id,
+        _id: mockUser._id,
         fullname: mockUser.fullname,
         email: mockUser.email,
         age: mockUser.age,
@@ -126,7 +127,7 @@ describe('AuthService', () => {
       jest.spyOn(jwtService, 'sign').mockReturnValue(mockAccessToken);
 
       const user = {
-        id: new ObjectId('60c72b2f9b1d8e001f8e1a1a'),
+        _id: new ObjectId('60c72b2f9b1d8e001f8e1a1a'),
         email: mockUser.email,
         fullname: mockUser.fullname,
         age: mockUser.age,
@@ -137,27 +138,19 @@ describe('AuthService', () => {
 
       expect(jwtService.sign).toHaveBeenCalledWith({
         email: user.email,
-        sub: user.id.toString(),
+        sub: user._id.toString(),
       });
 
       expect(result).toEqual({
         access_token: mockAccessToken,
         user: {
-          id: user.id,
+          id: user._id,
           fullname: user.fullname,
           email: user.email,
           age: user.age,
           phone: user.phone,
         },
       });
-    });
-
-    it('should throw UnauthorizedException for an invalid user object', async () => {
-      const invalidUser = { email: 'invalid@example.com' };
-      await expect(service.login(invalidUser)).rejects.toThrow(
-        UnauthorizedException,
-      );
-      await expect(service.login(null)).rejects.toThrow(UnauthorizedException);
     });
   });
 

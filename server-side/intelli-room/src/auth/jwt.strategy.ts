@@ -1,6 +1,3 @@
-// This is the JWT Strategy - it tells Passport how to handle JWT tokens
-// When someone sends a request with a JWT token, this code runs to check if it's valid
-
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -13,12 +10,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
   ) {
-    // Configure how JWT tokens should be handled
     super({
-      // Where to find the JWT token in the request (in the "Authorization" header)
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 
-      // Don't allow expired tokens
       ignoreExpiration: false,
       secretOrKey:
         configService.get<string>('JWT_SECRET') ||

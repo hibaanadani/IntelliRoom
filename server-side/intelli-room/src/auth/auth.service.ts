@@ -24,40 +24,21 @@ export class AuthService {
   }
 
   async login(user: any) {
-    if (!user) {
-      throw new UnauthorizedException('Invalid user object for login.');
-    }
-
-    const id = user.id;
-
-    if (!id || !user.email) {
-      throw new UnauthorizedException('Invalid user object for login.');
-    }
-
-    const fullname = user.fullname || '';
-
     const payload = {
       email: user.email,
-      sub: id.toString(),
+      sub: user._id.toString(),
     };
 
-    try {
-      const access_token = this.jwtService.sign(payload);
-
-      return {
-        access_token,
-        user: {
-          id: id,
-          fullname: fullname,
-          email: user.email,
-          age: user.age,
-          phone: user.phone,
-        },
-      };
-    } catch (error) {
-      console.error('JWT sign failed:', error);
-      throw new UnauthorizedException('Authentication failed.');
-    }
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: {
+        id: user._id,
+        fullname: user.fullname,
+        email: user.email,
+        age: user.age,
+        phone: user.phone,
+      },
+    };
   }
 
   async signup(createUserDto: CreateUserDto) {
