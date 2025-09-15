@@ -50,7 +50,6 @@ jobs:
           sed -i "s|ADMIN_EMAIL=.*|ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}|g" .env.example
           sed -i "s|ML_API_URL=.*|ML_API_URL=${{ secrets.ML_API_URL }}|g" .env.example
           sed -i "s|API_BASE_URL=.*|API_BASE_URL=${{ secrets.API_BASE_URL }}|g" .env.example
-          sed -i "s|PORT=.*|PORT=${{ secrets.PORT }}|g" .env.example
 
       - name: Copy .enc.example to .env
         working-directory: server-side/intelli-room
