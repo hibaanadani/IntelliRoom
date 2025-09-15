@@ -78,12 +78,12 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Update user by ID' })
-  @ApiParam({ name: 'id', description: 'User ID', type: 'integer' })
+  @ApiParam({ name: 'id', description: 'User ID (ObjectId)', type: 'string' })
   @ApiOkResponse({ type: User, description: 'User updated successfully' })
   @ApiNotFoundResponse({ description: 'User not found' })
   @Patch(':id')
   async updateUser(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<User> {
     return this.usersService.updateUser(id, updateUserDto);

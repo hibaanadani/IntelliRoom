@@ -12,6 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from 'src/auth/auth.service';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class UsersService {
@@ -79,8 +80,14 @@ export class UsersService {
     return userWithoutPassword as User;
   }
 
-  async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<User> {
-    const user = await this.usersRepository.findOneBy({ id });
+  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    if (!ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid user ID format.');
+    }
+
+    const user = await this.usersRepository.findOne({
+      where: { _id: new ObjectId(id) },
+    });
 
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
