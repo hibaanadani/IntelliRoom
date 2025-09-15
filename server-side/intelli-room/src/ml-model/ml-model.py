@@ -1,222 +1,196 @@
 import os
-import torch
-import numpy as np
 import io
+import base64
 import tempfile
+import numpy as np
+import torch
+import requests
+import uuid
+from pathlib import Path
 from PIL import Image
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
-from torchvision import transforms
 from transformers import CLIPVisionModel
-from torch import nn
+from torchvision import transforms
 from ultralytics import YOLO
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+from diffusers import StableDiffusionControlNetPipeline, ControlNetModel, UniPCMultistepScheduler
+from torch import nn
 
-# --- Part 1: Initializing Models and Parameters ---
+ROOT_DIR = Path(__file__).resolve().parent 
+GENERATED_IMAGES_DIR = ROOT_DIR.parent.parent / "uploads" / "generatedrooms"
+UPLOADS_DIR = ROOT_DIR.parent.parent / "uploads"
 
-# We only need one instance of these models.
-aesthetic_classifier_head = None
+YOLO_MODEL_PATH = ROOT_DIR / "yolov8n.pt"
+AESTHETIC_MODEL_PATH = ROOT_DIR / "aesthetic_classifier_head.pt"
+CONTROLNET_MODEL_PATH = "lllyasviel/sd-controlnet-canny"
+STABLE_DIFFUSION_MODEL_PATH = "runwayml/stable-diffusion-v1-5" 
+
 yolo_model = None
-clip_vision_model = None
-
-# We need to find the root directory of the project to load the models.
-# This code will find the directory of this script, then go up one level.
-# This makes it compatible with your folder structure.
-def find_root_path():
-    """Finds the project root directory."""
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    # Assumes the script is at 'src/ml-model/ml-model.py'
-    # so we need to go up two levels to get to the root.
-    return os.path.dirname(os.path.dirname(current_dir))
-
-ROOT_DIR = find_root_path()
-YOLO_MODEL_PATH = os.path.join(ROOT_DIR, "yolov8n.pt")
-AESTHETIC_MODEL_PATH = os.path.join(ROOT_DIR, "aesthetic_classifier_head.pt")
-
-
-# A simple in-memory catalogue for suggestions
-item_catalogue = [
-    {"object": "chair", "aesthetic": "Good", "suggestion": "Try a comfortable armchair to create a cozy reading nook.", "color": "deep blue"},
-    {"object": "couch", "aesthetic": "Good", "suggestion": "Consider a large sectional sofa to anchor the living space.", "color": "dark gray"},
-    {"object": "bed", "aesthetic": "Good", "suggestion": "A canopy bed can add a touch of elegance and luxury.", "color": "white"},
-    {"object": "lamp", "aesthetic": "Good", "suggestion": "Install a modern floor lamp for both style and light.", "color": "black"},
-    {"object": "table", "aesthetic": "Good", "suggestion": "A minimalist coffee table will keep the room feeling open.", "color": "light wood"},
-    {"object": "chair", "aesthetic": "Bad", "suggestion": "Consider replacing this worn-out chair with a modern, sleek design.", "color": "brown"},
-    {"object": "couch", "aesthetic": "Bad", "suggestion": "It seems your current couch is a negative focal point. Consider replacing it with a 'Plush Velvet Sofa' in a 'deep blue' color to improve the room's aesthetic."},
-]
+aesthetic_model_head = None
+aesthetic_model_body = None
+generator_pipeline = None
+processor = None
 
 app = FastAPI()
 
-# --- Part 2: Utility Functions ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-def get_dominant_color(image_path):
-    """
-    Finds the most dominant color in an image.
-    (This function is kept for potential future use, but its output is not used in the final JSON now).
-    """
-    image = Image.open(image_path)
-    image = image.convert("RGB")
-    image_np = np.array(image)
-    pixels = image_np.reshape(-1, 3)
-    unique_colors, counts = np.unique(pixels, axis=0, return_counts=True)
-    dominant_color_rgb = unique_colors[np.argmax(counts)]
-    
-    # A simplified logic to return a named color
-    # You can expand this with more colors and better logic
-    if np.all(dominant_color_rgb > 200):
-        return "white"
-    elif np.all(dominant_color_rgb < 50):
-        return "black"
-    elif dominant_color_rgb[0] > 150 and dominant_color_rgb[1] > 150 and dominant_color_rgb[2] < 100:
-        return "yellow"
-    else:
-        return "other"
+app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
-def generate_suggestions(overall_classification, object_analysis, dominant_color):
-    """
-    Generates actionable advice based on the ML analysis.
-    """
-    report = []
-    
-    # Get a count of "bad" items
-    bad_items = [item for item in object_analysis if item['classification'] == 'Bad']
-    
-    # Logic for when the overall room is bad
-    if overall_classification == 'Bad':
-        if bad_items:
-            # If there are bad items, we generate a report based on them
-            for item in bad_items:
-                # You can add more specific suggestions here
-                report.append(f"Consider improving the '{item['object']}' to enhance the room's aesthetic.")
-        else:
-            # If the room is bad but no individual objects are, suggest a general change
-            report.append("The overall room is classified as 'Bad', but no individual objects were classified as 'Bad'.")
-            report.append("This is likely due to the overall composition, lighting, or clutter that the model could not identify by object name.")
-            report.append("Consider changing the color scheme, adjusting the lighting, or rearranging the space.")
-    else: # If the overall room is good
-        if bad_items:
-            # If the room is good but has some bad items, suggest changing them.
-            report.append("The room is generally good, but there are some objects that could be improved.")
-            for item in bad_items:
-                report.append(f"Consider improving the '{item['object']}' to make the room excellent.")
-        else:
-            # The room is good and has no bad objects.
-            report.append("The room has a cohesive aesthetic with no obvious bad objects. Great job!")
-
-    # Add the dominant color suggestion if needed
-    if dominant_color:
-        report.append(f"The overall room has a dominant '{dominant_color}' color scheme. Adding a contrasting element, like a small accent piece in a complementary color, could enhance the room's appeal.")
-
-    return report
-
-# --- Part 3: FastAPI Startup Event ---
+class ImageRequest(BaseModel):
+    url: str
 
 @app.on_event("startup")
-def load_models():
-    """
-    This function runs once when the API server starts to load the models.
-    """
-    global aesthetic_classifier_head, yolo_model, clip_vision_model
+async def load_models():
+    global yolo_model, aesthetic_model_head, aesthetic_model_body, generator_pipeline, processor
     
-    # Load YOLOv8 model using the corrected path
+    os.makedirs(GENERATED_IMAGES_DIR, exist_ok=True)
+    
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Using device: {device}")
+    
     print("Loading YOLOv8 object detection model...")
-    yolo_model = YOLO(YOLO_MODEL_PATH)
+    if not os.path.exists(YOLO_MODEL_PATH):
+        print(f"YOLO model not found at {YOLO_MODEL_PATH}. Downloading...")
+        yolo_model = YOLO(str(YOLO_MODEL_PATH))
+    else:
+        yolo_model = YOLO(str(YOLO_MODEL_PATH))
     
-    # Load CLIP vision model
-    print("Loading CLIP vision model for aesthetic analysis...")
-    clip_vision_model = CLIPVisionModel.from_pretrained("openai/clip-vit-base-patch32")
+    print("Loading CLIP vision model and aesthetic classifier head...")
+    aesthetic_model_head = nn.Linear(768, 2)
+    aesthetic_model_head.load_state_dict(torch.load(AESTHETIC_MODEL_PATH))
+    
+    aesthetic_model_body = CLIPVisionModel.from_pretrained("openai/clip-vit-base-patch32")
+    aesthetic_model_head.eval()
+    aesthetic_model_body.eval()
+    
+    processor = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+    
+    print("Loading Stable Diffusion and ControlNet models...")
+    controlnet = ControlNetModel.from_pretrained(CONTROLNET_MODEL_PATH)
+    
+    generator_pipeline = StableDiffusionControlNetPipeline.from_pretrained(
+        STABLE_DIFFUSION_MODEL_PATH, 
+        controlnet=controlnet, 
+        safety_checker=None,
+        torch_dtype=torch.float16 
+    )
+    generator_pipeline.scheduler = UniPCMultistepScheduler.from_config(generator_pipeline.scheduler.config)
+    
+    yolo_model.to(device)
+    aesthetic_model_head.to(device)
+    aesthetic_model_body.to(device)
+    generator_pipeline.to(device)
 
-    # Load custom aesthetic classifier head using the corrected path
-    print("Loading custom aesthetic classifier head...")
-    aesthetic_classifier_head = nn.Linear(clip_vision_model.config.hidden_size, 2)
-    state_dict = torch.load(AESTHETIC_MODEL_PATH)
-    aesthetic_classifier_head.load_state_dict(state_dict)
-    aesthetic_classifier_head.eval()
+def get_full_analysis(image):
+    """
+    Performs both overall and per-object aesthetic analysis using the loaded models.
+    """
+    device = next(aesthetic_model_body.parameters()).device
+    
+    overall_inputs = processor(image).unsqueeze(0).to(device)
+    with torch.no_grad():
+        overall_features = aesthetic_model_body(overall_inputs).pooler_output
+        overall_outputs = aesthetic_model_head(overall_features)
+        _, overall_pred_idx = torch.max(overall_outputs, 1)
 
-# --- Part 4: API Endpoint for Room Analysis ---
+    overall_classification = "Good" if overall_pred_idx.item() == 0 else "Bad"
 
+    yolo_results = yolo_model.predict(source=image, save=False)
+    
+    per_object_report = []
+    actionable_report = [] 
+
+    for result in yolo_results:
+        for box in result.boxes:
+            class_id = int(box.cls)
+            object_name = yolo_model.names[class_id]
+            
+            x1, y1, x2, y2 = [int(coord) for coord in box.xyxy[0]]
+            cropped_image = image.crop((x1, y1, x2, y2))
+            
+            if min(cropped_image.size) > 0:
+                cropped_inputs = processor(cropped_image).unsqueeze(0).to(device)
+                
+                with torch.no_grad():
+                    cropped_features = aesthetic_model_body(cropped_inputs).pooler_output
+                    cropped_outputs = aesthetic_model_head(cropped_features)
+                    _, cropped_pred_idx = torch.max(cropped_outputs, 1)
+                
+                object_classification = "Good" if cropped_pred_idx.item() == 0 else "Bad"
+                
+                per_object_report.append({
+                    "object": object_name,
+                    "classification": object_classification,
+                })
+                
+                if object_classification == "Bad":
+                    actionable_report.append(f"Consider tidying or improving the '{object_name}'.")
+
+    return {
+        "overallClassification": overall_classification,
+        "individualObjectAnalysis": per_object_report,
+        "actionableReport": actionable_report
+    }
+
+# --- Part 5: The API Endpoint ---
 @app.post("/analyze")
-async def analyze_room(file: UploadFile = File(...)):
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Invalid file type. Only images are allowed.")
+async def analyze_room(request: ImageRequest):
+    try:
+        response = requests.get(request.url)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=400, detail=f"Could not download image from URL: {e}")
 
     try:
-        # Read the image data
-        image_data = await file.read()
-        image_stream = io.BytesIO(image_data)
-        pil_image = Image.open(image_stream).convert("RGB")
-        
-        # Save the image to a temporary file in a location that is accessible by YOLO
-        temp_dir = tempfile.gettempdir()
-        temp_image_path = os.path.join(temp_dir, "uploaded_image.jpg")
-        pil_image.save(temp_image_path)
-
-        # --- Step 1: Overall Aesthetic Classification ---
-        image_transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
-        input_image = image_transform(pil_image).unsqueeze(0)
-        
-        with torch.no_grad():
-            image_features = clip_vision_model(input_image).pooler_output
-            aesthetic_scores = aesthetic_classifier_head(image_features)
-        
-        _, predicted_class = torch.max(aesthetic_scores, 1)
-        overall_classification = "Good" if predicted_class.item() == 0 else "Bad"
-
-        # --- Step 2: Object Detection and Individual Analysis ---
-        results = yolo_model(temp_image_path)
-        
-        individual_object_analysis = []
-        for r in results:
-            for box in r.boxes:
-                # Get class and confidence
-                class_id = r.names[box.cls[0].item()]
-                confidence = box.conf[0].item()
-
-                # Get bounding box coordinates
-                x1, y1, x2, y2 = box.xyxy[0].tolist()
-
-                # --- NEW: Get a new classification for each object ---
-                # Crop the object from the image
-                cropped_object_pil = pil_image.crop((x1, y1, x2, y2))
-                input_object = image_transform(cropped_object_pil).unsqueeze(0)
-
-                with torch.no_grad():
-                    object_features = clip_vision_model(input_object).pooler_output
-                    object_scores = aesthetic_classifier_head(object_features)
-                
-                _, object_predicted_class = torch.max(object_scores, 1)
-                object_classification = "Good" if object_predicted_class.item() == 0 else "Bad"
-                
-                # We will only add the fields that your DTO requires
-                individual_object_analysis.append({
-                    "object": class_id,
-                    "classification": object_classification,
-                    # We are intentionally not adding the `box` coordinates here.
-                })
-
-        # --- Step 3: Get Dominant Color (Not used in final output, but the function is still here) ---
-        dominant_color = get_dominant_color(temp_image_path)
-
-        # --- Step 4: Generate Actionable Report ---
-        actionable_report = generate_suggestions(overall_classification, individual_object_analysis, dominant_color)
-
-        # --- Final Step: Build the Response ---
-        # The keys here are adjusted to match your DTO's `camelCase` naming conventions
-        response_data = {
-            "overallClassification": overall_classification,
-            # We are intentionally not adding the "dominant_room_color" field here
-            "individualObjectAnalysis": individual_object_analysis,
-            "actionableReport": actionable_report,
-        }
-        
-        # Clean up the temporary image file
-        os.remove(temp_image_path)
-
-        return JSONResponse(content=response_data)
-
+        image = Image.open(io.BytesIO(response.content)).convert("RGB")
     except Exception as e:
-        print(f"An error occurred: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=400, detail=f"Could not process image from URL: {e}")
+
+    analysis = get_full_analysis(image)
+    
+    generated_image_url = None
+    
+    if analysis["overallClassification"] == "Bad":
+        print("--- DEBUG: Generating new image with updated logic ---")
+        
+        image_np = np.array(image)
+        low_threshold = 100
+        high_threshold = 200
+        edges = cv2.Canny(image_np, low_threshold, high_threshold)
+        
+        edges_pil = Image.fromarray(edges).convert("RGB")
+        
+
+        prompt = "a clean, well-lit, aesthetically pleasing room"
+        if analysis["actionableReport"]:
+            prompt = f"a clean, tidy, beautiful room, fixing the following issues: {', '.join(analysis['actionableReport'])}"
+        
+        output_image = generator_pipeline(
+            prompt,
+            image=edges_pil,
+            num_inference_steps=20,
+            eta=0.0,
+        ).images[0]
+
+        filename = f"generated_room_{uuid.uuid4().hex}.jpeg"
+        output_image_path = GENERATED_IMAGES_DIR / filename
+        output_image.save(output_image_path, "JPEG")
+        generated_image_url = f"/uploads/generatedrooms/{filename}"
+
+    return {
+        "analysis": analysis,
+        "generatedImage": generated_image_url,
+    }

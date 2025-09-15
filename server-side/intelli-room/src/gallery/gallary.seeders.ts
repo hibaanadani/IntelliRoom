@@ -37,6 +37,16 @@ export class GallerySeeder implements OnModuleInit {
         catalogue: 'uploads/gallery/FRIGERIO2023.pdf',
         coverImage: 'uploads/gallery/Concept.png',
       },
+      {
+        name: 'Alberta',
+        catalogue: 'uploads/gallery/EthnicraftFurnitureCatalogue.pdf',
+        coverImage: 'uploads/gallery/alberta.png',
+      },
+      {
+        name: 'Mobilitop',
+        catalogue: 'uploads/gallery/FRIGERIODAVISSystem.pdf',
+        coverImage: 'uploads/gallery/MobilitopLogo.png',
+      },
     ];
 
     await this.galleryRepository.save(galleryItems);
