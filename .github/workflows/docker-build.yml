@@ -7,6 +7,12 @@ on:
   push:
     branches: [main]
 
+# 'env' defines environment variables that can be used throughout the workflow.
+# This keeps our image names clean and reusable.
+# comment the env
+# env:
+#   DOCKER_REPO_SERVER: your-dockerhub-username/intelli-room-server
+
 # 'jobs' defines the main tasks to be executed. We have a single job named 'build-push-nestjs'.
 jobs:
   build-push-nestjs:
@@ -30,6 +36,25 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Injecting secrets to env.example
+        run: |
+          sed -i "s|MONGODB_USERNAME=.*|MONGODB_USERNAME=${{ secrets.MONGODB_USERNAME }}|g" env.example
+          sed -i "s|MONGODB_PASSWORD=.*|MONGODB_PASSWORD=${{ secrets.MONGODB_PASSWORD }}|g" env.example
+          sed -i "s|MONGODB_DB=.*|MONGODB_DB=${{ secrets.MONGODB_DB }}|g" env.example
+          sed -i "s|MONGODB_DATABASE_HOST=.*|MONGODB_DATABASE_HOST=${{ secrets.MONGODB_DATABASE_HOST }}|g" env.example
+          sed -i "s|MONGODB_DATABASE_URI=.*|MONGODB_DATABASE_URI=${{ secrets.MONGODB_DATABASE_URI }}|g" env.example
+          sed -i "s|N8N_WEBHOOK_URL_Calendar=.*|N8N_WEBHOOK_URL_Calendar=${{ secrets.N8N_WEBHOOK_URL_Calendar }}|g" env.example
+          sed -i "s|N8N_WEBHOOK_URL_Available=.*|N8N_WEBHOOK_URL_Available=${{ secrets.N8N_WEBHOOK_URL_Available }}|g" env.example
+          sed -i "s|CHATBOT_WEBHOOK_URL=.*|CHATBOT_WEBHOOK_URL=${{ secrets.CHATBOT_WEBHOOK_URL }}|g" env.example
+          sed -i "s|ADMIN_EMAIL=.*|ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}|g" env.example
+          sed -i "s|JWT_SECRET=.*|JWT_SECRET=${{ secrets.JWT_SECRET }}|g" env.example
+          sed -i "s|ML_API_URL=.*|ML_API_URL=${{ secrets.ML_API_URL }}|g" env.example
+          sed -i "s|API_BASE_URL=.*|API_BASE_URL=${{ secrets.API_BASE_URL }}|g" env.example
+          sed -i "s|PORT=.*|PORT=${{ secrets.PORT }}|g" env.example
+
+      - name: Copy .enc.example to .env
+        run: cp .env.example .env
+
       # This step uses the 'docker-compose' command to build and push both images.
       # It finds the docker-compose.yml file and processes both the 'server' and 'client' services.
       - name: Build and push images
@@ -43,9 +68,9 @@ jobs:
         # takes Dockerfile by default
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/docker-backend:22 . && docker push ${{ secrets.DOCKERHUB_USERNAME }}/docker-backend:22
 
-      # connect to server
+        # connect to server
 
-  # We will comment out this entire job for now because we don't have an EC2 instance to deploy to yet.
+  # new job
   copy-docker-compose-to-ec2:
     # 'runs-on' specifies the type of machine the job will run on.
     # 'ubuntu-latest' is a standard virtual machine provided by GitHub.
@@ -62,8 +87,18 @@ jobs:
       # sed searching substituting strings s| string .* anything named MYSQL_ROOT_PASSWORD |g glbal in all the file
       # sed -i "s|MYSQL_ROOT_PASSWORD:.*|MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}|g" docker-compose.yml
       # sed -i "s|MYSQL_DATABASE:.*|MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}|g" docker-compose.yml
-      # we will remove the old sed command, because we now pass secrets securely
-      # so this step is simpler, just copying the file
+      - name: Injecting secrets to docker-compose
+        run: |
+          sed -i "s|MONGO_INITDB_ROOT_USERNAME:.*|MONGO_INITDB_ROOT_USERNAME: ${{ secrets.MONGO_INITDB_ROOT_USERNAME }}|g" docker-compose.yml
+          sed -i "s|MONGO_INITDB_ROOT_PASSWORD:.*|MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}|g" docker-compose.yml
+          sed -i "s|MONGO_INITDB_DATABASE:.*|MONGO_INITDB_DATABASE: ${{ secrets.MONGO_INITDB_DATABASE }}|g" docker-compose.yml
+
+      # job to deploy ONLYY DOCKER COMPOSE to EC2
+      # ssh to connect to a remote host, it provides a secure shell
+      # host: ip address username and key
+      # scp secured copy to copy files from and to remote host
+      # using repo appleboy/scp-action the first v
+      # with for attributes
       - name: Copy docker-compose to ec2
         uses: appleboy/scp-action@v1
         with:
@@ -102,17 +137,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          # We pass the GitHub Secret names on the right side of the colon
-          # to the environment variable names that your docker-compose file expects on the left.
-          env:
-            MONGODB_USERNAME: ${{ secrets.MONGODB_USERNAME }}
-            MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
-            MONGODB_DB: ${{ secrets.MONGODB_DB }}
-            MONGODB_DATABASE_HOST: mongodb_db
-            N8N_WEBHOOK_URL_Calendar: ${{ secrets.N8N_WEBHOOK_URL_Calendar }}
-            CHATBOT_WEBHOOK_URL: ${{ secrets.CHATBOT_WEBHOOK_URL }}
-            DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           script: |
             docker compose down
-            docker rmi $DOCKERHUB_USERNAME/docker-backend:22
+            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/docker-backend:22
             docker compose up -d
