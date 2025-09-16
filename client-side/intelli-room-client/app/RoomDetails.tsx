@@ -14,7 +14,7 @@ interface AnalysisOutput {
 
 interface MLOutput {
   analysis: AnalysisOutput;
-  generatedImage: string | null;
+  generated_image_url: string | null;
 }
 
 const RoomDetails = () => {
@@ -25,7 +25,11 @@ const RoomDetails = () => {
   if (mlOutput) {
     if (typeof mlOutput === "string") {
       try {
-        parsedMlOutput = JSON.parse(mlOutput);
+        const data = JSON.parse(mlOutput);
+        parsedMlOutput = {
+          analysis: data.analysis,
+          generated_image_url: data.generated_image_url || null,
+        };
       } catch (e) {
         console.error("Failed to parse ML output:", e);
       }
@@ -109,13 +113,13 @@ const RoomDetails = () => {
           ))}
         </View>
 
-        {parsedMlOutput.generatedImage && (
+        {parsedMlOutput.generated_image_url && (
           <View className="mb-5 p-4 bg-white rounded-lg shadow-md">
             <Text className="text-primary text-lg font-cinzel-bold mb-5">
               Generated Design
             </Text>
             <Image
-              source={{ uri: parsedMlOutput.generatedImage }}
+              source={{ uri: parsedMlOutput.generated_image_url }}
               className="w-full h-52 rounded-xl mb-4"
               resizeMode="cover"
             />
