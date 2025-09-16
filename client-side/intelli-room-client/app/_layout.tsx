@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Provider } from "react-redux";
 import { store } from "../store";
 import { AuthProvider } from "./context/AuthContext";
+import KeyboardWrapper from "../components/KeyboardWrapper.tsx";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -40,7 +41,9 @@ const RootLayout = () => {
   return (
     <Provider store={store}>
       <AuthProvider>
-        <RootLayoutContent />
+        <KeyboardWrapper>
+          <RootLayoutContent />
+        </KeyboardWrapper>
       </AuthProvider>
     </Provider>
   );
