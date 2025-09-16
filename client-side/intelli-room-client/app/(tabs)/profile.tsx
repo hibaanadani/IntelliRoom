@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import AuthButton from "../../components/AuthButton";
-import Chatbtn from "@/components/Chatbtn";
+import Chatbtn from "../../components/Chatbtn";
 import InputField from "../../components/InputField";
 import { icons } from "../../constants/icons";
-import { useAuth } from "../context/AuthContext";
+import { useAppSelector, useAppDispatch } from "../../store/hooks";
+import { logout, updateUser } from "../../store/authSlice";
 import { updateProfile } from "../../services/users.service";
 import { router } from "expo-router";
 
 const profilePicture = require("../../assets/images/profilepic.png");
 
 const Profile = () => {
-  const { user, logout, token, updateUser } = useAuth();
+  const { user, token } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
 
   const [formData, setFormData] = useState({
     fullname: user?.fullname || "",
@@ -79,7 +81,7 @@ const Profile = () => {
 
       const updatedUser = await updateProfile(user._id, updatedData, token);
 
-      await updateUser(updatedUser);
+      dispatch(updateUser(updatedUser));
 
       console.log("Profile updated successfully!");
       router.replace("/(tabs)/profile");
@@ -93,7 +95,7 @@ const Profile = () => {
   };
 
   const handleLogout = async () => {
-    await logout();
+    dispatch(logout());
     router.replace("/onboarding");
   };
 

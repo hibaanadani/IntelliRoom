@@ -1,4 +1,4 @@
-import { icons } from "@/constants/icons";
+import { icons } from "../constants/icons";
 import React, { useState, useEffect } from "react";
 import {
   Image,
@@ -10,13 +10,12 @@ import {
   Alert,
 } from "react-native";
 import { Calendar } from "react-native-calendars";
-import { useAuth } from "./context/AuthContext";
+import { useAppSelector } from "../store/hooks";
 import { useLocalSearchParams } from "expo-router";
-import { getGalleryById } from "../services/gallary.service";
+import { getGalleryById } from "../services/gallery.service";
 import { Gallery } from "../interfaces/gallery.interface";
 import { createBooking, getAvailableTimes } from "../services/booking.service";
 
-// Helper function to convert 12-hour time to 24-hour time
 const convertTo24Hour = (time: string): string => {
   if (!time) return "";
   const [h, modifier] = time.split(" ");
@@ -34,7 +33,7 @@ const convertTo24Hour = (time: string): string => {
 };
 
 const Booking = () => {
-  const { user, token } = useAuth();
+  const { user, token } = useAppSelector((state) => state.auth);
   const { galleryId } = useLocalSearchParams();
 
   const [selectedGallery, setSelectedGallery] = useState<Gallery | null>(null);
@@ -146,9 +145,8 @@ const Booking = () => {
 
       Alert.alert("Success", "Your booking has been successfully created!");
 
-      // Re-fetch the available times to refresh the list
       await fetchAndSetAvailableTimes(selectedDate);
-      setSelectedTime(null); // Clear the selected time as it's no longer available
+      setSelectedTime(null);
     } catch (error) {
       console.error("Booking failed:", error);
       Alert.alert("Error", "Failed to create booking. Please try again.");

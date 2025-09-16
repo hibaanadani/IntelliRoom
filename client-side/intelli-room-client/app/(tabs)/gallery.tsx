@@ -1,4 +1,4 @@
-import GalleryCard from "@/components/GalleryCard";
+import GalleryCard from "../../components/GalleryCard";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View, Alert } from "react-native";
@@ -7,9 +7,9 @@ import * as Sharing from "expo-sharing";
 import {
   getAllGalleries,
   getGalleryById,
-} from "../../services/gallary.service";
+} from "../../services/gallery.service";
 import { Gallery as GalleryInterface } from "../../interfaces/gallery.interface";
-import Chatbtn from "@/components/Chatbtn";
+import Chatbtn from "../../components/Chatbtn";
 
 const Gallery = () => {
   const [galleries, setGalleries] = useState<GalleryInterface[]>([]);

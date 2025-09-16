@@ -17,7 +17,6 @@ const mockMongoRepository = () => ({
   deleteOne: jest.fn(),
 });
 
-
 const mockGallery: Gallery = {
   _id: new ObjectId(),
   name: 'Gallery Item 1',

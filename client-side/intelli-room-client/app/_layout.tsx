@@ -1,10 +1,8 @@
 import { Stack, SplashScreen } from "expo-router";
 import { useFonts } from "expo-font";
 import { useEffect } from "react";
-import { Provider } from "react-redux";
-import { store } from "../store";
-import { AuthProvider } from "./context/AuthContext";
 import KeyboardWrapper from "../components/KeyboardWrapper.tsx";
+import ReduxProvider from "../components/ReduxProvider.tsx";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,13 +37,11 @@ const RootLayoutContent = () => {
 
 const RootLayout = () => {
   return (
-    <Provider store={store}>
-      <AuthProvider>
-        <KeyboardWrapper>
-          <RootLayoutContent />
-        </KeyboardWrapper>
-      </AuthProvider>
-    </Provider>
+    <ReduxProvider>
+      <KeyboardWrapper>
+        <RootLayoutContent />
+      </KeyboardWrapper>
+    </ReduxProvider>
   );
 };
 

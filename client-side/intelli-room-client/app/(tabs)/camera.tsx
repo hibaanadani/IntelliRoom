@@ -2,13 +2,13 @@ import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import { Image, ScrollView, Text, View, Alert, TextInput } from "react-native";
 import { router } from "expo-router";
-
 import AuthButton from "../../components/AuthButton";
 import { saveRoomWithImage } from "../../services/rooms.service";
-import { useAuth } from "../context/AuthContext";
+import { useAppSelector } from "../..//store/hooks";
 
 const UploadPhoto = () => {
-  const { user, token } = useAuth();
+  const { user, token } = useAppSelector((state) => state.auth);
+
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [roomName, setRoomName] = useState("");
@@ -68,7 +68,7 @@ const UploadPhoto = () => {
 
     try {
       await saveRoomWithImage(
-        String(user.id),
+        String(user._id),
         finalRoomName,
         selectedImage,
         token

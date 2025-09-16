@@ -11,9 +11,13 @@ import {
 import { router } from "expo-router";
 import AuthButton from "../components/AuthButton";
 import InputField from "../components/InputField";
-import { useAuth } from "./context/AuthContext";
+import { useAppSelector, useAppDispatch } from "../store/hooks";
+import { signUp } from "../store/authSlice";
+
 const Signup = () => {
-  const { signUp, isLoading: isAuthLoading } = useAuth();
+  const { isLoading: isAuthLoading } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+
   const [formData, setFormData] = useState({
     fullname: "",
     email: "",
@@ -22,36 +26,44 @@ const Signup = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
+
   const handleLoginPress = () => {
     router.push("/Login");
   };
+
   const handleSignUp = async () => {
     setIsLoading(true);
     setError("");
+
     if (formData.password !== formData.confirmpassword) {
       setError("Passwords do not match.");
       setIsLoading(false);
       return;
     }
+
     try {
       const { confirmpassword, ...userData } = formData;
-      await signUp(userData);
+      await dispatch(signUp(userData)).unwrap();
       router.replace("/(tabs)/Home");
     } catch (err: any) {
       console.error("Signup failed:", err);
       const backendError =
-        err.response?.data?.message || "Signup failed. Please try again.";
+        err.response?.data?.message ||
+        err ||
+        "Signup failed. Please try again.";
       setError(backendError);
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
     <KeyboardAvoidingView className="flex-1" behavior="height">
       <ScrollView
@@ -137,4 +149,5 @@ const Signup = () => {
     </KeyboardAvoidingView>
   );
 };
+
 export default Signup;

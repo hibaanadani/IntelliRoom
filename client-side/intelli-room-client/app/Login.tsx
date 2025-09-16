@@ -10,10 +10,12 @@ import {
 } from "react-native";
 import AuthButton from "../components/AuthButton";
 import InputField from "../components/InputField";
-import { useAuth } from "./context/AuthContext.tsx";
+import { useAppDispatch } from "../store/hooks";
+import { login } from "../store/authSlice";
 
 const Login = () => {
-  const { login } = useAuth();
+  const dispatch = useAppDispatch();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -34,13 +36,16 @@ const Login = () => {
     setError("");
 
     try {
-      await login(formData.email, formData.password);
+      await dispatch(
+        login({ email: formData.email, password: formData.password })
+      ).unwrap();
       console.log("Login was successful! Redirecting now...");
       router.replace("/(tabs)/Home");
     } catch (err: any) {
       console.error("Login failed:", err);
       setError(
         err.response?.data?.message ||
+          err ||
           "Login failed. Please check your credentials."
       );
     } finally {
@@ -64,12 +69,10 @@ const Login = () => {
             resizeMode="contain"
           />
         </View>
-
         <View className="w-full max-w-sm rounded-3xl p-6 border border-primary">
           <Text className="text-primary text-2xl font-cinzel-bold text-center mb-6">
             LOGIN
           </Text>
-
           <View className="space-y-4">
             <InputField
               placeholder="Email"
@@ -91,7 +94,6 @@ const Login = () => {
               editable={!isLoading}
             />
           </View>
-
           <TouchableOpacity
             onPress={handleForgotPassword}
             className="self-end mb-6"
@@ -99,18 +101,15 @@ const Login = () => {
           >
             <Text className="text-secondary text-sm">Forgot Password?</Text>
           </TouchableOpacity>
-
           {isLoading ? (
             <ActivityIndicator size="large" className="text-white" />
           ) : (
             <AuthButton text="Login" variant="primary" onPress={handleLogin} />
           )}
-
           {error ? (
             <Text className="text-red-500 text-center mt-2">{error}</Text>
           ) : null}
         </View>
-
         <View className="mt-6 flex-row items-center">
           <Text className="text-primary text-sm">Don't have an account? </Text>
           <TouchableOpacity onPress={handleSignUpPress}>

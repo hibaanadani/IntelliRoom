@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { View, TouchableOpacity, Image } from "react-native";
 import Chatbot from "./Chatbot/Chatbot.tsx";
 import { icons } from "../constants/icons.ts";
-import { useAuth } from "../app/context/AuthContext.tsx";
+import { useAppSelector } from "../store/hooks";
 
 const Chatbtn = () => {
   const [isChatbotVisible, setIsChatbotVisible] = useState(false);
-  const { user } = useAuth();
+
+  const user = useAppSelector((state) => state.auth.user);
+
   const userId: string | null = user?.id?.toString() || null;
 
   const toggleChatbot = () => {

@@ -10,8 +10,8 @@ import {
 import AuthButton from "../../components/AuthButton";
 import HomeCard from "../../components/HomeCard";
 import Chatbtn from "../../components/Chatbtn.tsx";
-import { useAuth } from "../context/AuthContext.tsx";
-import { getAllGalleries } from "../../services/gallary.service";
+import { useAppSelector } from "../../store/hooks";
+import { getAllGalleries } from "../../services/gallery.service.ts";
 import { Gallery } from "../../interfaces/gallery.interface";
 
 const suggestedItems = [
@@ -33,7 +33,7 @@ const suggestedItems = [
 ];
 
 const home = () => {
-  const { user } = useAuth();
+  const { user } = useAppSelector((state) => state.auth);
 
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [galleriesLoading, setGalleriesLoading] = useState(true);
