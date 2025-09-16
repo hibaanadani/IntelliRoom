@@ -1,71 +1,75 @@
-import torch
-import torch.nn as nn
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
-from PIL import Image
-from transformers import CLIPProcessor, CLIPModel
-from ultralytics import YOLO
-import tempfile
 import os
+import io
+import tempfile
+import torch
+import requests
+from PIL import Image
+from transformers import CLIPVisionModel, CLIPProcessor
+from ultralytics import YOLO
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, BackgroundTasks
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, List, Any
+from torch import nn
 
-app = FastAPI()
-
-# --- Load Models ---
+# --- Model Loading (for analysis only) ---
 print("Loading the pre-trained CLIP model...")
-clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to('cpu')
-processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-model_body = clip_model.vision_model
+clip_model = CLIPVisionModel.from_pretrained("openai/clip-vit-base-patch16").to('cpu')
+processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch16")
 
 print("Loading the custom aesthetic classifier head...")
-model_head_weights = torch.load('aesthetic_classifier_head.pt', map_location=torch.device('cpu'))
-
-model_head = nn.Linear(512, 2)
-model_head.weight = nn.Parameter(model_head_weights['weight'])
-model_head.bias = nn.Parameter(model_head_weights['bias'])
-model_head.eval()
+aesthetic_model_head = nn.Linear(768, 2)
+aesthetic_model_head.load_state_dict(torch.load('aesthetic_classifier_head.pt', map_location=torch.device('cpu')))
+aesthetic_model_head.eval()
 
 print("Loading the YOLOv8 object detection model...")
 yolo_model = YOLO('yolov8n.pt')
 
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # --- Analysis Function ---
 def get_full_analysis(image_path: str) -> Dict:
     """
-    Performs both overall and per-object aesthetic analysis using the loaded models,
-    with an improved actionable report.
+    Performs both overall and per-object aesthetic analysis using the loaded models.
     """
     try:
         full_image = Image.open(image_path).convert("RGB")
     except FileNotFoundError:
         return {"error": f"Oops! I can't find the picture at: {image_path}"}
     
-    # --- Overall Room Analysis ---
     overall_inputs = processor(images=full_image, return_tensors="pt").to('cpu')
     with torch.no_grad():
-        overall_features = model_body(**overall_inputs).pooler_output
-        overall_outputs = model_head(overall_features)
+        overall_features = clip_model(**overall_inputs).pooler_output
+        overall_outputs = aesthetic_model_head(overall_features)
         _, overall_pred_idx = torch.max(overall_outputs, 1)
         overall_classification = "Good Room" if overall_pred_idx.item() == 0 else "Bad Room"
 
-    # --- Per-Object Analysis (using YOLOv8 and aesthetic classifier) ---
     yolo_results = yolo_model(image_path)
     per_object_report: List[Dict[str, str]] = []
-    
-    # Count how many of each object type are classified as "Bad"
-    bad_object_counts: Dict[str, int] = {}
-    
+    actionable_report: List[str] = []
+
     for result in yolo_results:
         for box in result.boxes:
             class_id = int(box.cls)
             object_name = yolo_model.names[class_id]
+            
             x1, y1, x2, y2 = [int(coord) for coord in box.xyxy[0]]
             cropped_image = full_image.crop((x1, y1, x2, y2))
             
             if min(cropped_image.size) > 0:
                 cropped_inputs = processor(images=cropped_image, return_tensors="pt").to('cpu')
+                
                 with torch.no_grad():
-                    cropped_features = model_body(**cropped_inputs).pooler_output
-                    cropped_outputs = model_head(cropped_features)
+                    cropped_features = clip_model(**cropped_inputs).pooler_output
+                    cropped_outputs = aesthetic_model_head(cropped_features)
                     _, cropped_pred_idx = torch.max(cropped_outputs, 1)
                     object_classification = "Good" if cropped_pred_idx.item() == 0 else "Bad"
                 
@@ -75,45 +79,48 @@ def get_full_analysis(image_path: str) -> Dict:
                 })
                 
                 if object_classification == "Bad":
-                    bad_object_counts[object_name] = bad_object_counts.get(object_name, 0) + 1
+                    actionable_report.append(f"Consider tidying or improving the '{object_name}'.")
 
-    # --- Final Actionable Report Logic ---
-    actionable_report: List[str] = []
+    # This is the new logic to always return an actionableReport
+    if not actionable_report:
+        actionable_report.append("Your room looks great! For minor improvements, consider adding a few plants or adjusting the lighting.")
 
-    if overall_classification == "Good Room":
-        if not bad_object_counts:
-            actionable_report.append("Your room is beautiful! No actionable changes are needed based on the analysis.")
-        else:
-            actionable_report.append("Your room is classified as 'Good', but the following objects could be improved:")
-            for obj, count in bad_object_counts.items():
-                s = "" if count == 1 else "s"
-                actionable_report.append(f"Consider tidying or improving the {count} '{obj}' object{s}.")
-                
-    elif overall_classification == "Bad Room":
-        if bad_object_counts:
-            actionable_report.append("The overall room is classified as 'Bad'. Focus on improving these areas:")
-            for obj, count in bad_object_counts.items():
-                s = "" if count == 1 else "s"
-                actionable_report.append(f"Consider tidying or improving the {count} '{obj}' object{s}.")
-        else:
-            actionable_report.append("The overall room is classified as 'Bad', but no individual objects were a clear cause.")
-            actionable_report.append("This is likely due to the overall composition, lighting, or unidentifiable clutter.")
-            actionable_report.append("Consider changing the color scheme, adjusting the lighting, or rearranging the space.")
-            
     return {
         "overallClassification": overall_classification,
         "individualObjectAnalysis": per_object_report,
         "actionableReport": actionable_report
     }
 
-# --- API Endpoint ---
+# --- New Helper Function for Background Task ---
+def trigger_generation(file_path: str, actionable_report: List[str]):
+    try:
+        prompt = "a clean, well-lit, aesthetically pleasing room"
+        if actionable_report:
+            prompt = f"a clean, tidy, beautiful room, fixing the following issues: {', '.join(actionable_report)}"
+        
+        with open(file_path, "rb") as image_file:
+            files = {'file': (os.path.basename(file_path), image_file, 'image/jpeg')}
+            data = {'prompt': prompt}
+            
+            response = requests.post(
+                "http://192.168.1.110:5001/generate_image", 
+
+                files=files,
+                data=data
+            )
+            response.raise_for_status()
+            
+            print("Image generation task triggered successfully.")
+    except Exception as e:
+        print(f"Error during image generation request in background: {e}")
+    finally:
+        os.remove(file_path)
+
+# --- API Endpoint (with BackgroundTasks) ---
 @app.post("/analyze")
-async def analyze_room(file: UploadFile = File(...)):
+async def analyze_room(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
     if not file.content_type.startswith('image/'):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid file type. Please upload an image."
-        )
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload an image.")
 
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".jpeg") as temp_file:
@@ -121,18 +128,30 @@ async def analyze_room(file: UploadFile = File(...)):
             temp_file_path = temp_file.name
 
         analysis_result = get_full_analysis(temp_file_path)
-
+        
+        if analysis_result["actionableReport"]:
+            print("--- Analysis complete, adding generation task to background ---")
+            
+            background_tasks.add_task(
+                trigger_generation, 
+                file_path=temp_file_path, 
+                actionable_report=analysis_result["actionableReport"]
+            )
+            
+            return JSONResponse(content={
+                "analysis": analysis_result,
+                "generatedImage": None
+            })
+        
         os.remove(temp_file_path)
 
-        if "error" in analysis_result:
-            raise HTTPException(status_code=500, detail=analysis_result["error"])
-        
-        return JSONResponse(content=analysis_result)
-
+        return JSONResponse(content={
+            "analysis": analysis_result,
+            "generatedImage": None
+        })
+    
     except Exception as e:
         print(f"An error occurred: {e}")
+        if os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
         raise HTTPException(status_code=500, detail="Internal server error")
-
-@app.get("/")
-async def read_root():
-    return {"message": "Welcome to the Room Analyzer API. Use the /analyze endpoint to upload an image."}

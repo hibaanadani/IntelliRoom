@@ -3,13 +3,18 @@ import React from "react";
 import { ScrollView, Text, View, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface MLOutput {
+interface AnalysisOutput {
   overallClassification: string;
   individualObjectAnalysis: {
     object: string;
     classification: "Good" | "Bad";
   }[];
   actionableReport?: string[];
+}
+
+interface MLOutput {
+  analysis: AnalysisOutput;
+  generatedImage: string | null;
 }
 
 const RoomDetails = () => {
@@ -32,7 +37,7 @@ const RoomDetails = () => {
   const roomName = name as string;
   const roomImageUrl = imageUrl as string;
 
-  if (!parsedMlOutput) {
+  if (!parsedMlOutput || !parsedMlOutput.analysis) {
     return (
       <View className="flex-1 justify-center items-center bg-backgroundclr">
         <Text className="text-red-500 text-lg">
@@ -41,6 +46,8 @@ const RoomDetails = () => {
       </View>
     );
   }
+
+  const analysisData = parsedMlOutput.analysis;
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundclr">
@@ -67,7 +74,7 @@ const RoomDetails = () => {
             Overall Classification
           </Text>
           <Text className="text-base text-gray-600">
-            {parsedMlOutput.overallClassification}
+            {analysisData.overallClassification}
           </Text>
         </View>
 
@@ -75,7 +82,7 @@ const RoomDetails = () => {
           <Text className="text-lg font-bold text-gray-700 mb-2">
             Object Analysis
           </Text>
-          {parsedMlOutput.individualObjectAnalysis?.map((item, index) => (
+          {analysisData.individualObjectAnalysis?.map((item, index) => (
             <Text key={index} className="text-base text-gray-600">
               - {item.object}:{" "}
               <Text
@@ -95,12 +102,25 @@ const RoomDetails = () => {
           <Text className="text-lg font-bold text-gray-700 mb-2">
             Actionable Report
           </Text>
-          {parsedMlOutput.actionableReport?.map((item, index) => (
+          {analysisData.actionableReport?.map((item, index) => (
             <Text key={index} className="text-base text-gray-600">
               - {item}
             </Text>
           ))}
         </View>
+
+        {parsedMlOutput.generatedImage && (
+          <View className="mb-5 p-4 bg-white rounded-lg shadow-md">
+            <Text className="text-primary text-lg font-cinzel-bold mb-5">
+              Generated Design
+            </Text>
+            <Image
+              source={{ uri: parsedMlOutput.generatedImage }}
+              className="w-full h-52 rounded-xl mb-4"
+              resizeMode="cover"
+            />
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

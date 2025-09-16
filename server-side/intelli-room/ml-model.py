@@ -15,7 +15,7 @@ import cv2
 
 # --- Configuration for this service ---
 ROOT_DIR = Path(__file__).resolve().parent 
-GENERATED_IMAGES_DIR = ROOT_DIR.parent.parent / "uploads" / "generatedrooms"
+GENERATED_IMAGES_DIR = ROOT_DIR / "uploads" / "generatedrooms"
 
 CONTROLNET_MODEL_PATH = "lllyasviel/sd-controlnet-canny"
 STABLE_DIFFUSION_MODEL_PATH = "runwayml/stable-diffusion-v1-5" 
