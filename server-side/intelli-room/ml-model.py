@@ -68,7 +68,7 @@ async def generate_image_endpoint(
         output_image = generator_pipeline(
             prompt,
             image=edges_pil,
-            num_inference_steps=20,
+            num_inference_steps=5,
             eta=0.0,
         ).images[0]
 

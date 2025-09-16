@@ -11,9 +11,13 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, List, Any
 from torch import nn
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- Model Loading (for analysis only) ---
 print("Loading the pre-trained CLIP model...")
+# The Hugging Face libraries will now automatically use the token from your .env
 clip_model = CLIPVisionModel.from_pretrained("openai/clip-vit-base-patch16").to('cpu')
 processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch16")
 
@@ -104,7 +108,6 @@ def trigger_generation(file_path: str, actionable_report: List[str]):
             
             response = requests.post(
                 "http://192.168.1.110:5001/generate_image", 
-
                 files=files,
                 data=data
             )
@@ -122,6 +125,7 @@ async def analyze_room(background_tasks: BackgroundTasks, file: UploadFile = Fil
     if not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload an image.")
 
+    temp_file_path = None
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".jpeg") as temp_file:
             temp_file.write(await file.read())
@@ -143,6 +147,7 @@ async def analyze_room(background_tasks: BackgroundTasks, file: UploadFile = Fil
                 "generatedImage": None
             })
         
+        # If no actionable report, we still return the analysis and delete the file
         os.remove(temp_file_path)
 
         return JSONResponse(content={
@@ -152,6 +157,6 @@ async def analyze_room(background_tasks: BackgroundTasks, file: UploadFile = Fil
     
     except Exception as e:
         print(f"An error occurred: {e}")
-        if os.path.exists(temp_file_path):
+        if temp_file_path and os.path.exists(temp_file_path):
             os.remove(temp_file_path)
         raise HTTPException(status_code=500, detail="Internal server error")
