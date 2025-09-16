@@ -13,19 +13,6 @@ const UploadPhoto = () => {
   const [loading, setLoading] = useState(false);
   const [roomName, setRoomName] = useState("");
 
-  const mlOutputPlaceholder = {
-    overallClassification: "Clean and Tidy",
-    individualObjectAnalysis: [
-      { object: "Bed", classification: "Good" },
-      { object: "Desk", classification: "Good" },
-      { object: "Clutter", classification: "Bad" },
-    ],
-    actionableReport: [
-      "Tidy up the desk area.",
-      "Clear the clutter from the floor.",
-    ],
-  };
-
   const handleLaunchCamera = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (permissionResult.granted === false) {
@@ -83,14 +70,23 @@ const UploadPhoto = () => {
       await saveRoomWithImage(
         String(user.id),
         finalRoomName,
-        mlOutputPlaceholder,
         selectedImage,
         token
       );
-      Alert.alert("Success", "Room saved successfully!");
-      setTimeout(() => {
-        router.replace("/(tabs)/rooms");
-      }, 500);
+
+      setSelectedImage(null);
+      setRoomName("");
+
+      Alert.alert("Success", "Room saved successfully! Upload another room?", [
+        {
+          text: "View Rooms",
+          onPress: () => router.replace("/(tabs)/rooms"),
+        },
+        {
+          text: "Upload Another",
+          style: "default",
+        },
+      ]);
     } catch (error) {
       console.error("Failed to save room:", error);
       Alert.alert("Error", "Failed to save room. Please try again.");
