@@ -8,8 +8,7 @@ import requests
 import uuid
 from pathlib import Path
 from PIL import Image
-from transformers import CLIPVisionModel
-from torchvision import transforms
+from transformers import CLIPVisionModel, CLIPProcessor
 from ultralytics import YOLO
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from diffusers import StableDiffusionControlNetPipeline, ControlNetModel, UniPCMultistepScheduler
 from torch import nn
+import cv2 
 
 ROOT_DIR = Path(__file__).resolve().parent 
 GENERATED_IMAGES_DIR = ROOT_DIR.parent.parent / "uploads" / "generatedrooms"
@@ -54,7 +54,8 @@ async def load_models():
     
     os.makedirs(GENERATED_IMAGES_DIR, exist_ok=True)
     
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # We explicitly set the device to CPU for your machine
+    device = "cpu"
     print(f"Using device: {device}")
     
     print("Loading YOLOv8 object detection model...")
@@ -66,26 +67,23 @@ async def load_models():
     
     print("Loading CLIP vision model and aesthetic classifier head...")
     aesthetic_model_head = nn.Linear(768, 2)
-    aesthetic_model_head.load_state_dict(torch.load(AESTHETIC_MODEL_PATH))
+    aesthetic_model_head.load_state_dict(torch.load(AESTHETIC_MODEL_PATH, map_location=torch.device('cpu')))
     
     aesthetic_model_body = CLIPVisionModel.from_pretrained("openai/clip-vit-base-patch32")
     aesthetic_model_head.eval()
     aesthetic_model_body.eval()
     
-    processor = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
+    processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
     
     print("Loading Stable Diffusion and ControlNet models...")
     controlnet = ControlNetModel.from_pretrained(CONTROLNET_MODEL_PATH)
     
+    # *** THIS IS THE CRITICAL CHANGE ***
+    # The torch_dtype=torch.float16 argument has been removed
     generator_pipeline = StableDiffusionControlNetPipeline.from_pretrained(
         STABLE_DIFFUSION_MODEL_PATH, 
         controlnet=controlnet, 
-        safety_checker=None,
-        torch_dtype=torch.float16 
+        safety_checker=None
     )
     generator_pipeline.scheduler = UniPCMultistepScheduler.from_config(generator_pipeline.scheduler.config)
     
@@ -100,9 +98,9 @@ def get_full_analysis(image):
     """
     device = next(aesthetic_model_body.parameters()).device
     
-    overall_inputs = processor(image).unsqueeze(0).to(device)
+    overall_inputs = processor(images=image, return_tensors="pt").to(device)
     with torch.no_grad():
-        overall_features = aesthetic_model_body(overall_inputs).pooler_output
+        overall_features = aesthetic_model_body(**overall_inputs).pooler_output
         overall_outputs = aesthetic_model_head(overall_features)
         _, overall_pred_idx = torch.max(overall_outputs, 1)
 
@@ -122,10 +120,10 @@ def get_full_analysis(image):
             cropped_image = image.crop((x1, y1, x2, y2))
             
             if min(cropped_image.size) > 0:
-                cropped_inputs = processor(cropped_image).unsqueeze(0).to(device)
+                cropped_inputs = processor(images=cropped_image, return_tensors="pt").to(device)
                 
                 with torch.no_grad():
-                    cropped_features = aesthetic_model_body(cropped_inputs).pooler_output
+                    cropped_features = aesthetic_model_body(**cropped_inputs).pooler_output
                     cropped_outputs = aesthetic_model_head(cropped_features)
                     _, cropped_pred_idx = torch.max(cropped_outputs, 1)
                 
@@ -145,7 +143,7 @@ def get_full_analysis(image):
         "actionableReport": actionable_report
     }
 
-# --- Part 5: The API Endpoint ---
+# --- The API Endpoint ---
 @app.post("/analyze")
 async def analyze_room(request: ImageRequest):
     try:
@@ -166,31 +164,37 @@ async def analyze_room(request: ImageRequest):
     if analysis["overallClassification"] == "Bad":
         print("--- DEBUG: Generating new image with updated logic ---")
         
-        image_np = np.array(image)
-        low_threshold = 100
-        high_threshold = 200
-        edges = cv2.Canny(image_np, low_threshold, high_threshold)
-        
-        edges_pil = Image.fromarray(edges).convert("RGB")
-        
+        try:
+            image_np = np.array(image)
+            low_threshold = 100
+            high_threshold = 200
+            edges = cv2.Canny(image_np, low_threshold, high_threshold)
+            
+            edges_pil = Image.fromarray(edges).convert("RGB")
+            
+            prompt = "a clean, well-lit, aesthetically pleasing room"
+            if analysis["actionableReport"]:
+                prompt = f"a clean, tidy, beautiful room, fixing the following issues: {', '.join(analysis['actionableReport'])}"
+            
+            # The generation will now run on the CPU with float32
+            output_image = generator_pipeline(
+                prompt,
+                image=edges_pil,
+                num_inference_steps=20,
+                eta=0.0,
+            ).images[0]
 
-        prompt = "a clean, well-lit, aesthetically pleasing room"
-        if analysis["actionableReport"]:
-            prompt = f"a clean, tidy, beautiful room, fixing the following issues: {', '.join(analysis['actionableReport'])}"
-        
-        output_image = generator_pipeline(
-            prompt,
-            image=edges_pil,
-            num_inference_steps=20,
-            eta=0.0,
-        ).images[0]
+            filename = f"generated_room_{uuid.uuid4().hex}.jpeg"
+            output_image_path = GENERATED_IMAGES_DIR / filename
+            output_image.save(output_image_path, "JPEG")
+            generated_image_url = f"/uploads/generatedrooms/{filename}"
 
-        filename = f"generated_room_{uuid.uuid4().hex}.jpeg"
-        output_image_path = GENERATED_IMAGES_DIR / filename
-        output_image.save(output_image_path, "JPEG")
-        generated_image_url = f"/uploads/generatedrooms/{filename}"
+        except Exception as e:
+            print(f"Error during image generation: {e}")
+            generated_image_url = None
 
     return {
         "analysis": analysis,
         "generatedImage": generated_image_url,
     }
+
