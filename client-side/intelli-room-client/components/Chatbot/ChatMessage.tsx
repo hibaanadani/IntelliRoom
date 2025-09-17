@@ -2,11 +2,14 @@ import React from "react";
 import { View, Text, Image } from "react-native";
 import { icons } from "../../constants/icons.ts";
 
+interface ChatMessageData {
+  role: "user" | "model";
+  text: string;
+  timestamp: number;
+}
+
 interface ChatMessageProps {
-  chat: {
-    role: "user" | "model";
-    text: string;
-  };
+  chat: ChatMessageData;
 }
 
 const ChatMessage = ({ chat }: ChatMessageProps) => {
