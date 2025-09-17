@@ -1,27 +1,35 @@
-# Dockerfile: # our node base image
-FROM node:22
+# Stage 1: The Builder
+FROM node:22 AS builder
 
-# goes to our app directory (cd in a way)
-# app is a dir in our docker image
 WORKDIR /app
 
-# We copy package.json first for faster rebuilds
-# This is a cool trick called layer caching. If your package.json doesn't change,
-# Docker will not re-run `npm install`, which saves a ton of time.
-# copy package.json and package-lock
+# Copy package.json and install dependencies
+# We need dev dependencies for the 'build' step
 COPY package*.json ./
+RUN npm install
 
-# Use --omit=dev for smaller images
-# install app dependencies (for building we use run)
-# This prevents development dependencies (like testing frameworks) from being
-# installed in your production image, making it smaller and more secure.
-RUN npm install --omit=dev
-
-# copy the code to the image
+# Copy all application code
 COPY . .
 
-# expose port
+# Run the build command to generate the 'dist' directory
+RUN npm run build
+
+# Stage 2: The Production Image
+# Use a lean base image for the final production image
+FROM node:22-alpine AS production
+
+WORKDIR /app
+
+# Copy only the necessary files from the builder stage
+# This includes package.json and the compiled 'dist' directory
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/dist ./dist
+
+# Install production dependencies only
+RUN npm install --omit=dev
+
+# Expose the port
 EXPOSE 9000
 
-# run the app (to start the app after building)
-CMD ["npm","run","start:prod"]
+# Start the application using the compiled JavaScript
+CMD ["node", "dist/main.js"]
