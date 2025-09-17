@@ -40,21 +40,18 @@ export default function Index() {
       <SafeAreaView className="flex-1 justify-end items-center pb-20">
         <View className="items-center">
           <Text
+            className="text-primary font-cinzel-bold text-center mb-2.5"
             style={{
               fontSize: 24,
-              color: "#8C3B1E",
-              fontFamily: "Cinzel-Bold",
-              textAlign: "center",
               marginBottom: 10,
             }}
           >
             Welcome to Intelliroom
           </Text>
           <Text
+            className="text-secondary text-center mb-10"
             style={{
               fontSize: 16,
-              color: "#548E32",
-              textAlign: "center",
               marginBottom: 40,
             }}
           >
@@ -68,10 +65,9 @@ export default function Index() {
               onPress={handleSignUp}
             />
             <Text
+              className=" text-secondary text-center mb-7.5"
               style={{
                 fontSize: 14,
-                color: "#548E32",
-                textAlign: "center",
                 marginBottom: 30,
               }}
             >
