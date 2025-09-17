@@ -4,10 +4,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { icons } from "../../constants/icons.ts";
 import ChatForm from "./ChatForm.tsx";
 import ChatMessage from "./ChatMessage.tsx";
+import TypingIndicator from "./TypingIndicator.tsx";
 import { postChatbotMessage } from "../../services/chatbot.service.ts";
 import { ChatbotResponse } from "../../services/chatbot.service.ts";
 
-interface ChatMessage {
+interface ChatMessageData {
   role: "user" | "model";
   text: string;
   timestamp: number;
@@ -18,8 +19,9 @@ interface ChatbotProps {
 }
 
 const Chatbot = ({ userId }: ChatbotProps) => {
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [chatHistory, setChatHistory] = useState<ChatMessageData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isTyping, setIsTyping] = useState(false);
   const scrollViewRef = useRef<ScrollView | null>(null);
 
   const getStorageKey = (userId: string): string => {
@@ -27,7 +29,7 @@ const Chatbot = ({ userId }: ChatbotProps) => {
   };
 
   const saveMessagesToStorage = async (
-    messages: ChatMessage[]
+    messages: ChatMessageData[]
   ): Promise<void> => {
     try {
       const storageKey = getStorageKey(userId);
@@ -37,7 +39,7 @@ const Chatbot = ({ userId }: ChatbotProps) => {
     }
   };
 
-  const loadMessagesFromStorage = async (): Promise<ChatMessage[]> => {
+  const loadMessagesFromStorage = async (): Promise<ChatMessageData[]> => {
     try {
       const storageKey = getStorageKey(userId);
       const storedMessages = await AsyncStorage.getItem(storageKey);
@@ -49,6 +51,7 @@ const Chatbot = ({ userId }: ChatbotProps) => {
     }
     return [];
   };
+
 
   const getBotResponse = async (userMessage: string): Promise<string> => {
     try {
@@ -87,9 +90,11 @@ const Chatbot = ({ userId }: ChatbotProps) => {
 
     const lastMessage = chatHistory[chatHistory.length - 1];
     if (lastMessage && lastMessage.role === "user") {
+      setIsTyping(true);
+
       getBotResponse(lastMessage.text)
         .then((botResponse) => {
-          const botMessage: ChatMessage = {
+          const botMessage: ChatMessageData = {
             role: "model",
             text: botResponse,
             timestamp: Date.now(),
@@ -98,13 +103,16 @@ const Chatbot = ({ userId }: ChatbotProps) => {
           setChatHistory((prevHistory) => [...prevHistory, botMessage]);
         })
         .catch((error) => {
-          const errorMessage: ChatMessage = {
+          const errorMessage: ChatMessageData = {
             role: "model",
             text: "Sorry, I'm having trouble connecting right now. Please try again later.",
             timestamp: Date.now(),
           };
 
           setChatHistory((prevHistory) => [...prevHistory, errorMessage]);
+        })
+        .finally(() => {
+          setIsTyping(false);
         });
     }
   }, [chatHistory, isLoading]);
@@ -113,7 +121,7 @@ const Chatbot = ({ userId }: ChatbotProps) => {
     if (scrollViewRef.current) {
       scrollViewRef.current.scrollToEnd({ animated: true });
     }
-  }, [chatHistory]);
+  }, [chatHistory, isTyping]);
 
   if (isLoading) {
     return (
@@ -146,6 +154,8 @@ const Chatbot = ({ userId }: ChatbotProps) => {
           {chatHistory.map((chat, index) => (
             <ChatMessage key={`${chat.timestamp}-${index}`} chat={chat} />
           ))}
+
+          {isTyping && <TypingIndicator />}
         </ScrollView>
       </View>
 
