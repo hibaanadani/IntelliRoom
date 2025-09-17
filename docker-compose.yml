@@ -15,7 +15,7 @@ services:
     # build: .
     # 'image' gives a name and tag to the image that will be built.
     # We use 'latest' to indicate it's the most recent build.
-    image: hibanadani/docker-backend:22
+    image: hibaanadani/docker-backend:22
     # using service database
     environment:
       # we're now using env variables from our CI/CD pipeline

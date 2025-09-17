@@ -9,11 +9,11 @@ import {
   Alert,
 } from "react-native";
 import RoomCard from "../../components/RoomCard";
-import Chatbtn from "@/components/Chatbtn";
+import Chatbtn from "../../components/Chatbtn";
 import { icons } from "../../constants/icons";
 import { router, useFocusEffect } from "expo-router";
 import { deleteRoom, getUserRooms } from "../../services/rooms.service";
-import { useAuth } from "../context/AuthContext";
+import { useAppSelector } from "../../store/hooks";
 
 export interface Room {
   id: string;
@@ -24,7 +24,7 @@ export interface Room {
 }
 
 const Rooms = () => {
-  const { user, token, isLoading } = useAuth();
+  const { user, token, isLoading } = useAppSelector((state) => state.auth);
   const [myRooms, setMyRooms] = useState<Room[]>([]);
   const [isFetching, setIsFetching] = useState(true);
 

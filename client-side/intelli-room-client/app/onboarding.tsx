@@ -8,25 +8,19 @@ import {
 import bg from "../assets/images/bg.png";
 import AuthButton from "../components/AuthButton";
 
-import { useDispatch } from "react-redux";
-import { setUser } from "../store/authSlice";
-
 export default function Index() {
   const insets = useSafeAreaInsets();
   const screenHeight = Dimensions.get("window").height;
   const screenWidth = Dimensions.get("window").width;
 
-  const dispatch = useDispatch();
-
   const handleLogin = () => {
-    dispatch(setUser({ name: "User" }));
-
     router.push("/Login");
   };
 
   const handleSignUp = () => {
     router.push("/Signup");
   };
+
   const goToHome = () => {
     router.push("/Home");
   };
@@ -43,46 +37,37 @@ export default function Index() {
           resizeMode: "contain",
         }}
       />
-
       <SafeAreaView className="flex-1 justify-end items-center pb-20">
         <View className="items-center">
           <Text
+            className="text-primary font-cinzel-bold text-center mb-2.5"
             style={{
               fontSize: 24,
-              color: "#8C3B1E",
-              fontFamily: "Cinzel-Bold",
-              textAlign: "center",
               marginBottom: 10,
             }}
           >
             Welcome to Intelliroom
           </Text>
-
           <Text
+            className="text-secondary text-center mb-10"
             style={{
               fontSize: 16,
-              color: "#548E32",
-              textAlign: "center",
               marginBottom: 40,
             }}
           >
             Your online room decorator
           </Text>
-
           <View className="w-full mx-auto">
             <AuthButton variant="primary" text="Login" onPress={handleLogin} />
-
             <AuthButton
               variant="secondary"
               text="Sign Up"
               onPress={handleSignUp}
             />
-
             <Text
+              className=" text-secondary text-center mb-7.5"
               style={{
                 fontSize: 14,
-                color: "#548E32",
-                textAlign: "center",
                 marginBottom: 30,
               }}
             >

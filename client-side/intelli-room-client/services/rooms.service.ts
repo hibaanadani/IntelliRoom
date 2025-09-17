@@ -6,11 +6,11 @@ import api from "./axiosInstance";
 export const saveRoomWithImage = async (
   userObjectId: string,
   roomName: string,
-  mlOutput: any,
   imageUri: string,
   token: string
 ) => {
   console.log("SAVE ROOM: Attempting to save a room for userId:", userObjectId);
+
   const formData = new FormData();
 
   const fileExtension = imageUri.split(".").pop();
@@ -24,12 +24,10 @@ export const saveRoomWithImage = async (
   };
 
   formData.append("image", imageFormData);
-
   formData.append(
     "roomData",
     JSON.stringify({
       name: roomName,
-      mlOutput: mlOutput,
     })
   );
 
@@ -44,7 +42,6 @@ export const saveRoomWithImage = async (
         },
       }
     );
-
     return response.data;
   } catch (error) {
     if (isAxiosError(error)) {
@@ -62,6 +59,7 @@ export const getUserRooms = async (
   console.log("GET ROOMS: Attempting to fetch rooms for userId:", userObjectId);
   const url = `/users/${userObjectId}/rooms`;
   console.log("GET ROOMS: Full URL being requested:", url);
+
   try {
     const response = await api.get(url, {
       headers: {
@@ -86,6 +84,7 @@ export const deleteRoom = async (
   console.log("DELETE ROOM: Attempting to delete room.");
   console.log("User ID:", userObjectId);
   console.log("Room ID:", roomId);
+
   const url = `/users/${userObjectId}/rooms/${roomId}`;
   console.log("DELETE URL:", url);
 

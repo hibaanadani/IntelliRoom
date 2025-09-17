@@ -2,10 +2,14 @@ import React, { useState } from "react";
 import { View, TextInput, TouchableOpacity, Image } from "react-native";
 import { icons } from "../../constants/icons.ts";
 
+interface ChatMessageData {
+  role: "user" | "model";
+  text: string;
+  timestamp: number;
+}
+
 interface ChatFormProps {
-  setChatHistory: React.Dispatch<
-    React.SetStateAction<{ role: "user" | "model"; text: string }[]>
-  >;
+  setChatHistory: React.Dispatch<React.SetStateAction<ChatMessageData[]>>;
 }
 
 const ChatForm = ({ setChatHistory }: ChatFormProps) => {
@@ -17,10 +21,13 @@ const ChatForm = ({ setChatHistory }: ChatFormProps) => {
 
     setMessage("");
 
-    setChatHistory((history) => [
-      ...history,
-      { role: "user", text: userMessage },
-    ]);
+    const userMessageObj: ChatMessageData = {
+      role: "user",
+      text: userMessage,
+      timestamp: Date.now(),
+    };
+
+    setChatHistory((history) => [...history, userMessageObj]);
   };
 
   return (

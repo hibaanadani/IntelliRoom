@@ -1,0 +1,11 @@
+.\venv\Scripts\activate
+
+uvicorn ml_api:app --reload --port 5000
+
+uvicorn ml_model:app --reload --port 5001
+
+uvicorn ml_api:app --host 0.0.0.0 --port 5000 --reload
+
+npm run start:dev
+
+npx expo start --clear

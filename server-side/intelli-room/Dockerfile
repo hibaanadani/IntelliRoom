@@ -24,4 +24,4 @@ COPY . .
 EXPOSE 9000
 
 # run the app (to start the app after building)
-CMD ["npm","start"]
+CMD ["npm","run","start:prod"]

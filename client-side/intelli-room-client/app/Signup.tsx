@@ -11,9 +11,13 @@ import {
 import { router } from "expo-router";
 import AuthButton from "../components/AuthButton";
 import InputField from "../components/InputField";
-import { useAuth } from "./context/AuthContext";
+import { useAppSelector, useAppDispatch } from "../store/hooks";
+import { signUp } from "../store/authSlice";
+
 const Signup = () => {
-  const { signUp, isLoading: isAuthLoading } = useAuth();
+  const { isLoading: isAuthLoading } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+
   const [formData, setFormData] = useState({
     fullname: "",
     email: "",
@@ -22,26 +26,68 @@ const Signup = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState({
+    fullname: "",
+    email: "",
+    password: "",
+    confirmpassword: "",
+  });
+
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
   };
+
   const handleLoginPress = () => {
     router.push("/Login");
   };
-  const handleSignUp = async () => {
-    setIsLoading(true);
-    setError("");
+
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = {
+      fullname: "",
+      email: "",
+      password: "",
+      confirmpassword: "",
+    };
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!formData.fullname.trim()) {
+      newErrors.fullname = "Full name is required.";
+      isValid = false;
+    }
+    if (!formData.email || !emailRegex.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address.";
+      isValid = false;
+    }
+    if (!formData.password || formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters long.";
+      isValid = false;
+    }
     if (formData.password !== formData.confirmpassword) {
-      setError("Passwords do not match.");
-      setIsLoading(false);
+      newErrors.confirmpassword = "Passwords do not match.";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSignUp = async () => {
+    if (!validateForm()) {
       return;
     }
+
+    setIsLoading(true);
+    setError("");
+
     try {
       const { confirmpassword, ...userData } = formData;
-      await signUp(userData);
+      await dispatch(signUp(userData)).unwrap();
       router.replace("/(tabs)/Home");
     } catch (err: any) {
       console.error("Signup failed:", err);
@@ -52,6 +98,7 @@ const Signup = () => {
       setIsLoading(false);
     }
   };
+
   return (
     <KeyboardAvoidingView className="flex-1" behavior="height">
       <ScrollView
@@ -80,6 +127,9 @@ const Signup = () => {
                 autoCapitalize="none"
                 editable={!isLoading}
               />
+              {errors.fullname ? (
+                <Text className="text-red-500 -mt-2">{errors.fullname}</Text>
+              ) : null}
               <InputField
                 placeholder="Email"
                 value={formData.email}
@@ -90,6 +140,9 @@ const Signup = () => {
                 autoCapitalize="none"
                 editable={!isLoading}
               />
+              {errors.email ? (
+                <Text className="text-red-500 -mt-2">{errors.email}</Text>
+              ) : null}
               <InputField
                 placeholder="Password"
                 value={formData.password}
@@ -99,6 +152,9 @@ const Signup = () => {
                 secureTextEntry={true}
                 editable={!isLoading}
               />
+              {errors.password ? (
+                <Text className="text-red-500 -mt-2">{errors.password}</Text>
+              ) : null}
               <InputField
                 placeholder="Confirm Password"
                 value={formData.confirmpassword}
@@ -108,6 +164,11 @@ const Signup = () => {
                 secureTextEntry={true}
                 editable={!isLoading}
               />
+              {errors.confirmpassword ? (
+                <Text className="text-red-500 -mt-2">
+                  {errors.confirmpassword}
+                </Text>
+              ) : null}
             </View>
             {isLoading || isAuthLoading ? (
               <ActivityIndicator size="large" className="text-white" />
@@ -137,4 +198,5 @@ const Signup = () => {
     </KeyboardAvoidingView>
   );
 };
+
 export default Signup;

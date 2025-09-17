@@ -2,29 +2,16 @@ import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import { Image, ScrollView, Text, View, Alert, TextInput } from "react-native";
 import { router } from "expo-router";
-
 import AuthButton from "../../components/AuthButton";
 import { saveRoomWithImage } from "../../services/rooms.service";
-import { useAuth } from "../context/AuthContext";
+import { useAppSelector } from "../..//store/hooks";
 
 const UploadPhoto = () => {
-  const { user, token } = useAuth();
+  const { user, token } = useAppSelector((state) => state.auth);
+
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [roomName, setRoomName] = useState("");
-
-  const mlOutputPlaceholder = {
-    overallClassification: "Clean and Tidy",
-    individualObjectAnalysis: [
-      { object: "Bed", classification: "Good" },
-      { object: "Desk", classification: "Good" },
-      { object: "Clutter", classification: "Bad" },
-    ],
-    actionableReport: [
-      "Tidy up the desk area.",
-      "Clear the clutter from the floor.",
-    ],
-  };
 
   const handleLaunchCamera = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
@@ -81,16 +68,21 @@ const UploadPhoto = () => {
 
     try {
       await saveRoomWithImage(
-        String(user.id),
+        String(user._id),
         finalRoomName,
-        mlOutputPlaceholder,
         selectedImage,
         token
       );
-      Alert.alert("Success", "Room saved successfully!");
-      setTimeout(() => {
-        router.replace("/(tabs)/rooms");
-      }, 500);
+
+      setSelectedImage(null);
+      setRoomName("");
+
+      Alert.alert("Success", "Room saved successfully!", [
+        {
+          text: "View Rooms",
+          onPress: () => router.replace("/(tabs)/rooms"),
+        },
+      ]);
     } catch (error) {
       console.error("Failed to save room:", error);
       Alert.alert("Error", "Failed to save room. Please try again.");

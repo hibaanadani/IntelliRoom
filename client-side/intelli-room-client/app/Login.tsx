@@ -10,31 +10,60 @@ import {
 } from "react-native";
 import AuthButton from "../components/AuthButton";
 import InputField from "../components/InputField";
-import { useAuth } from "./context/AuthContext.tsx";
+import { useAppDispatch } from "../store/hooks";
+import { login } from "../store/authSlice";
 
 const Login = () => {
-  const { login } = useAuth();
+  const dispatch = useAppDispatch();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState({ email: "", password: "" });
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = { email: "", password: "" };
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!formData.email || !emailRegex.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address.";
+      isValid = false;
+    }
+    if (!formData.password || formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters long.";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
   };
 
   const handleLogin = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     console.log("Login button pressed. Starting login process...");
     setIsLoading(true);
     setError("");
 
     try {
-      await login(formData.email, formData.password);
+      await dispatch(
+        login({ email: formData.email, password: formData.password })
+      ).unwrap();
       console.log("Login was successful! Redirecting now...");
       router.replace("/(tabs)/Home");
     } catch (err: any) {
@@ -64,12 +93,10 @@ const Login = () => {
             resizeMode="contain"
           />
         </View>
-
         <View className="w-full max-w-sm rounded-3xl p-6 border border-primary">
           <Text className="text-primary text-2xl font-cinzel-bold text-center mb-6">
             LOGIN
           </Text>
-
           <View className="space-y-4">
             <InputField
               placeholder="Email"
@@ -81,6 +108,9 @@ const Login = () => {
               autoCapitalize="none"
               editable={!isLoading}
             />
+            {errors.email ? (
+              <Text className="text-red-500 -mt-2">{errors.email}</Text>
+            ) : null}
             <InputField
               placeholder="Password"
               value={formData.password}
@@ -90,8 +120,10 @@ const Login = () => {
               secureTextEntry={true}
               editable={!isLoading}
             />
+            {errors.password ? (
+              <Text className="text-red-500 -mt-2">{errors.password}</Text>
+            ) : null}
           </View>
-
           <TouchableOpacity
             onPress={handleForgotPassword}
             className="self-end mb-6"
@@ -99,18 +131,15 @@ const Login = () => {
           >
             <Text className="text-secondary text-sm">Forgot Password?</Text>
           </TouchableOpacity>
-
           {isLoading ? (
             <ActivityIndicator size="large" className="text-white" />
           ) : (
             <AuthButton text="Login" variant="primary" onPress={handleLogin} />
           )}
-
           {error ? (
             <Text className="text-red-500 text-center mt-2">{error}</Text>
           ) : null}
         </View>
-
         <View className="mt-6 flex-row items-center">
           <Text className="text-primary text-sm">Don't have an account? </Text>
           <TouchableOpacity onPress={handleSignUpPress}>
