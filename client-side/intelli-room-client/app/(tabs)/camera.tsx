@@ -77,14 +77,10 @@ const UploadPhoto = () => {
       setSelectedImage(null);
       setRoomName("");
 
-      Alert.alert("Success", "Room saved successfully! Upload another room?", [
+      Alert.alert("Success", "Room saved successfully!", [
         {
           text: "View Rooms",
           onPress: () => router.replace("/(tabs)/rooms"),
-        },
-        {
-          text: "Upload Another",
-          style: "default",
         },
       ]);
     } catch (error) {
