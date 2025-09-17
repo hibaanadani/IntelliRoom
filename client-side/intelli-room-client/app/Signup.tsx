@@ -26,27 +26,64 @@ const Signup = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState({
+    fullname: "",
+    email: "",
+    password: "",
+    confirmpassword: "",
+  });
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
   const handleLoginPress = () => {
     router.push("/Login");
   };
 
-  const handleSignUp = async () => {
-    setIsLoading(true);
-    setError("");
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = {
+      fullname: "",
+      email: "",
+      password: "",
+      confirmpassword: "",
+    };
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!formData.fullname.trim()) {
+      newErrors.fullname = "Full name is required.";
+      isValid = false;
+    }
+    if (!formData.email || !emailRegex.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address.";
+      isValid = false;
+    }
+    if (!formData.password || formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters long.";
+      isValid = false;
+    }
     if (formData.password !== formData.confirmpassword) {
-      setError("Passwords do not match.");
-      setIsLoading(false);
+      newErrors.confirmpassword = "Passwords do not match.";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSignUp = async () => {
+    if (!validateForm()) {
       return;
     }
+
+    setIsLoading(true);
+    setError("");
 
     try {
       const { confirmpassword, ...userData } = formData;
@@ -55,9 +92,7 @@ const Signup = () => {
     } catch (err: any) {
       console.error("Signup failed:", err);
       const backendError =
-        err.response?.data?.message ||
-        err ||
-        "Signup failed. Please try again.";
+        err.response?.data?.message || "Signup failed. Please try again.";
       setError(backendError);
     } finally {
       setIsLoading(false);
@@ -92,6 +127,9 @@ const Signup = () => {
                 autoCapitalize="none"
                 editable={!isLoading}
               />
+              {errors.fullname ? (
+                <Text className="text-red-500 -mt-2">{errors.fullname}</Text>
+              ) : null}
               <InputField
                 placeholder="Email"
                 value={formData.email}
@@ -102,6 +140,9 @@ const Signup = () => {
                 autoCapitalize="none"
                 editable={!isLoading}
               />
+              {errors.email ? (
+                <Text className="text-red-500 -mt-2">{errors.email}</Text>
+              ) : null}
               <InputField
                 placeholder="Password"
                 value={formData.password}
@@ -111,6 +152,9 @@ const Signup = () => {
                 secureTextEntry={true}
                 editable={!isLoading}
               />
+              {errors.password ? (
+                <Text className="text-red-500 -mt-2">{errors.password}</Text>
+              ) : null}
               <InputField
                 placeholder="Confirm Password"
                 value={formData.confirmpassword}
@@ -120,6 +164,11 @@ const Signup = () => {
                 secureTextEntry={true}
                 editable={!isLoading}
               />
+              {errors.confirmpassword ? (
+                <Text className="text-red-500 -mt-2">
+                  {errors.confirmpassword}
+                </Text>
+              ) : null}
             </View>
             {isLoading || isAuthLoading ? (
               <ActivityIndicator size="large" className="text-white" />

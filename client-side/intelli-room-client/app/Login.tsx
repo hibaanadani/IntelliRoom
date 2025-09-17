@@ -22,15 +22,40 @@ const Login = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState({ email: "", password: "" });
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = { email: "", password: "" };
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!formData.email || !emailRegex.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address.";
+      isValid = false;
+    }
+    if (!formData.password || formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters long.";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
   };
 
   const handleLogin = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     console.log("Login button pressed. Starting login process...");
     setIsLoading(true);
     setError("");
@@ -45,7 +70,6 @@ const Login = () => {
       console.error("Login failed:", err);
       setError(
         err.response?.data?.message ||
-          err ||
           "Login failed. Please check your credentials."
       );
     } finally {
@@ -84,6 +108,9 @@ const Login = () => {
               autoCapitalize="none"
               editable={!isLoading}
             />
+            {errors.email ? (
+              <Text className="text-red-500 -mt-2">{errors.email}</Text>
+            ) : null}
             <InputField
               placeholder="Password"
               value={formData.password}
@@ -93,6 +120,9 @@ const Login = () => {
               secureTextEntry={true}
               editable={!isLoading}
             />
+            {errors.password ? (
+              <Text className="text-red-500 -mt-2">{errors.password}</Text>
+            ) : null}
           </View>
           <TouchableOpacity
             onPress={handleForgotPassword}
