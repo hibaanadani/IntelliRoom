@@ -6,6 +6,7 @@
 <img src="./readme/title2.svg"/>
 
 > Intelliroom: Your Ultimate AI Decor Guru ✨
+
 > Hey fellow design enthusiasts! Ready to level up your living space? Meet Intelliroom, the mobile app designed to be your ultimate interior design partner. Just snap a pic of your room, and our powerful AI and Machine Learning models get to work, instantly identifying your furniture and decor. It’s like having a personal design assistant in your pocket!
 
 > No more design dilemmas! Intelliroom takes that smart analysis and provides actionable suggestions for furniture modifications and additions. We help you create a space that's not just functional, but also a true reflection of your style. Get ready to transform your room and become a home design pro! 🏡
