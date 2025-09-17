@@ -1,0 +1,117 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n   \"startTime\": \"2025-09-18T10:00:00.000Z\",\n  \"endTime\": \"2025-09-18T11:00:00.000Z\"\n}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1760,
+        -560
+      ],
+      "id": "65e0a12a-1970-4453-bd51-ef1ff1720175",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input items (Google Calendar events)\nconst events = $input.all().map(item => ({\n  start: new Date(item.json.start.dateTime),\n  end: new Date(item.json.end.dateTime),\n}));\n\n// Define working window (10:00 → 18:00 on same day)\nconst workDay = \"2025-09-18\"; // you could pass this dynamically\nconst startWindow = new Date(`${workDay}T10:00:00+03:00`);\nconst endWindow   = new Date(`${workDay}T18:00:00+03:00`);\n\n// Sort events by start time\nevents.sort((a, b) => a.start - b.start);\n\nlet freeSlots = [];\nlet current = new Date(startWindow);\n\n// Loop over each 1-hour block in working window\nwhile (current < endWindow) {\n  let slotStart = new Date(current);\n  let slotEnd   = new Date(current.getTime() + 60 * 60 * 1000);\n\n  // Check if this slot overlaps any event\n  const overlaps = events.some(ev =>\n    (slotStart < ev.end && slotEnd > ev.start) // overlap condition\n  );\n\n  // If no overlap, add slot to free slots\n  if (!overlaps) {\n    freeSlots.push({\n      start: slotStart.toISOString(),\n      end: slotEnd.toISOString()\n    });\n  }\n\n  // Move forward 1 hour\n  current = slotEnd;\n}\n\nreturn [\n  {\n    json: {\n      freeSlots\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        -560
+      ],
+      "id": "e6256b13-bc4a-4d48-88e2-cc7885d97349",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Build output message\nfor (const item of items) {\n  const freeSlots = item.json.freeSlots || [];\n\n  let message = \"\";\n\n  if (freeSlots.length > 0) {\n    // Format available slots for display\n    const slotList = freeSlots.map(slot => \n      `🕗 ${new Date(slot.start).toLocaleString('en-US', { timeZone: 'Asia/Beirut' })} → ${new Date(slot.end).toLocaleString('en-US', { timeZone: 'Asia/Beirut' })}`\n    ).join('\\n');\n\n    message = `✅ Great! I found ${freeSlots.length} available time slot(s) for you at Daze Gallery:\\n\\n${slotList}\\n\\nPlease let me know which one works best for you! 😊`;\n  } else {\n    message = \"😞 Sorry, no availability found in the selected time window. Would you like to try another date or time?\";\n  }\n\n  // Replace entire item output\n  item.json = {\n    output: message\n  };\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        -560
+      ],
+      "id": "8d9b8ff7-acea-4da0-8c4d-c15e4daaf454",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "hibaanadani1@gmail.com",
+          "mode": "list",
+          "cachedResultName": "hibaanadani1@gmail.com"
+        },
+        "start": "={{ $json.start }}",
+        "end": "={{ $json.end }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -1536,
+        -560
+      ],
+      "id": "ca09e2d8-f603-42ba-b30d-eccf9bf5fe48",
+      "name": "Create an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "rM3iNedU3Hr6GDq2",
+          "name": "Hiba"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "startTime": "2025-09-18T10:00:00.000Z",
+        "endTime": "2025-09-18T11:00:00.000Z"
+      }
+    ]
+  },
+  "meta": {
+    "instanceId": "0dfdd65f438ca4668643edcc3c30a88b11306a89d4f9a9410bb12c54ceb14ccb"
+  }
+}
