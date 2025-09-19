@@ -64,7 +64,7 @@ const RoomDetails = () => {
         {roomImageUrl && (
           <Image
             source={{ uri: roomImageUrl }}
-            className="w-full h-52 rounded-xl mb-4"
+            className="w-full h-60 rounded-xl mb-4"
             resizeMode="cover"
           />
         )}
@@ -120,7 +120,7 @@ const RoomDetails = () => {
             </Text>
             <Image
               source={{ uri: parsedMlOutput.generated_image_url }}
-              className="w-full h-52 rounded-xl mb-4"
+              className="w-full h-60 rounded-xl mb-4"
               resizeMode="cover"
             />
           </View>
