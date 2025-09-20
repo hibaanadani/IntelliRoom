@@ -57,33 +57,11 @@
 
 ### Add Title Here
 
-| Services                              | Validation                             | Testing                             |
-| ------------------------------------- | -------------------------------------- | ----------------------------------- |
-| ![Landing](./readme/demo/service.png) | ![fsdaf](./readme/demo/validation.png) | ![fsdaf](./readme/demo/testing.png) |
+| Services                              | Validation                            | Testing                             |
+| ------------------------------------- | ------------------------------------- | ----------------------------------- |
+| ![Landing](./readme/demo/service.png) | ![fsdaf](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/testing.png) |
 
 <br><br>
-
-<!-- AI-Powered App -->
-<img src="./readme/title8.svg"/>
-
-### CI/CD
-
-- A new feature begins development on a local branch.
-- The local branch is pushed to its remote counterpart.
-- The remote branch is merged into the staging branch.
-- This merge triggers GitHub Actions to run the CI/CD workflow.
-- The workflow first attempts to boot the database, then runs migrations and tests.
-- If the CI is successful, the CD process begins. GitHub Actions pushes the code to the AWS EC2 staging instance and executes a deployment script.
-- The deployment script builds separate Docker containers for the Laravel, Node, React, and database services.
-- Once the feature is finished and passes staging, the staging branch is merged into the main branch.
-- The production deployment is initiated, following the same steps as the staging CD process.
-
-| Postman API 1                          | Postman API 2                        | Postman API 3                        |
-| -------------------------------------- | ------------------------------------ | ------------------------------------ |
-| ![Landing](./readme/demo/postman1.png) | ![fsdaf](./readme/demo/postman2.png) | ![fsdaf](./readme/demo/postman3.png) |
-
-<br><br>
-
 
 <!-- Deployment -->
 <img src="./readme/title7.svg"/>

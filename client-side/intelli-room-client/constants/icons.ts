@@ -13,7 +13,6 @@ import arrow from "../assets/icons/Arrow.png";
 import send from "../assets/icons/Send.png";
 import xicon from "../assets/icons/xicon.png";
 import logout from "../assets/icons/Logout.png";
-import open from "../assets/icons/open.png";
 
 export const icons = {
   arrow,
