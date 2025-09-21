@@ -63,32 +63,28 @@
 <!-- Development & Testing -->
 <img src="./readme/title6.svg"/>
 
-### Add Title Here
 
 | Services                              | Validation                       | Testing                             |
 | ------------------------------------- | -------------------------------- | ----------------------------------- |
 | ![Landing](./readme/demo/service.png) | ![fsdaf](./readme/demo/auth.png) | ![fsdaf](./readme/demo/testing.png) |
-
 <br><br>
 
-<!-- AI-Powered App -->
+<!-- AI-Powered APP -->
 <img src="./readme/title8.svg"/>
 
-### CI/CD
+### Calendar Workflow
 
-- A new feature begins development on a local branch.
-- The local branch is pushed to its remote counterpart.
-- The remote branch is merged into the staging branch.
-- This merge triggers GitHub Actions to run the CI/CD workflow.
-- The workflow first attempts to boot the database, then runs migrations and tests.
-- If the CI is successful, the CD process begins. GitHub Actions pushes the code to the AWS EC2 staging instance and executes a deployment script.
-- The deployment script builds separate Docker containers for the Laravel, Node, React, and database services.
-- Once the feature is finished and passes staging, the staging branch is merged into the main branch.
-- The production deployment is initiated, following the same steps as the staging CD process.
+<img src="./readme/demo/Calendarworkflow.png"/>
 
-| Postman API 1                          | Postman API 2                        | Postman API 3                        |
-| -------------------------------------- | ------------------------------------ | ------------------------------------ |
-| ![Landing](./readme/demo/postman1.png) | ![fsdaf](./readme/demo/postman2.png) | ![fsdaf](./readme/demo/postman3.png) |
+> Intelliroom uses AI agent to provide a smoother booking experience!
+
+- Returns the available booking times at the selected date.
+- Handles booking with selected gallery of the users choice.
+- Chatbot agent that assists the user when needed.
+
+| Calendar Service                              | Chatbot Service                            |
+| --------------------------------------------- | ------------------------------------------ |
+| ![Landing](./readme/demo/calendarservice.png) | ![fsdaf](./readme/demo/chatbotservice.png) |
 
 <br><br>
 
@@ -117,24 +113,5 @@
 | Postman API 1                          | Postman API 2                        | Swagger                             |
 | -------------------------------------- | ------------------------------------ | ----------------------------------- |
 | ![Landing](./readme/demo/postman1.png) | ![fsdaf](./readme/demo/postman2.png) | ![fsdaf](./readme/demo/swagger.png) |
-
-<br><br>
-
-<!-- AI-Powered APP -->
-<img src="./readme/title8.svg"/>
-
-### Calendar Workflow
-
-<img src="./readme/demo/Calendarworkflow.png"/>
-
-> Intelliroom uses AI agent to provide a smoother booking experience!
-
-- Returns the available booking times at the selected date.
-- Handles booking with selected gallery of the users choice.
-- Chatbot agent that assists the user when needed.
-
-| Calendar Service                              | Chatbot Service                            |
-| --------------------------------------------- | ------------------------------------------ |
-| ![Landing](./readme/demo/calendarservice.png) | ![fsdaf](./readme/demo/chatbotservice.png) |
 
 <br><br>
