@@ -41,6 +41,7 @@ jobs:
         run: |
           sed -i "s|MONGODB_USERNAME=.*|MONGODB_USERNAME=${{ secrets.MONGODB_USERNAME }}|g" .env.example
           sed -i "s|MONGODB_PASSWORD=.*|MONGODB_PASSWORD=${{ secrets.MONGODB_PASSWORD }}|g" .env.example
+          sed -i "s|MONGODB_DATABASE_URI=.*|MONGODB_DATABASE_URI=${{ secrets.MONGODB_DATABASE_URI }}|g" .env.example
           sed -i "s|MONGODB_DB=.*|MONGODB_DB=${{ secrets.MONGODB_DB }}|g" .env.example
           sed -i "s|MONGODB_DATABASE_HOST=.*|MONGODB_DATABASE_HOST=${{ secrets.MONGODB_DATABASE_HOST }}|g" .env.example
           sed -i "s|MONGODB_DATABASE_URI=.*|MONGODB_DATABASE_URI=${{ secrets.MONGODB_DATABASE_URI }}|g" .env.example
