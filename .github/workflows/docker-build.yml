@@ -151,4 +151,6 @@ jobs:
           script: |
             docker compose down
             docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/docker-backend:22
+            cp server-side/intelli-room/.env ~/
+            rm -rf server-side
             docker compose up -d
