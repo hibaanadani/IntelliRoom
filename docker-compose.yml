@@ -45,11 +45,11 @@ services:
     # Environment variables for initial setup.
     environment:
       # Set the root user's username. This is for initial access.
-      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+      MONGO_INITDB_ROOT_USERNAME: placeholder
       # Set the root user's password.
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      MONGO_INITDB_ROOT_PASSWORD: placeholder
       # Create an initial database on startup.
-      MONGO_INITDB_DATABASE: ${MONGODB_DB}
+      MONGO_INITDB_DATABASE: placeholder
       # The host variable is for a client (like your backend) to connect to the database,
       # not for the database itself to know its own address.
     # Persist data using a named volume.
