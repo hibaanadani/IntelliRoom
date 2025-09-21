@@ -46,9 +46,13 @@
 
 ### User Screens (Mobile)
 
-| Login screen                            | Register screen                       | Register screen                       |
-| --------------------------------------- | ------------------------------------- | ------------------------------------- |
-| ![Landing](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/1440x1024.png) |
+| Landing screen                         | Register screen                      | Signup screen                       |
+| -------------------------------------- | ------------------------------------ | ----------------------------------- |
+| ![Landing](./readme/demo/landing.jpeg) | ![fsdaf](./readme/demo/landing.jpeg) | ![fsdaf](./readme/demo/signup.jpeg) |
+
+| Chatbot screen                        | Register screen                      | Booking screen                      |
+| ------------------------------------- | ------------------------------------ | ----------------------------------- |
+| ![Landing](./readme/demo/chatbot.gif) | ![fsdaf](./readme/demo/landing.jpeg) | ![fsdaf](./readme/demo/booking.gif) |
 
 <br><br>
 
@@ -57,9 +61,9 @@
 
 ### Add Title Here
 
-| Services                              | Validation                            | Testing                             |
-| ------------------------------------- | ------------------------------------- | ----------------------------------- |
-| ![Landing](./readme/demo/service.png) | ![fsdaf](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/testing.png) |
+| Services                              | Validation                             | Testing                             |
+| ------------------------------------- | -------------------------------------- | ----------------------------------- |
+| ![Landing](./readme/demo/service.png) | ![fsdaf](./readme/demo/validation.png) | ![fsdaf](./readme/demo/testing.png) |
 
 <br><br>
 
