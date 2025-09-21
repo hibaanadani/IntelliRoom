@@ -63,7 +63,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          source: ".env"
+          source: "server-side/intelli-room/.env"
           target: "/home/${{ secrets.EC2_USER }}"
 
       # This step uses the 'docker-compose' command to build and push both images.
