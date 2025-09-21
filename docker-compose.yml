@@ -17,6 +17,8 @@ services:
     # We use 'latest' to indicate it's the most recent build.
     image: hibaanadani/docker-backend:22
     # using service database
+    env_file:
+      - .env
     environment:
       # we're now using env variables from our CI/CD pipeline
       # The backend connects to 'mongodb_db' service name, not a URL

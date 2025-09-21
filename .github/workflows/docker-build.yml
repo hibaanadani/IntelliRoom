@@ -57,6 +57,15 @@ jobs:
         working-directory: server-side/intelli-room
         run: cp .env.example .env
 
+      - name: Copy docker-compose to ec2
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          source: ".env"
+          target: "/home/${{ secrets.EC2_USER }}"
+
       # This step uses the 'docker-compose' command to build and push both images.
       # It finds the docker-compose.yml file and processes both the 'server' and 'client' services.
       - name: Build and push images
