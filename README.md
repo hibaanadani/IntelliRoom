@@ -71,6 +71,25 @@
 
 <br><br>
 
+<!-- AI-Powered APP -->
+<img src="./readme/title8.svg"/>
+
+### Calendar Workflow
+
+<img src="./readme/demo/Calendarworkflow.png"/>
+
+> Intelliroom uses AI agent to provide a smoother booking experience!
+
+- Returns the available booking times at the selected date.
+- Handles booking with selected gallery of the users choice.
+- Chatbot agent that assists the user when needed.
+
+| Calendar Service                              | Chatbot Service                            |
+| --------------------------------------------- | ------------------------------------------ |
+| ![Landing](./readme/demo/calendarservice.png) | ![fsdaf](./readme/demo/chatbotservice.png) |
+
+<br><br>
+
 <!-- Deployment -->
 <img src="./readme/title7.svg"/>
 
@@ -95,24 +114,5 @@
 | Postman API 1                          | Postman API 2                        | Swagger                             |
 | -------------------------------------- | ------------------------------------ | ----------------------------------- |
 | ![Landing](./readme/demo/postman1.png) | ![fsdaf](./readme/demo/postman2.png) | ![fsdaf](./readme/demo/swagger.png) |
-
-<br><br>
-
-<!-- AI-Powered APP -->
-<img src="./readme/title8.svg"/>
-
-### Calendar Workflow
-
-<img src="./readme/demo/Calendarworkflow.png"/>
-
-> Intelliroom uses AI agent to provide a smoother booking experience!
-
-- Returns the available booking times at the selected date.
-- Handles booking with selected gallery of the users choice.
-- Chatbot agent that assists the user when needed.
-
-| Calendar Service                              | Chatbot Service                            |
-| --------------------------------------------- | ------------------------------------------ |
-| ![Landing](./readme/demo/calendarservice.png) | ![fsdaf](./readme/demo/chatbotservice.png) |
 
 <br><br>
