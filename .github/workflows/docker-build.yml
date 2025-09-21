@@ -48,8 +48,8 @@ jobs:
           sed -i "s|N8N_WEBHOOK_URL_Available=.*|N8N_WEBHOOK_URL_Available=${{ secrets.N8N_WEBHOOK_URL_Available }}|g" .env.example
           sed -i "s|CHATBOT_WEBHOOK_URL=.*|CHATBOT_WEBHOOK_URL=${{ secrets.CHATBOT_WEBHOOK_URL }}|g" .env.example
           sed -i "s|ADMIN_EMAIL=.*|ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}|g" .env.example
-          sed -i "s|ML_API_URL=.*|ML_API_URL=${{ secrets.ML_API_URL }}|g" .env.example
-          sed -i "s|API_BASE_URL=.*|API_BASE_URL=${{ secrets.API_BASE_URL }}|g" .env.example
+          sed -i "s|ML_API_URL=.*|ML_API_URL=${{ secrets.EC2_HOST }}:5000|g" .env.example
+          sed -i "s|API_BASE_URL=.*|API_BASE_URL=${{ secrets.EC2_HOST }}:9000|g" .env.example
           sed -i "s|HF_TOKEN=.*|HF_TOKEN=${{ secrets.HF_TOKEN }}|g" .env.example
 
       - name: Copy .enc.example to .env
