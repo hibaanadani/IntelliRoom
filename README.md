@@ -22,7 +22,7 @@
 
 ### Components Diagram
 
-<img src="./readme/demo/Schema.png"/>
+<img src="./readme/demo/ComponentsDiagram.png"/>
 
 <br><br>
 
@@ -46,13 +46,17 @@
 
 ### User Screens (Mobile)
 
-| Landing screen                         | Register screen                      | Signup screen                       |
-| -------------------------------------- | ------------------------------------ | ----------------------------------- |
-| ![Landing](./readme/demo/landing.jpeg) | ![fsdaf](./readme/demo/landing.jpeg) | ![fsdaf](./readme/demo/signup.jpeg) |
+| Landing screen                         | Register screen                    | Signup screen                       |
+| -------------------------------------- | ---------------------------------- | ----------------------------------- |
+| ![Landing](./readme/demo/landing.jpeg) | ![fsdaf](./readme/demo/login.jpeg) | ![fsdaf](./readme/demo/signup.jpeg) |
 
-| Chatbot screen                        | Register screen                      | Booking screen                      |
-| ------------------------------------- | ------------------------------------ | ----------------------------------- |
-| ![Landing](./readme/demo/chatbot.gif) | ![fsdaf](./readme/demo/landing.jpeg) | ![fsdaf](./readme/demo/booking.gif) |
+| Home screen                         | Gallery screen                       | Room screen                               |
+| ----------------------------------- | ------------------------------------ | ----------------------------------------- |
+| ![Landing](./readme/demo/home.jpeg) | ![fsdaf](./readme/demo/gallery.jpeg) | ![fsdaf](./readme/demo/roomanalysis.jpeg) |
+
+| Chatbot screen                        | Rooms screen                      | Booking screen                      |
+| ------------------------------------- | --------------------------------- | ----------------------------------- |
+| ![Landing](./readme/demo/chatbot.gif) | ![fsdaf](./readme/demo/rooms.gif) | ![fsdaf](./readme/demo/booking.gif) |
 
 <br><br>
 
@@ -72,6 +76,8 @@
 
 ### CI/CD
 
+<img src="./readme/demo/CICD.png"/>
+
 - A new feature begins development on a local branch.
 - The local branch is pushed to its remote counterpart.
 - The remote branch is merged into the staging branch.
@@ -82,8 +88,31 @@
 - Once the feature is finished and passes staging, the staging branch is merged into the main branch.
 - The production deployment is initiated, following the same steps as the staging CD process.
 
-| Postman API 1                          | Postman API 2                        | Postman API 3                        |
-| -------------------------------------- | ------------------------------------ | ------------------------------------ |
-| ![Landing](./readme/demo/postman1.png) | ![fsdaf](./readme/demo/postman2.png) | ![fsdaf](./readme/demo/postman3.png) |
+| GitHub Pull Request                        | GitHub Testing Pipeline              | GitHub Deployment Pipeline Success  |
+| ------------------------------------------ | ------------------------------------ | ----------------------------------- |
+| ![Landing](./readme/demo/pullrequests.png) | ![fsdaf](./readme/demo/pipeline.png) | ![fsdaf](./readme/demo/success.png) |
+
+| Postman API 1                          | Postman API 2                        | Swagger                             |
+| -------------------------------------- | ------------------------------------ | ----------------------------------- |
+| ![Landing](./readme/demo/postman1.png) | ![fsdaf](./readme/demo/postman2.png) | ![fsdaf](./readme/demo/swagger.png) |
+
+<br><br>
+
+<!-- AI-Powered APP -->
+<img src="./readme/title8.svg"/>
+
+### Calendar Workflow
+
+<img src="./readme/demo/Calendarworkflow.png"/>
+
+> Intelliroom uses AI agent to provide a smoother booking experience!
+
+- Returns the available booking times at the selected date.
+- Handles booking with selected gallery of the users choice.
+- Chatbot agent that assists the user when needed.
+
+| Calendar Service                              | Chatbot Service                            |
+| --------------------------------------------- | ------------------------------------------ |
+| ![Landing](./readme/demo/calendarservice.png) | ![fsdaf](./readme/demo/chatbotservice.png) |
 
 <br><br>
