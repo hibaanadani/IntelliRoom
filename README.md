@@ -68,23 +68,35 @@
 | ------------------------------------- | -------------------------------- | ----------------------------------- |
 | ![Landing](./readme/demo/service.png) | ![fsdaf](./readme/demo/auth.png) | ![fsdaf](./readme/demo/testing.png) |
 
-<br><br>
+<br>
 
 ### 🤖 AI Agent
 
+> IntelliRoom uses a smart AI assistant for a seamless booking experience.
+
+It's a two-part system designed to save you time: a friendly chatbot that assists you with your inquiries which that instantly checks for open slots and a dedicated booking page where you can easily finalize all the meeting details.
+
+#### 1. Chatbot
+
+This part of the process is a quick question-and-answer session.
+
+- **Input**: You tell the chatbot assistant any question you have about the app. You also tell which day you want to check. For example, "What times are free on Tuesday?"
+- **Process & Decisions**: The assistant instantly connects to your online calendar (like Google Calendar). It quickly scans your schedule for that day and decides which time slots are open. It's like it's looking at your paper calendar and circling all the empty spaces.
+- **Output**: The assistant sends you a simple, clear answer, such as a list of available times or a simple "Yes, you have an open slot at 2 PM."
+
+#### 2. Finalizing the Booking
+
+Once you've found a time that works, you move to the booking page to complete the booking.
+
+- **Input**: You choose the date that works for you, and then select the time that is available that works for you.
+
+- **Process & Decisions**: The AI agent takes this information and sends it to your calendar. It makes a series of decisions: it checks to make sure the data is correct, it determines the best way to create the calendar event.
+
+- **Output**: A new event appears on your calendar, and you receive an email with all the meeting details. The booking is complete without you having to manually add anything to your calendar.
+
 <img src="./readme/demo/Calendarworkflow.png"/>
 
-> Intelliroom uses AI agent to provide a smoother booking experience!
-
-- Returns the available booking times at the selected date.
-- Handles booking with selected gallery of the users choice.
-- Chatbot agent that assists the user when needed.
-
-| Calendar Service                              | Chatbot Service                            |
-| --------------------------------------------- | ------------------------------------------ |
-| ![Landing](./readme/demo/calendarservice.png) | ![fsdaf](./readme/demo/chatbotservice.png) |
-
-<br><br>
+<br>
 
 ### Machine Learning
 
@@ -128,7 +140,7 @@ To evaluate the aesthetic classifier, standard machine learning metrics were use
 | -------------------------------------- | ---------------------------------- | --------------------------------------- |
 | ![Landing](./readme/demo/Terminal.png) | ![fsdaf](./readme/demo/detect.png) | ![fsdaf](./readme/demo/suggestions.png) |
 
-<br><br>
+<br>
 
 <!-- Deployment -->
 <img src="./readme/title7.svg"/>
