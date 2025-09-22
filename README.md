@@ -63,16 +63,13 @@
 <!-- Development & Testing -->
 <img src="./readme/title6.svg"/>
 
-
 | Services                              | Validation                       | Testing                             |
 | ------------------------------------- | -------------------------------- | ----------------------------------- |
 | ![Landing](./readme/demo/service.png) | ![fsdaf](./readme/demo/auth.png) | ![fsdaf](./readme/demo/testing.png) |
+
 <br><br>
 
-<!-- AI-Powered APP -->
-<img src="./readme/title8.svg"/>
-
-### Calendar Workflow
+### AI Agent
 
 <img src="./readme/demo/Calendarworkflow.png"/>
 
@@ -87,7 +84,6 @@
 | ![Landing](./readme/demo/calendarservice.png) | ![fsdaf](./readme/demo/chatbotservice.png) |
 
 <br><br>
-
 
 <!-- Deployment -->
 <img src="./readme/title7.svg"/>
