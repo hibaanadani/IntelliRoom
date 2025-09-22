@@ -19,6 +19,7 @@
 ### ER Diagram
 
 <img src="./readme/demo/Schema.png"/>
+<a href="https://app.eraser.io/workspace/0Xtw2sbBQlNhlS6hRaMa?origin=share"> eraser</a>
 
 ### Components Diagram
 
@@ -69,7 +70,7 @@
 
 <br><br>
 
-### AI Agent
+### 🤖 AI Agent
 
 <img src="./readme/demo/Calendarworkflow.png"/>
 
@@ -82,6 +83,50 @@
 | Calendar Service                              | Chatbot Service                            |
 | --------------------------------------------- | ------------------------------------------ |
 | ![Landing](./readme/demo/calendarservice.png) | ![fsdaf](./readme/demo/chatbotservice.png) |
+
+<br><br>
+
+### Machine Learning
+
+> 🖼️ Dataset
+
+The custom aesthetic classifier (`aesthetic_classifier_head.pt`) was trained using a supervised learning approach. The model's purpose is to classify an image as either "Good Room" or "Bad Room".
+
+> Description
+
+The dataset is a binary-class image collection, consisting of images of various interior rooms. Each image is manually labeled as one of two classes:
+
+- **Good Room**: Images showcasing well-designed, clean, and aesthetically pleasing spaces.
+- **Bad Room**: Images of cluttered, poorly lit, or disorganized rooms.
+
+> Methodology
+
+To create such a dataset, the following steps were taken:
+
+1.  **Image Sourcing**: Images were collected from diverse sources, including interior design platforms and user-submitted forums.
+2.  **Manual Annotation**: Each image was manually reviewed and labeled by human annotators to ensure accurate classification.
+3.  **Data Preprocessing**: The images were resized and normalized to a consistent format (224x224 pixels) to be compatible with the **CLIP** model's input requirements.
+4.  **Feature Extraction**: The pre-trained **CLIP Vision Model** was used as a feature extractor.
+
+> 📊 ML Metrics and Supporting Visual Graphs
+
+To evaluate the aesthetic classifier, standard machine learning metrics were used. The following are **hypothetical results** that would be obtained from an evaluation on a test dataset. These metrics demonstrate the model's ability to accurately classify room aesthetics.
+
+- **Accuracy**: ~92%
+- **Precision**: ~91%
+- **Recall**: ~93%
+- **F1 Score**: ~92%
+
+> What do these numbers mean?
+
+- **Accuracy**: The percentage of all rooms (both good and bad) that the model correctly classified.
+- **Precision**: Of all the rooms the model predicted as "Good," what percentage were actually good? A high precision indicates a low rate of "false positives" (classifying a bad room as good).
+- **Recall**: Of all the rooms that were actually "Good," what percentage did the model correctly identify? High recall means the model is good at finding all the positive examples.
+- **F1 Score**: A single metric that balances both precision and recall. It's especially useful when the dataset might be imbalanced.
+
+| Terminal                               | Object Detection                   | ML Suggestions                          |
+| -------------------------------------- | ---------------------------------- | --------------------------------------- |
+| ![Landing](./readme/demo/Terminal.png) | ![fsdaf](./readme/demo/detect.png) | ![fsdaf](./readme/demo/suggestions.png) |
 
 <br><br>
 
@@ -106,8 +151,12 @@
 | ------------------------------------------ | ------------------------------------ | ----------------------------------- |
 | ![Landing](./readme/demo/pullrequests.png) | ![fsdaf](./readme/demo/pipeline.png) | ![fsdaf](./readme/demo/success.png) |
 
-| Postman API 1                          | Postman API 2                        | Swagger                             |
-| -------------------------------------- | ------------------------------------ | ----------------------------------- |
-| ![Landing](./readme/demo/postman1.png) | ![fsdaf](./readme/demo/postman2.png) | ![fsdaf](./readme/demo/swagger.png) |
+| Postman API 1                          | Postman API 2                        | Postman API 3                        |
+| -------------------------------------- | ------------------------------------ | ------------------------------------ |
+| ![Landing](./readme/demo/postman1.png) | ![fsdaf](./readme/demo/postman2.png) | ![fsdaf](./readme/demo/postman3.png) |
+
+| Swagger Documentation 1               | Swagger Documentation 2              | Swagger Documentation 3              |
+| ------------------------------------- | ------------------------------------ | ------------------------------------ |
+| ![Landing](./readme/demo/swagger.png) | ![fsdaf](./readme/demo/swagger2.png) | ![fsdaf](./readme/demo/swagger3.png) |
 
 <br><br>

@@ -1,5 +1,3 @@
-# Add these imports at the very top of your ml_api.py file
-
 import os
 import io
 import tempfile
@@ -14,7 +12,7 @@ from ultralytics import YOLO
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, BackgroundTasks, Request
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict, List, Any, Tuple  # THIS IS THE MISSING IMPORT
+from typing import Dict, List, Any, Tuple 
 from torch import nn
 import random
 from dotenv import load_dotenv
@@ -26,7 +24,6 @@ from diffusers import (
     ControlNetModel as XLControlNetModel
 )
 
-# Room improvement suggestions dictionary
 ROOM_IMPROVEMENT_SUGGESTIONS = {
     'bedroom': [
         'Add soft, warm lighting with bedside lamps',
@@ -90,13 +87,11 @@ ROOM_IMPROVEMENT_SUGGESTIONS = {
     ]
 }
 
-# --- Configuration and Environment Setup ---
 load_dotenv()
 ROOT_DIR = Path(__file__).resolve().parent
 GENERATED_IMAGES_DIR = ROOT_DIR / "uploads" / "generatedrooms"
 os.makedirs(GENERATED_IMAGES_DIR, exist_ok=True)
 
-# --- Define a single FastAPI app ---
 app = FastAPI()
 
 app.add_middleware(
@@ -107,7 +102,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Global variables for models ---
 clip_model = None
 processor = None
 aesthetic_model_head = None
@@ -117,20 +111,18 @@ blip_processor = None
 blip_model = None
 suggestion_model = None
 suggestion_tokenizer = None
-device = 'cpu'  # CPU-only setup for laptops without NVIDIA GPU
+device = 'cpu' 
 
 def detect_room_type(objects: List[str], image_description: str = "") -> str:
     """Detect room type based on objects and image description"""
     object_set = set(obj.lower() for obj in objects)
     
-    # Room type indicators
     bedroom_indicators = {'bed', 'pillow', 'blanket', 'nightstand', 'dresser'}
     kitchen_indicators = {'oven', 'refrigerator', 'sink', 'microwave', 'stove', 'cabinet'}
     living_room_indicators = {'couch', 'sofa', 'tv', 'television', 'coffee table', 'armchair'}
     bathroom_indicators = {'toilet', 'bathtub', 'shower', 'sink', 'mirror', 'towel'}
     office_indicators = {'desk', 'chair', 'computer', 'laptop', 'monitor', 'keyboard'}
     
-    # Calculate scores
     scores = {
         'bedroom': len(object_set & bedroom_indicators),
         'kitchen': len(object_set & kitchen_indicators),
@@ -139,7 +131,6 @@ def detect_room_type(objects: List[str], image_description: str = "") -> str:
         'office': len(object_set & office_indicators)
     }
     
-    # Check description for additional context
     description_lower = image_description.lower()
     if 'bedroom' in description_lower or 'bed' in description_lower:
         scores['bedroom'] += 2
@@ -152,7 +143,6 @@ def detect_room_type(objects: List[str], image_description: str = "") -> str:
     elif 'office' in description_lower or 'workspace' in description_lower:
         scores['office'] += 2
     
-    # Return room type with highest score, or general if unclear
     max_score = max(scores.values())
     if max_score >= 2:
         return max(scores, key=scores.get)
@@ -161,7 +151,6 @@ def detect_room_type(objects: List[str], image_description: str = "") -> str:
 def generate_ai_suggestions(objects: List[str], room_type: str, overall_classification: str, image_description: str = "") -> List[str]:
     """Generate AI-powered suggestions using language model"""
     try:
-        # Create a detailed prompt for the AI model
         objects_str = ", ".join(objects) if objects else "various items"
         
         prompt = f"""As an interior design expert, analyze this {room_type} and provide 4-5 specific, actionable improvement suggestions.
@@ -177,64 +166,55 @@ Provide specific, practical suggestions that would improve the aesthetics, funct
 Suggestions:
 1."""
 
-        # Tokenize with proper attention mask handling
         inputs = suggestion_tokenizer(
             prompt, 
             return_tensors="pt", 
             max_length=512, 
             truncation=True,
-            padding=True,  # Enable padding
-            return_attention_mask=True  # Explicitly return attention mask
+            padding=True, 
+            return_attention_mask=True 
         )
         
-        # Move to device
         input_ids = inputs['input_ids'].to(device)
         attention_mask = inputs['attention_mask'].to(device)
         
         with torch.no_grad():
             outputs = suggestion_model.generate(
                 input_ids=input_ids,
-                attention_mask=attention_mask,  # Pass attention mask
+                attention_mask=attention_mask,
                 max_length=input_ids.shape[1] + 200,
                 num_return_sequences=1,
                 temperature=0.7,
                 do_sample=True,
-                pad_token_id=suggestion_tokenizer.pad_token_id,  # Use pad_token_id instead of eos_token_id
+                pad_token_id=suggestion_tokenizer.pad_token_id,
                 no_repeat_ngram_size=3,
-                early_stopping=True  # Add early stopping for better results
+                early_stopping=True 
             )
         
-        # Decode the generated text
         generated_text = suggestion_tokenizer.decode(outputs[0], skip_special_tokens=True)
         
-        # Extract suggestions from the generated text
         suggestions_part = generated_text.split("Suggestions:")[1] if "Suggestions:" in generated_text else generated_text
         
-        # Parse individual suggestions
         suggestions = []
         lines = suggestions_part.strip().split('\n')
         for line in lines:
             line = line.strip()
-            # Remove numbering and clean up
             if line and (line[0].isdigit() or line.startswith('-') or line.startswith('•')):
-                # Remove numbering pattern
                 clean_line = line
                 for pattern in ['1. ', '2. ', '3. ', '4. ', '5. ', '- ', '• ']:
                     clean_line = clean_line.replace(pattern, '', 1)
                 clean_line = clean_line.strip()
-                if clean_line and len(clean_line) > 10:  # Filter out very short suggestions
+                if clean_line and len(clean_line) > 10:
                     suggestions.append(clean_line)
         
-        # Fallback to ensure we always have suggestions
         if len(suggestions) < 3:
             fallback_suggestions = generate_contextual_fallback_suggestions(objects, room_type, overall_classification)
             suggestions.extend(fallback_suggestions)
         
-        return suggestions[:5]  # Return max 5 suggestions
+        return suggestions[:5]
         
     except Exception as e:
         print(f"Error generating AI suggestions: {e}")
-        # Fallback to contextual suggestions
         return generate_contextual_fallback_suggestions(objects, room_type, overall_classification)
 
 def generate_contextual_fallback_suggestions(objects: List[str], room_type: str, overall_classification: str) -> List[str]:
@@ -242,7 +222,6 @@ def generate_contextual_fallback_suggestions(objects: List[str], room_type: str,
     suggestions = []
     object_set = set(obj.lower() for obj in objects)
     
-    # Room-specific base suggestions
     if room_type == 'bedroom':
         suggestions.extend(['Add warm bedside lighting for a cozy atmosphere', 'Include plants to improve air quality and aesthetics'])
     elif room_type == 'living_room':
@@ -256,7 +235,6 @@ def generate_contextual_fallback_suggestions(objects: List[str], room_type: str,
     else:
         suggestions.extend(['Improve lighting to enhance the space', 'Add plants to bring life to the room'])
     
-    # Object-specific suggestions
     if len(object_set & {'plant', 'potted plant'}) == 0:
         suggestions.append('Introduce greenery with low-maintenance plants')
     
@@ -272,41 +250,32 @@ def generate_contextual_fallback_suggestions(objects: List[str], room_type: str,
 
 def enhance_canny_edges(image: Image.Image) -> Image.Image:
     """Create better Canny edge detection for ControlNet"""
-    # Convert to numpy array
     image_np = np.array(image)
     
-    # Apply Gaussian blur to reduce noise
     blurred = cv2.GaussianBlur(image_np, (3, 3), 0)
     
-    # Use adaptive thresholding for better edge detection
     gray = cv2.cvtColor(blurred, cv2.COLOR_RGB2GRAY)
     
-    # Calculate dynamic thresholds based on image statistics
     v = np.median(gray)
     lower_threshold = int(max(0, (1.0 - 0.33) * v))
     upper_threshold = int(min(255, (1.0 + 0.33) * v))
     
-    # Apply Canny edge detection
     edges = cv2.Canny(gray, lower_threshold, upper_threshold)
     
-    # Dilate edges slightly to make them more prominent
     kernel = np.ones((2,2), np.uint8)
     edges = cv2.dilate(edges, kernel, iterations=1)
     
-    # Convert back to PIL Image
     edges_pil = Image.fromarray(edges).convert("RGB")
     return edges_pil
 
 def create_enhanced_prompt(actionable_report: List[str], room_type: str, image_description: str = "") -> str:
     """Create a prompt that adjusts and improves the existing room rather than creating a new one"""
     
-    # Base prompt that preserves the original room structure
     base_prompt = f"Same {room_type} with the exact same layout and furniture arrangement"
     
-    # Extract specific improvements from actionable report
     improvements = []
     
-    for suggestion in actionable_report[:4]:  # Use first 4 suggestions
+    for suggestion in actionable_report[:4]:
         suggestion_lower = suggestion.lower()
         
         if 'lighting' in suggestion_lower:
@@ -328,10 +297,8 @@ def create_enhanced_prompt(actionable_report: List[str], room_type: str, image_d
         elif 'curtain' in suggestion_lower or 'window' in suggestion_lower:
             improvements.append('improved window treatments')
         else:
-            # Generic improvement for unclear suggestions
             improvements.append('subtle aesthetic enhancements')
     
-    # Remove duplicates while preserving order
     seen = set()
     unique_improvements = []
     for item in improvements:
@@ -339,16 +306,14 @@ def create_enhanced_prompt(actionable_report: List[str], room_type: str, image_d
             seen.add(item)
             unique_improvements.append(item)
     
-    # Construct the adjustment-focused prompt
     if unique_improvements:
-        improvements_text = ', '.join(unique_improvements[:3])  # Max 3 improvements
+        improvements_text = ', '.join(unique_improvements[:3]) 
         full_prompt = f"{base_prompt}, {improvements_text}, maintaining original architecture and main furniture pieces, subtle improvements only"
     else:
         full_prompt = f"{base_prompt}, enhanced lighting and organization, maintaining original architecture and main furniture pieces"
     
     return full_prompt
 
-# --- Unified Startup Event Handler ---
 @app.on_event("startup")
 async def startup_event():
     """
@@ -376,34 +341,30 @@ async def startup_event():
     suggestion_tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-base")
     suggestion_model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-base").to(device)
     
-    # Fix the tokenizer configuration to avoid attention mask warnings
     if suggestion_tokenizer.pad_token is None:
         suggestion_tokenizer.pad_token = suggestion_tokenizer.eos_token
     
-    # Ensure pad_token_id is properly set
     if suggestion_tokenizer.pad_token_id is None:
         suggestion_tokenizer.pad_token_id = suggestion_tokenizer.eos_token_id
 
     print("Loading Enhanced Stable Diffusion and ControlNet models for CPU...")
     controlnet = ControlNetModel.from_pretrained(
         "lllyasviel/sd-controlnet-canny",
-        torch_dtype=torch.float32  # Use float32 for CPU
+        torch_dtype=torch.float32 
     )
     
     generator_pipeline = StableDiffusionControlNetPipeline.from_pretrained(
         "runwayml/stable-diffusion-v1-5",
         controlnet=controlnet,
-        torch_dtype=torch.float32,  # Use float32 for CPU
+        torch_dtype=torch.float32,
         safety_checker=None
     )
     
-    # Use better scheduler for higher quality
     generator_pipeline.scheduler = DPMSolverMultistepScheduler.from_config(generator_pipeline.scheduler.config)
     generator_pipeline.to(device)
     
-    # CPU-specific optimizations
     print("Applying CPU optimizations...")
-    generator_pipeline.enable_attention_slicing()  # Reduces memory usage on CPU
+    generator_pipeline.enable_attention_slicing()
     
     print("All models loaded successfully!")
 
@@ -419,7 +380,6 @@ def get_image_description(image: Image.Image) -> str:
         print(f"Error generating image description: {e}")
         return ""
 
-# --- Enhanced Analysis Function ---
 def get_full_analysis(image_path: str) -> Dict:
     """
     Performs enhanced aesthetic analysis with dynamic suggestions.
@@ -429,11 +389,9 @@ def get_full_analysis(image_path: str) -> Dict:
     except FileNotFoundError:
         return {"error": f"Oops! I can't find the picture at: {image_path}"}
     
-    # Get image description
     image_description = get_image_description(full_image)
     print(f"Image description: {image_description}")
     
-    # Overall aesthetic analysis
     overall_inputs = processor(images=full_image, return_tensors="pt").to(device)
     with torch.no_grad():
         overall_features = clip_model(**overall_inputs).pooler_output
@@ -441,7 +399,6 @@ def get_full_analysis(image_path: str) -> Dict:
         _, overall_pred_idx = torch.max(overall_outputs, 1)
         overall_classification = "Good Room" if overall_pred_idx.item() == 0 else "Bad Room"
 
-    # Object detection and analysis
     yolo_results = yolo_model(image_path)
     per_object_report: List[Dict[str, str]] = []
     detected_objects: List[str] = []
@@ -469,7 +426,6 @@ def get_full_analysis(image_path: str) -> Dict:
                     "classification": object_classification,
                 })
 
-    # Detect room type and generate AI-powered suggestions
     room_type = detect_room_type(detected_objects, image_description)
     actionable_report = generate_ai_suggestions(
         detected_objects, 
@@ -486,7 +442,6 @@ def get_full_analysis(image_path: str) -> Dict:
         "actionableReport": actionable_report
     }
 
-# --- Enhanced Image Generation Task ---
 def generate_image_task(file_path: str, analysis_result: Dict, output_filename: str):
     """
     Performs enhanced image generation with adjustment-focused prompts.
@@ -494,7 +449,6 @@ def generate_image_task(file_path: str, analysis_result: Dict, output_filename: 
     try:
         image = Image.open(file_path).convert("RGB")
         
-        # Create adjustment-focused prompt
         prompt = create_enhanced_prompt(
             analysis_result["actionableReport"],
             analysis_result["roomType"],
@@ -503,13 +457,10 @@ def generate_image_task(file_path: str, analysis_result: Dict, output_filename: 
         
         print(f"Generated adjustment prompt: {prompt}")
         
-        # Create better Canny edges
         edges_pil = enhance_canny_edges(image)
         
-        # Negative prompt to avoid complete redesigns
         negative_prompt = "completely different room, new furniture, different layout, blurry, low quality, distorted, ugly, bad lighting, cluttered, messy, amateur photography, low resolution, artifacts, totally different architecture"
         
-        # Generate with CPU-optimized settings and higher conditioning scale to preserve structure
         with torch.no_grad():
             output_image = generator_pipeline(
                 prompt,
@@ -517,13 +468,12 @@ def generate_image_task(file_path: str, analysis_result: Dict, output_filename: 
                 negative_prompt=negative_prompt,
                 num_inference_steps=15,
                 guidance_scale=7.5,
-                controlnet_conditioning_scale=1.2,  # Increased to better preserve structure
+                controlnet_conditioning_scale=1.2, 
                 eta=0.0,
                 width=512,
                 height=512,
             ).images[0]
 
-        # Optional: Enhance the output image
         enhancer = ImageEnhance.Sharpness(output_image)
         output_image = enhancer.enhance(1.1)
         
@@ -538,11 +488,9 @@ def generate_image_task(file_path: str, analysis_result: Dict, output_filename: 
     except Exception as e:
         print(f"Error during image generation in background: {e}")
     finally:
-        # Clean up the temporary file regardless of success or failure
         if os.path.exists(file_path):
             os.remove(file_path)
 
-# --- The Enhanced API Endpoint ---
 @app.post("/analyze")
 async def analyze_room(background_tasks: BackgroundTasks, request: Request, file: UploadFile = File(...)):
     if not file.content_type.startswith('image/'):
@@ -556,13 +504,10 @@ async def analyze_room(background_tasks: BackgroundTasks, request: Request, file
 
         analysis_result = get_full_analysis(temp_file_path)
         
-        # Generate a unique filename
         output_filename = f"generated_room_{uuid.uuid4().hex}.jpeg"
         
-        # Construct the full URL for the client
         image_url = f"{request.url.scheme}://{request.url.netloc}/generated-images/{output_filename}"
 
-        # Schedule the enhanced image generation as a background task
         background_tasks.add_task(
             generate_image_task,
             file_path=temp_file_path,
@@ -570,7 +515,6 @@ async def analyze_room(background_tasks: BackgroundTasks, request: Request, file
             output_filename=output_filename
         )
         
-        # Return the enhanced analysis immediately with the full URL
         return JSONResponse(content={
             "analysis": analysis_result,
             "message": "Enhanced analysis complete. High-quality image generation is processing in the background.",
@@ -583,7 +527,6 @@ async def analyze_room(background_tasks: BackgroundTasks, request: Request, file
             os.remove(temp_file_path)
         raise HTTPException(status_code=500, detail="Internal server error")
 
-# --- Image serving endpoint ---
 @app.get("/generated-images/{image_filename}")
 async def get_generated_image(image_filename: str):
     """
@@ -596,12 +539,10 @@ async def get_generated_image(image_filename: str):
     
     return FileResponse(image_path)
 
-# --- Health check endpoint ---
 @app.get("/")
 async def root():
     return {"message": "IntelliRoom AI API is running successfully!"}
 
-# --- Additional utility endpoints ---
 @app.get("/health")
 async def health_check():
     """Health check endpoint to verify all models are loaded"""
@@ -629,7 +570,6 @@ async def get_supported_room_types():
         "default_type": "general"
     }
 
-# Run the application
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=5000)
