@@ -86,6 +86,8 @@ This part of the process is a quick question-and-answer session.
 - **Process & Decisions**: The assistant instantly connects to your online calendar (like Google Calendar). It quickly scans your schedule for that day and decides which time slots are open. It's like it's looking at your paper calendar and circling all the empty spaces.
 - **Output**: The assistant sends you a simple, clear answer, such as a list of available times or a simple "Yes, you have an open slot at 2 PM."
 
+<img src="./readme/demo/chatbotagent.png"/>
+
 #### 2. Finalizing the Booking
 
 Once you've found a time that works, you move to the booking page to complete the booking.
