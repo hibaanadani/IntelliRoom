@@ -55,9 +55,9 @@
 | ----------------------------------- | ------------------------------------ | ----------------------------------------- |
 | ![Landing](./readme/demo/home.jpeg) | ![fsdaf](./readme/demo/gallery.jpeg) | ![fsdaf](./readme/demo/roomanalysis.jpeg) |
 
-| Chatbot screen                        | Rooms screen                      | Booking screen                      |
-| ------------------------------------- | --------------------------------- | ----------------------------------- |
-| ![Landing](./readme/demo/chatbot.gif) | ![fsdaf](./readme/demo/rooms.gif) | ![fsdaf](./readme/demo/booking.gif) |
+| Chatbot screen                         | Rooms screen                      | Booking screen                      |
+| -------------------------------------- | --------------------------------- | ----------------------------------- |
+| ![Landing](./readme/demo/chatbot2.gif) | ![fsdaf](./readme/demo/rooms.gif) | ![fsdaf](./readme/demo/booking.gif) |
 
 <br><br>
 
