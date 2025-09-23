@@ -76,6 +76,8 @@
 
 It's a two-part system designed to save you time: a friendly chatbot that assists you with your inquiries which that instantly checks for open slots and a dedicated booking page where you can easily finalize all the meeting details.
 
+<img src="./readme/demo/AIflow.png"/>
+
 #### 1. Chatbot
 
 This part of the process is a quick question-and-answer session.
@@ -135,6 +137,8 @@ To evaluate the aesthetic classifier, standard machine learning metrics were use
 - **Precision**: Of all the rooms the model predicted as "Good," what percentage were actually good? A high precision indicates a low rate of "false positives" (classifying a bad room as good).
 - **Recall**: Of all the rooms that were actually "Good," what percentage did the model correctly identify? High recall means the model is good at finding all the positive examples.
 - **F1 Score**: A single metric that balances both precision and recall. It's especially useful when the dataset might be imbalanced.
+
+<img src="./readme/demo/MLflow.png"/>
 
 | Terminal                               | Object Detection                   | ML Suggestions                          |
 | -------------------------------------- | ---------------------------------- | --------------------------------------- |
